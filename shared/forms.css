@@ -1,0 +1,164 @@
+/* forms.css: the sheets that collect something from a person (sign-in, the email step for voting, submit, remind me,
+   share). Loads after brand.css; every value comes from its tokens. The few sizes brand.css does not have are below. */
+:root {
+  --fm-w: 480px;            /* a sheet with one field: sign-in, remind me */
+  --fm-w-wide: 600px;       /* the submit and share sheets */
+  --fm-hit: 44px;           /* the smallest touch target */
+  --fm-field: 44px;         /* input height on a pointer; 48px on touch, below */
+  --fm-code: 56px;          /* height of one box of the six-digit code */
+  --fm-gap-top: 48px;       /* room kept above a phone's bottom sheet so the page behind still shows */
+  --fm-icon: 16px;          /* the close cross */
+  --fm-icon-s: 14px;        /* marks inside text: the error mark, the arrow on Share on X */
+  --fm-box: 20px;           /* the checkbox */
+  --fm-ring: 2px;           /* the focus outline, as on city.css */
+  --fm-lift: 0 24px 64px -24px var(--c-shade);   /* the sheet's drop, the same as the project sheet in city.css */
+  /* the share card is always drawn on the night ground, whatever ground the page is on. These repeat the night values
+     of palette.js so the card file can carry literal colours (an SVG file cannot read the page's custom properties). */
+  --fm-card-ground: oklch(0.19 0.0025 157.5);
+  --fm-card-ink: oklch(0.95 0.003 157.5);
+  --fm-card-ink-2: oklch(0.79 0.003 157.5);
+  --fm-card-line: oklch(0.95 0.003 157.5 / 0.16);
+  --fm-card-green: oklch(0.762 0.154 159.4);
+}
+@media (pointer: coarse) { :root { --fm-field: 48px; } }
+
+/* the page behind a sheet does not scroll */
+html.fm-lock { overflow: hidden; }
+
+/* ---------------- the sheet ---------------- */
+.fm { box-sizing: border-box; width: min(var(--fm-w), calc(100vw - 2 * var(--s-5))); max-width: none; max-height: calc(100dvh - 2 * var(--s-6));
+  margin: auto; padding: 0; border: 0; border-radius: var(--r-0); background: var(--c-ground); color: var(--c-ink);
+  font: var(--w-regular) var(--t-md)/1.5 var(--font-sans); -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale;
+  box-shadow: 0 0 0 var(--line-thin) var(--c-line), var(--fm-lift);
+  overflow: auto; overscroll-behavior: contain;
+  opacity: 0; transform: translateY(var(--s-3));
+  transition: opacity var(--dur-panel-exit) var(--ease-exit), transform var(--dur-panel-exit) var(--ease-exit); }
+.fm *, .fm *::before, .fm *::after { box-sizing: border-box; }
+.fm [hidden] { display: none !important; }
+/* a focused field scrolls clear of the sticky header, with its label in view */
+.fm input, .fm button, .fm a { scroll-margin: calc(var(--fm-hit) + var(--s-6)) 0 var(--s-5); }
+.fm.is-wide { width: min(var(--fm-w-wide), calc(100vw - 2 * var(--s-5))); }
+.fm[data-state="open"] { opacity: 1; transform: none; transition: opacity var(--dur-panel) var(--ease-drawer), transform var(--dur-panel) var(--ease-drawer); }
+.fm::backdrop { background: color-mix(in oklch, var(--c-ground) 72%, transparent); opacity: 0; transition: opacity var(--dur-panel-exit) var(--ease-exit); }
+.fm[data-state="open"]::backdrop { opacity: 1; transition: opacity var(--dur-panel) var(--ease-drawer); }
+.fm:focus { outline: none; }
+
+.fm-in { padding: var(--s-5) var(--s-6) var(--s-6); }
+.fm-top { position: sticky; top: 0; z-index: 1; background: var(--c-ground); display: flex; justify-content: space-between; align-items: center; min-height: var(--fm-hit); margin: calc(-1 * var(--s-2)) 0 var(--s-3); }
+.fm-k { margin: 0; font: var(--w-medium) var(--t-label)/1.2 var(--font-mono); letter-spacing: var(--t-label-track); text-transform: uppercase; color: var(--c-ink-2); }
+.fm-x { display: grid; place-items: center; width: var(--fm-hit); height: var(--fm-hit); margin-right: calc(-1 * var(--s-3)); padding: 0; border: 0; border-radius: var(--r-0); background: none; color: var(--c-ink); cursor: pointer;
+  touch-action: manipulation; -webkit-tap-highlight-color: transparent; transition: background-color var(--dur-hover) ease-out; }
+.fm-x svg { width: var(--fm-icon); height: var(--fm-icon); fill: none; stroke: currentColor; stroke-width: var(--line-thick); }
+.fm-h { margin: 0; font-size: var(--t-h2); line-height: 1.15; font-weight: var(--w-regular); letter-spacing: var(--track-tight); text-wrap: balance; overflow-wrap: anywhere; }
+.fm-h:focus { outline: none; }
+.fm-p { margin: var(--s-2) 0 0; color: var(--c-ink-2); text-wrap: pretty; overflow-wrap: anywhere; }
+.fm-p b { font-weight: var(--w-medium); color: var(--c-ink); }
+.fm-form { display: grid; row-gap: var(--s-5); margin-top: var(--s-5); }
+.fm-note { margin: 0; font-size: var(--t-sm); color: var(--c-ink-2); text-wrap: pretty; }
+.fm-vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+
+/* ---------------- fields ---------------- */
+.fm-f { display: grid; row-gap: var(--s-2); min-width: 0; }
+.fm-l { display: flex; justify-content: space-between; align-items: baseline; gap: var(--s-3); font: var(--w-medium) var(--t-label)/1.2 var(--font-mono); letter-spacing: var(--t-label-track); text-transform: uppercase; color: var(--c-ink-2); }
+.fm-l small { font: inherit; color: var(--c-ink-3); }
+.fm-ct { font-variant-numeric: tabular-nums; color: var(--c-ink-3); }
+.fm-ct.is-full { color: var(--c-ink); }
+.fm-i { display: block; width: 100%; height: var(--fm-field); margin: 0; padding: 0 var(--s-3); border: 0; border-radius: var(--r-0); background: none; color: var(--c-ink);
+  font: var(--w-regular) var(--t-md)/1 var(--font-sans); box-shadow: inset 0 0 0 var(--line-thin) var(--c-line); appearance: none; -webkit-appearance: none;
+  transition: box-shadow var(--dur-hover) ease-out; touch-action: manipulation; }
+.fm-i::placeholder { color: var(--c-ink-3); opacity: 1; }
+.fm-i:focus { outline: none; }
+.fm-i:focus-visible { outline: var(--fm-ring) solid var(--c-ink); outline-offset: -1px; }
+.fm-i[aria-invalid="true"] { box-shadow: inset 0 0 0 var(--line-thick) var(--c-ink); }
+.fm-i:read-only { color: var(--c-ink-2); }
+/* an error: ink, a mark, and words that say how to fix it. No second colour: the page keeps one green and no red. */
+.fm-err { display: flex; align-items: flex-start; gap: var(--s-2); margin: 0; font-size: var(--t-sm); line-height: 1.4; color: var(--c-ink); text-wrap: pretty; }
+.fm-err[hidden] { display: none; }
+.fm-err svg { flex: none; width: var(--fm-icon-s); height: var(--fm-icon-s); margin-top: calc(var(--s-1) / 2); fill: none; stroke: currentColor; stroke-width: var(--line-thick); }
+
+/* the six-digit code */
+.fm-code { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: var(--s-2); margin: 0; padding: 0; border: 0; min-width: 0; }
+.fm-code input { width: 100%; height: var(--fm-code); padding: 0; border: 0; border-radius: var(--r-0); background: none; color: var(--c-ink); text-align: center;
+  font: var(--w-medium) var(--t-xl)/1 var(--font-mono); font-variant-numeric: tabular-nums; caret-color: var(--c-ink); box-shadow: inset 0 0 0 var(--line-thin) var(--c-line); appearance: none; touch-action: manipulation; }
+.fm-code input:focus { outline: none; }
+.fm-code input:focus-visible { outline: var(--fm-ring) solid var(--c-ink); outline-offset: -1px; }
+.fm-code input[aria-invalid="true"] { box-shadow: inset 0 0 0 var(--line-thick) var(--c-ink); }
+.fm-code[aria-busy="true"] input { color: var(--c-ink-2); }
+
+/* the checkbox row: the whole row is the label, no dead zones */
+.fm-chk { display: grid; grid-template-columns: auto minmax(0, 1fr); column-gap: var(--s-3); align-items: start; min-height: var(--fm-hit); padding: var(--s-2) 0; cursor: pointer; font-size: var(--t-md); line-height: 1.4; }
+.fm-chk input { position: relative; width: var(--fm-box); height: var(--fm-box); margin: calc(var(--s-1) / 2) 0 0; border: 0; border-radius: var(--r-0); background: none; box-shadow: inset 0 0 0 var(--line-thin) var(--c-ink-2); appearance: none; -webkit-appearance: none; cursor: pointer; }
+.fm-chk input:checked { background: var(--c-ink); box-shadow: none; }
+.fm-chk input:checked::after { content: ""; position: absolute; left: 35%; top: 15%; width: 25%; height: 50%; border: solid var(--c-ground); border-width: 0 var(--fm-ring) var(--fm-ring) 0; transform: rotate(45deg); }
+.fm-chk input:focus { outline: none; }
+.fm-chk input:focus-visible { outline: var(--fm-ring) solid var(--c-ink); outline-offset: var(--fm-ring); }
+.fm-chk input[aria-invalid="true"] { box-shadow: inset 0 0 0 var(--line-thick) var(--c-ink); }
+
+/* the picture: a 16:9 frame that is the drop target and shows the preview */
+.fm-pic { position: relative; display: grid; place-items: center; aspect-ratio: 16 / 9; width: 100%; overflow: hidden; cursor: pointer;
+  outline: var(--line-thin) dashed var(--c-ink-3); outline-offset: calc(-1 * var(--line-thin)); transition: background-color var(--dur-hover) ease-out; }
+.fm-pic.has-img { outline-style: solid; outline-color: var(--c-line); }
+.fm-pic.is-over { background: var(--c-tint-2); }
+.fm-pic img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.fm-pic-t { display: grid; justify-items: center; row-gap: var(--s-1); padding: var(--s-4); text-align: center; font-size: var(--t-sm); color: var(--c-ink-2); }
+.fm-pic-t b { font-weight: var(--w-medium); color: var(--c-ink); }
+.fm-pic input { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+.fm-pic:has(input:focus-visible) { outline: var(--fm-ring) solid var(--c-ink); outline-offset: -1px; }
+.fm-picrow { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); column-gap: var(--s-4); align-items: end; }
+.fm-pic-side { display: grid; row-gap: var(--s-2); align-content: end; }
+.fm-pic-a { display: flex; flex-wrap: wrap; column-gap: var(--s-4); }
+
+/* ---------------- buttons: the page's own. Square, a hairline ring, green only for the main action. ---------------- */
+.fm-act { display: flex; flex-wrap: wrap; gap: var(--s-2); align-items: center; }
+.fm-b { position: relative; display: inline-flex; align-items: center; justify-content: center; gap: var(--s-2); min-height: var(--fm-hit); padding: 0 var(--s-4); margin: 0;
+  border: 0; border-radius: var(--r-0); background: none; color: var(--c-ink); box-shadow: inset 0 0 0 var(--line-thin) var(--c-ink);
+  font: var(--w-medium) var(--t-sm)/1 var(--font-sans); text-decoration: none; white-space: nowrap; cursor: pointer;
+  touch-action: manipulation; -webkit-tap-highlight-color: transparent; user-select: none;
+  transition: background-color var(--dur-hover) ease-out, transform var(--dur-press) var(--ease-out); }
+.fm-b.g { background: var(--c-accent); color: var(--c-accent-ink); box-shadow: none; }
+.fm-b.wide { width: 100%; }
+.fm-b:active:not(:disabled) { transform: scale(0.97); }
+.fm-b:focus { outline: none; }
+.fm-b:focus-visible, .fm-x:focus-visible { outline: var(--fm-ring) solid var(--c-ink); outline-offset: var(--fm-ring); }
+.fm-b:disabled { cursor: default; }
+.fm-b:disabled:not([aria-busy="true"]) { color: var(--c-tint-3); box-shadow: inset 0 0 0 var(--line-thin) var(--c-tint-3); background: none; }
+.fm-b[aria-busy="true"] { cursor: progress; }
+.fm-b svg { width: var(--fm-icon-s); height: var(--fm-icon-s); fill: none; stroke: currentColor; stroke-width: var(--line-thick); }
+/* a quiet text action: underlined, with a 44px hit area */
+.fm-t { display: inline-flex; align-items: center; min-height: var(--fm-hit); padding: 0; margin: 0; border: 0; background: none; color: var(--c-ink); font: var(--w-regular) var(--t-sm)/1.2 var(--font-sans);
+  text-decoration: underline; text-decoration-thickness: from-font; text-underline-offset: 3px; cursor: pointer; touch-action: manipulation; }
+.fm-t:disabled { color: var(--c-ink-3); text-decoration: none; cursor: default; }
+.fm-t:focus { outline: none; }
+.fm-t:focus-visible { outline: var(--fm-ring) solid var(--c-ink); outline-offset: var(--fm-ring); }
+@media (hover: hover) and (pointer: fine) {
+  .fm-x:hover, .fm-b:not(.g):not(:disabled):hover { background: var(--c-tint-1); }
+  .fm-b.g:not(:disabled):hover { background: color-mix(in oklch, var(--c-accent) 90%, var(--c-ink)); }
+  .fm-pic:hover { background: var(--c-tint-1); }
+}
+
+/* ---------------- done state and the share sheet ---------------- */
+.fm-done { display: grid; row-gap: var(--s-4); margin-top: var(--s-5); }
+.fm-you { font: var(--w-medium) var(--t-label)/1.2 var(--font-mono); letter-spacing: var(--t-label-track); text-transform: uppercase; color: var(--c-accent); }
+.fm-card { display: block; width: 100%; height: auto; aspect-ratio: 1200 / 630; margin-top: var(--s-5); box-shadow: 0 0 0 var(--line-thin) var(--c-line); }
+.fm-share { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--s-2); margin-top: var(--s-4); }
+.fm-share .fm-b { padding: 0 var(--s-3); }
+.fm-url { margin: var(--s-3) 0 0; font: var(--w-medium) var(--t-xs)/1.4 var(--font-mono); color: var(--c-ink-2); overflow-wrap: anywhere; }
+
+/* ---------------- phone: a bottom sheet that sits above the keyboard ---------------- */
+@media (max-width: 719px) {
+  .fm, .fm.is-wide { position: fixed; inset: auto 0 var(--fm-kb, 0px) 0; width: 100%; max-width: 100%; margin: 0;
+    max-height: calc(var(--fm-vh, 100dvh) - var(--fm-gap-top)); transform: translateY(100%); opacity: 1;
+    box-shadow: 0 calc(-1 * var(--line-thin)) 0 var(--c-line);
+    transition: transform var(--dur-panel-exit) var(--ease-exit); }
+  .fm[data-state="open"] { transform: none; transition: transform var(--dur-panel) var(--ease-drawer); }
+  .fm-in { padding: var(--s-3) var(--s-4) calc(var(--s-5) + env(safe-area-inset-bottom)); }
+  .fm-h { font-size: var(--t-xl); }
+  .fm-share { grid-template-columns: minmax(0, 1fr); }
+  .fm-picrow { grid-template-columns: minmax(0, 1fr); row-gap: var(--s-2); }
+  .fm-act .fm-b { flex: 1 1 auto; }
+}
+/* no movement under reduced motion: the sheet and its backdrop only fade */
+@media (prefers-reduced-motion: reduce) {
+  .fm, .fm.is-wide, .fm[data-state="open"] { transform: none; }
+  .fm:not([data-state="open"]) { opacity: 0; }
+}

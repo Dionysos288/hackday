@@ -1,0 +1,239 @@
+<!doctype html>
+<html lang="en" data-paper="night">
+<head>
+<meta charset="utf-8">
+<meta name="robots" content="noindex">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Seal lab</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="../shared/brand.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@500&display=swap" rel="stylesheet">
+<script>
+/* Palette as one OKLCH object, as in shared/palette.js. Night is Supabase's ground and the default; graphite is the paper ground.
+   ?paper=graphite or the toggle switches it; the choice is remembered per viewer. */
+(function () {
+  var P = {
+    night: { ground: [0.19, 0.0025, 157.5], ink: [0.95, 0.003, 157.5], ink2: [0.74, 0.003, 157.5], green: [0.762, 0.154, 159.4], tagink: [0.12, 0.025, 160] },
+    graphite: { ground: [0.93, 0.003, 250], ink: [0.2, 0.003, 250], ink2: [0.37, 0.003, 250], green: [0.762, 0.154, 159.4], tagink: [0.12, 0.025, 160] }
+  };
+  var r = document.documentElement, q = new URLSearchParams(location.search).get('paper'), saved = null;
+  try { saved = localStorage.getItem('seal-paper'); } catch (e) { /* storage blocked */ }
+  var name = P[q] ? q : P[saved] ? saved : 'night';
+  function c(a) { return 'oklch(' + a[0] + ' ' + a[1] + ' ' + a[2] + ')'; }
+  window.__paper = function (n) { var p = P[n]; for (var k in p) r.style.setProperty('--' + k, c(p[k])); r.dataset.paper = n; };
+  window.__paper(name);
+  r.classList.add('preload'); requestAnimationFrame(function () { requestAnimationFrame(function () { r.classList.remove('preload'); }); });
+})();
+</script>
+<style>
+/* Lab-local tokens (not in brand.css on purpose: brand.css is being edited elsewhere).
+   --seal-big: the large seal's edge. --seal-draw-span: the replay runs this many --dur-draw from first stroke to last. */
+:root { --seal-big: min(640px, calc(100vh - 160px)); --seal-draw-span: 4; --lab-w: 288px; }
+* { box-sizing: border-box; }
+html, body { margin: 0; background: var(--c-ground); color: var(--c-ink); font: var(--w-regular) var(--t-sm)/1.45 var(--font-sans); -webkit-font-smoothing: antialiased; }
+.lbl { margin: 0; font: var(--w-medium) var(--t-label)/1 var(--font-mono); letter-spacing: var(--t-label-track); text-transform: uppercase; color: var(--c-ink-3); }
+main { padding: var(--s-5) calc(var(--lab-w) + var(--s-6)) var(--s-8) var(--s-6); }
+.top { display: flex; align-items: baseline; gap: var(--s-4); margin-bottom: var(--s-5); }
+.top h1 { margin: 0; font: var(--w-medium) var(--t-lg)/1 var(--font-sans); letter-spacing: var(--track-snug); }
+.top p { margin: 0; color: var(--c-ink-2); }
+.stage { display: grid; justify-items: center; gap: var(--s-3); padding-bottom: var(--s-6); border-bottom: var(--line-hair) solid var(--c-line); }
+.big { display: block; padding: 0; border: 0; background: none; color: var(--c-ink); cursor: pointer; width: var(--seal-big); height: var(--seal-big); }
+.big:focus-visible { outline: var(--line-thin) solid var(--c-ink-3); outline-offset: var(--s-2); }
+.big svg { display: block; width: 100%; height: 100%; }
+.meta { margin: 0; font: var(--w-medium) var(--t-xs)/1 var(--font-mono); color: var(--c-ink-2); font-variant-numeric: tabular-nums; }
+.meta b { font-weight: var(--w-medium); color: var(--c-ink); }
+section.row { padding: var(--s-6) 0; border-bottom: var(--line-hair) solid var(--c-line); }
+section.row .lbl { margin-bottom: var(--s-4); }
+.cities { display: grid; grid-template-columns: repeat(5, 120px); gap: var(--s-5) var(--s-6); margin: 0; padding: 0; list-style: none; }
+.cities li { display: grid; gap: var(--s-2); justify-items: center; }
+.cities li span { font: var(--w-regular) var(--t-xs)/1 var(--font-sans); color: var(--c-ink-2); }
+.cities svg { display: block; }
+.marks { display: flex; flex-wrap: wrap; gap: var(--s-2) var(--s-4); margin: 0; padding: 0; list-style: none; }
+.marks li { display: flex; align-items: center; gap: var(--s-2); font: var(--w-regular) var(--t-xs)/1 var(--font-sans); color: var(--c-ink-2); }
+.marks svg { display: block; flex: none; }
+.win { display: flex; flex-wrap: wrap; align-items: end; gap: var(--s-6); }
+.win figure { margin: 0; display: grid; gap: var(--s-2); justify-items: center; }
+.win figcaption { font: var(--w-regular) var(--t-xs)/1 var(--font-sans); color: var(--c-ink-2); }
+.win .w-big { width: 360px; height: 360px; }
+.win svg { display: block; width: 100%; height: 100%; }
+
+/* replay: the pen draws every stroke with stroke-dashoffset. Each curve starts at its order --k across the span. */
+.big svg.is-drawing path { stroke-dasharray: 1; stroke-dashoffset: 1; animation: seal-draw calc(var(--dur-draw) * var(--seal-draw-span) * 0.5) var(--ease-draw) calc(var(--k, 0) * var(--dur-draw) * var(--seal-draw-span) * 0.5) forwards; }
+.big svg.is-drawing.one path { animation-duration: calc(var(--dur-draw) * var(--seal-draw-span)); }
+@keyframes seal-draw { to { stroke-dashoffset: 0; } }
+
+/* the panel, as in lab/lab.css, with square corners and tokens only */
+.lab { position: fixed; z-index: 80; right: var(--s-4); top: var(--s-4); width: var(--lab-w); max-height: calc(100vh - 2 * var(--s-4)); overflow: auto; padding: var(--s-4);
+  background: var(--c-paper); box-shadow: 0 0 0 var(--line-hair) var(--c-line); font: var(--w-regular) var(--t-xs)/1.3 var(--font-sans); color: var(--c-ink); }
+.lab h2 { margin: 0 0 var(--s-3); }
+.lab .tabs { display: grid; grid-template-columns: repeat(3, 1fr); margin-bottom: var(--s-4); box-shadow: 0 0 0 var(--line-thin) var(--c-ink); }
+.lab .tabs button { height: 28px; border: 0; background: none; color: var(--c-ink); font: var(--w-medium) var(--t-xs)/1 var(--font-sans); cursor: pointer; border-radius: var(--r-0); transition: background-color var(--dur-hover) ease-out; }
+.lab .tabs button:hover { background: var(--c-tint-1); }
+.lab .tabs button[aria-selected="true"] { background: var(--c-ink); color: var(--c-ground); }
+.lab label { display: grid; grid-template-columns: 84px 1fr 36px; gap: var(--s-2); align-items: center; margin-bottom: var(--s-2); }
+.lab label.chk { grid-template-columns: 84px 1fr; }
+.lab output { text-align: right; font: var(--w-medium) var(--t-xs)/1 var(--font-mono); color: var(--c-ink-2); font-variant-numeric: tabular-nums; }
+.lab input[type="range"] { width: 100%; accent-color: var(--c-ink); }
+.lab input[type="checkbox"] { justify-self: start; accent-color: var(--c-ink); }
+.lab input[type="number"] { width: 100%; height: 28px; border: var(--line-thin) solid var(--c-line); border-radius: var(--r-0); background: var(--c-ground); color: var(--c-ink); font: var(--w-medium) var(--t-xs)/1 var(--font-mono); padding: 0 var(--s-2); }
+.lab .sep { height: 0; margin: var(--s-3) 0; border-top: var(--line-hair) solid var(--c-line); }
+.lab .btns { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s-2); margin: var(--s-3) 0; }
+.lab .btns button { height: 32px; border: var(--line-thin) solid var(--c-ink); border-radius: var(--r-0); background: none; color: var(--c-ink); font: var(--w-medium) var(--t-xs)/1 var(--font-sans); cursor: pointer; transition: background-color var(--dur-hover) ease-out; }
+.lab .btns button:hover { background: var(--c-tint-1); }
+.lab .btns button:active { background: var(--c-tint-2); }
+.lab .btns button.pri { background: var(--c-ink); color: var(--c-ground); }
+.lab .msg { min-height: 16px; color: var(--c-ink-2); word-break: break-all; }
+.lab .rail { display: flex; flex-wrap: wrap; gap: var(--s-1); margin-top: var(--s-2); }
+.lab .rail button { height: 24px; padding: 0 var(--s-2); border: var(--line-thin) solid var(--c-line); border-radius: var(--r-0); background: none; color: var(--c-ink); font: var(--w-medium) var(--t-label)/1 var(--font-mono); cursor: pointer; }
+.lab .rail button:hover { background: var(--c-tint-1); }
+
+@media (max-width: 900px) {
+  :root { --seal-big: min(calc(100vw - 2 * var(--s-4)), 560px); }
+  main { padding: var(--s-4) var(--s-4) var(--s-5); }
+  .top { flex-direction: column; gap: var(--s-1); }
+  .cities { grid-template-columns: repeat(2, 120px); justify-content: space-around; }
+  .win .w-big { width: min(360px, calc(100vw - 2 * var(--s-4))); height: min(360px, calc(100vw - 2 * var(--s-4))); }
+  .lab { position: static; width: auto; max-height: none; margin: 0 var(--s-4) var(--s-6); }
+}
+</style>
+<script src="../shared/seal.js"></script>
+</head>
+<body>
+<main>
+  <header class="top">
+    <h1>Seal lab</h1>
+    <p>Click the seal for a new one. Knobs to tweak, Save to keep.</p>
+  </header>
+  <section class="stage">
+    <button type="button" class="big" id="big" aria-label="Draw a new seal"></button>
+    <p class="meta" id="meta"></p>
+  </section>
+  <section class="row">
+    <h2 class="lbl">Ten cities at 120px</h2>
+    <ul class="cities" id="cities"></ul>
+  </section>
+  <section class="row">
+    <h2 class="lbl">At 24px, as a row marker</h2>
+    <ul class="marks" id="marks"></ul>
+  </section>
+  <section class="row">
+    <h2 class="lbl">The winner: the ten interlaced</h2>
+    <div class="win" id="win"></div>
+  </section>
+</main>
+<aside class="lab" id="lab" aria-label="Seal controls"></aside>
+<script>
+(function () {
+  'use strict';
+  var S = window.SEAL, q = new URLSearchParams(location.search), $ = function (s) { return document.querySelector(s); };
+  var NAMES = { sydney: 'Sydney', tokyo: 'Tokyo', singapore: 'Singapore', bengaluru: 'Bengaluru', berlin: 'Berlin', lagos: 'Lagos', london: 'London', 'sao-paulo': 'São Paulo', 'new-york': 'New York', 'san-francisco': 'San Francisco' };
+  var LABELS = { lobes: 'Lobes', rings: 'Rings', amp: 'Amplitude', inner: 'Inner radius', drift: 'Phase drift', density: 'Density', interlace: 'Interlace', harmonic: 'Harmonic', loop: 'Loop / turns', gap: 'Ring gap', rails: 'Rails', weight: 'Line weight' };
+  var MODE_NAME = { rosette: 'Rosette', band: 'Band', medallion: 'Medallion' };
+  var REDUCED = matchMedia('(prefers-reduced-motion: reduce)');
+  var cfg = S.clampCfg(S.DEF), raf = 0, ctl = {}, msg, rail, tabs = {};
+  function el(t, c, x) { var e = document.createElement(t); if (c) e.className = c; if (x != null) e.textContent = x; return e; }
+
+  /* ---- drawing ---- */
+  function bigSize() { return Math.round($('#big').getBoundingClientRect().width) || 600; }
+  function paint() {
+    var big = $('#big'), size = bigSize(), svg = S.render(cfg, { size: size, draw: true }), m = cfg[cfg.mode];
+    big.innerHTML = svg;
+    var n = big.querySelectorAll('path').length;
+    $('#meta').innerHTML = 'Seed <b>' + cfg.seed + '</b> · ' + cfg.mode + ' · ' + m.lobes + ' lobes · ' + (cfg.continuous ? 'one continuous line' : n + ' closed curves');
+    var ul = $('#cities'), mk = $('#marks'); ul.textContent = ''; mk.textContent = '';
+    S.CITIES.forEach(function (id) {
+      var li = el('li'); li.innerHTML = S.forCity(id, { size: 120, cfg: cfg }); li.appendChild(el('span', null, NAMES[id])); ul.appendChild(li);
+      var lm = el('li'); lm.innerHTML = S.forCity(id, { size: 24, cfg: cfg }); lm.appendChild(el('span', null, NAMES[id])); mk.appendChild(lm);
+    });
+    var w = $('#win'), wb = Math.min(360, w.getBoundingClientRect().width || 360); w.textContent = '';
+    [[wb, 'w-big', 'At ' + wb + 'px'], [120, '', 'At 120px'], [24, '', 'At 24px']].forEach(function (s) {
+      var f = el('figure'), d = el('div', s[1]); d.innerHTML = S.merged(S.CITIES, { size: s[0], cfg: cfg }); f.append(d, el('figcaption', null, s[2])); w.appendChild(f);
+    });
+  }
+  function go() { cancelAnimationFrame(raf); raf = requestAnimationFrame(function () { cfg = S.clampCfg(cfg); sync(); paint(); }); }
+  function replay() {
+    var svg = $('#big svg'); if (!svg) return;
+    if (REDUCED.matches) { svg.classList.remove('is-drawing'); return; }   /* reduced motion: the seal is simply there */
+    svg.classList.remove('is-drawing'); svg.classList.toggle('one', !!cfg.continuous); void svg.getBoundingClientRect(); svg.classList.add('is-drawing');
+    var t = 0; svg.onanimationend = function () { clearTimeout(t); t = setTimeout(function () { svg.classList.remove('is-drawing'); }, 60); };   /* drop the dash once the pen is done, so no seam stays at the start */
+  }
+
+  /* ---- panel ---- */
+  function sync() {
+    var m = cfg[cfg.mode];
+    Object.keys(ctl).forEach(function (k) {
+      var c = ctl[k], v = k === 'seed' || k === 'weight' || k === 'startMark' || k === 'continuous' ? cfg[k] : m[k];
+      if (c.input.type === 'checkbox') c.input.checked = !!v; else c.input.value = v;
+      if (c.out) c.out.textContent = k === 'weight' ? v + 'px' : v;
+    });
+    S.MODES.forEach(function (n) { tabs[n].setAttribute('aria-selected', String(n === cfg.mode)); });
+  }
+  function slider(p, k, top) {
+    var b = S.BOUNDS[k], lb = el('label'), inp = document.createElement('input'), out = el('output');
+    inp.type = 'range'; inp.min = b[0]; inp.max = b[1]; inp.step = b[2]; inp.setAttribute('aria-label', LABELS[k]);
+    inp.addEventListener('input', function () { if (top) cfg[k] = +inp.value; else cfg[cfg.mode][k] = +inp.value; go(); });
+    lb.append(el('span', null, LABELS[k]), inp, out); p.appendChild(lb); ctl[k] = { input: inp, out: out };
+  }
+  function check(p, k, label) {
+    var lb = el('label', 'chk'), inp = document.createElement('input'); inp.type = 'checkbox'; inp.setAttribute('aria-label', label);
+    inp.addEventListener('change', function () { cfg[k] = inp.checked; go(); });
+    lb.append(el('span', null, label), inp); p.appendChild(lb); ctl[k] = { input: inp };
+  }
+  function shuffle() { cfg.seed = 1 + Math.floor(Math.random() * 99999); go(); }
+  function snap() { try { return JSON.parse(localStorage.getItem('seal-saved') || '[]'); } catch (e) { return []; } }
+  function railDraw() {
+    rail.textContent = '';
+    snap().forEach(function (c) { var b = el('button', null, '#' + c.seed + ' ' + c.mode.slice(0, 3)); b.type = 'button'; b.title = 'Apply ' + c.mode + ' seed ' + c.seed; b.addEventListener('click', function () { cfg = S.clampCfg(c); go(); }); rail.appendChild(b); });
+  }
+  function save() {
+    cfg = S.clampCfg(cfg); var json = JSON.stringify(cfg, null, 2) + '\n';
+    try { navigator.clipboard.writeText(json).catch(function () {}); } catch (e) { /* no clipboard here */ }
+    try { var l = snap().filter(function (c) { return JSON.stringify(c) !== JSON.stringify(cfg); }); l.unshift(cfg); localStorage.setItem('seal-saved', JSON.stringify(l.slice(0, 10))); } catch (e) { /* storage blocked */ }
+    railDraw();
+    fetch('/__save?name=seal', { method: 'POST', body: json }).then(function (r) { return r.json(); })
+      .then(function (j) { msg.textContent = 'Saved to ' + j.path + ' and copied.'; })
+      .catch(function () { msg.textContent = 'Copied. There is no dev server here to write the file.'; });
+  }
+  function exportSvg() {
+    var s = '<?xml version="1.0" encoding="UTF-8"?>\n' + S.render(cfg, { size: 600, plot: true }) + '\n';
+    var a = el('a'); a.href = URL.createObjectURL(new Blob([s], { type: 'image/svg+xml' })); a.download = 'seal-' + cfg.mode + '-' + cfg.seed + '.svg';
+    document.body.appendChild(a); a.click(); a.remove(); setTimeout(function () { URL.revokeObjectURL(a.href); }, 1000);
+    msg.textContent = 'Exported ' + a.download + ', paths only.';
+  }
+  function panel() {
+    var p = $('#lab'); p.appendChild(el('h2', 'lbl', 'Seal'));
+    var tb = el('div', 'tabs'); tb.setAttribute('role', 'tablist'); tb.setAttribute('aria-label', 'Mode');
+    S.MODES.forEach(function (n) { var b = el('button', null, MODE_NAME[n]); b.type = 'button'; b.setAttribute('role', 'tab'); b.addEventListener('click', function () { cfg.mode = n; go(); }); tb.appendChild(b); tabs[n] = b; });
+    p.appendChild(tb);
+    var sl = el('label'), sin = document.createElement('input'); sl.style.gridTemplateColumns = '84px 1fr'; sin.type = 'number'; sin.min = S.BOUNDS.seed[0]; sin.max = S.BOUNDS.seed[1]; sin.setAttribute('aria-label', 'Seed');
+    sin.addEventListener('change', function () { cfg.seed = +sin.value; go(); }); sl.append(el('span', null, 'Seed'), sin); p.appendChild(sl); ctl.seed = { input: sin };
+    S.KNOBS.forEach(function (k) { slider(p, k, false); });
+    p.appendChild(el('div', 'sep'));
+    slider(p, 'weight', true); check(p, 'startMark', 'Start mark'); check(p, 'continuous', 'One line');
+    var btns = el('div', 'btns'), b1 = el('button', null, 'New seed'), b2 = el('button', 'pri', 'Save'), b3 = el('button', null, 'Replay'), b4 = el('button', null, 'Export SVG');
+    [b1, b2, b3, b4].forEach(function (b) { b.type = 'button'; btns.appendChild(b); });
+    b1.addEventListener('click', shuffle); b2.addEventListener('click', save); b3.addEventListener('click', replay); b4.addEventListener('click', exportSvg);
+    var pt = el('button', null, 'Paper'); pt.type = 'button'; pt.addEventListener('click', function () {
+      var n = document.documentElement.dataset.paper === 'night' ? 'graphite' : 'night'; window.__paper(n); try { localStorage.setItem('seal-paper', n); } catch (e) { /* storage blocked */ } pt.textContent = n === 'night' ? 'Paper' : 'Night';
+    });
+    pt.textContent = document.documentElement.dataset.paper === 'night' ? 'Paper' : 'Night'; btns.appendChild(pt);
+    var cp = el('button', null, 'Copy JSON'); cp.type = 'button'; cp.addEventListener('click', function () { try { navigator.clipboard.writeText(JSON.stringify(S.clampCfg(cfg), null, 2) + '\n'); msg.textContent = 'Copied.'; } catch (e) { msg.textContent = 'No clipboard here.'; } }); btns.appendChild(cp);
+    msg = el('div', 'msg'); rail = el('div', 'rail'); p.append(btns, msg, rail);
+  }
+
+  $('#big').addEventListener('click', function () { shuffle(); requestAnimationFrame(function () { requestAnimationFrame(replay); }); });
+  document.addEventListener('keydown', function (e) { if (e.target.closest('input, select, textarea') || e.metaKey || e.ctrlKey) return; if (e.key === 'r') shuffle(); if (e.key === 's') save(); if (e.key === 'p') replay(); });
+  var rz = 0; addEventListener('resize', function () { clearTimeout(rz); rz = setTimeout(paint, 120); });
+
+  /* the saved config is the starting state; ?mode= and ?seed= preview a variation without saving */
+  S.load("../saved/seal.config.json").then(function (saved) {
+    cfg = S.clampCfg(saved); if (q.get('mode')) cfg.mode = q.get('mode'); if (q.get('seed')) cfg.seed = +q.get('seed');
+    cfg = S.clampCfg(cfg); panel(); sync(); paint(); railDraw();
+    window.SEAL_LAB = { get: function () { return S.clampCfg(cfg); }, set: function (o) { cfg = S.clampCfg(Object.assign({}, cfg, o, o[cfg.mode] || o.rosette || o.band || o.medallion ? (function () { var x = {}; S.MODES.forEach(function (m) { if (o[m]) x[m] = Object.assign({}, cfg[m], o[m]); }); return x; })() : {})); sync(); paint(); return S.render(cfg); } };
+  });
+})();
+</script>
+</body>
+</html>

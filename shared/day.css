@@ -1,0 +1,266 @@
+/* day.css: the home (index.html), and the pieces the city page shares with it: the masthead, the strip and its bar,
+   the slot, the now line, How it works and the footer. Tokens from brand.css. The saved config's values arrive as
+   unitless custom properties set by day.js on .dl-page (--disp, --row, --fact, --sc, --shot, --hair, --speed, --bandk).
+   Layout per width comes from container queries on .dl-frame. */
+*, *::before, *::after { box-sizing: border-box; }
+html { background: var(--c-ground); color-scheme: dark; scrollbar-gutter: stable; overflow-x: clip; }
+html[data-paper="graphite"] { color-scheme: light; }
+body { margin: 0; min-height: 100vh; background: var(--c-ground); color: var(--c-ink); font: var(--w-regular) var(--t-md)/1.5 var(--font-sans);
+  -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; font-synthesis: none; -webkit-text-size-adjust: 100%; }
+a { color: inherit; text-decoration: none; }
+:focus-visible { outline: 2px solid var(--c-ink); outline-offset: 2px; }
+::selection { background: color-mix(in oklch, var(--c-ink) 22%, transparent); }
+.vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.noscript { margin: 0; padding: var(--s-6); font-size: var(--t-lg); color: var(--c-ink-2); }
+
+/* ---------------- frame, grid, rhythm ---------------- */
+.dl-frame { container: day / inline-size; position: relative; margin: 0 auto; }
+.dl-page {
+  --m: 32px; --g: 16px; --col: calc((100cqw - 2 * var(--m) - 11 * var(--g)) / 12);
+  --cw: calc(var(--col) + var(--g));                         /* one column and its gutter */
+  --rowh: calc(var(--row) * 1px); --ah: 28px; --rh: var(--rowh);
+  --nc: calc(10 - var(--sc));
+  --nameW: calc(var(--cw) * var(--nc) - var(--g)); --stripW: calc(var(--cw) * var(--sc) - var(--g)); --slotW: calc(var(--cw) * 2 - var(--g));
+  --tx: calc(var(--m) / 2); --jo: 28px;   /* the trunk's distance from the frame edge, the join circle's size */
+  --barh: 20px; --fitk: 6.45;                                 /* "San Francisco" in Geist 600 at -0.035em measures 6.29em; 6.45 leaves air */
+}
+.dl-page { position: relative; min-height: 100vh; overflow-x: clip; }
+
+/* ---------------- shared type ---------------- */
+.lbl, .slot-k, .you, .loc span:last-child, .axis, .mh-sub, .how-k, .join-lbl, .now span, .pnow span {
+  font: var(--w-medium) var(--t-label)/1.2 var(--font-mono); letter-spacing: var(--t-label-track); text-transform: uppercase; }
+.lbl { margin: 0 0 var(--s-4); color: var(--c-ink-2); }
+.name { display: block; position: relative; white-space: nowrap; font-weight: var(--w-regular); letter-spacing: var(--track-d96); color: var(--c-ink); }
+.is-build .name, .is-vote .name { font-weight: var(--w-semibold); }   /* rule 6: the heavier weight means live */
+.loc { display: none; position: absolute; right: 0; gap: 2px; text-align: right; font: var(--w-regular) var(--t-xs)/1.3 var(--font-sans); font-variant-numeric: tabular-nums; letter-spacing: 0; color: var(--c-ink-2); }
+.you { color: var(--c-accent); font-weight: var(--w-medium); }
+/* each city's local time sits on its bar, like an entry in a timetable */
+.bar-t { position: absolute; left: 0; bottom: calc(100% + 6px); white-space: nowrap; font: var(--w-regular) var(--t-xs)/1 var(--font-sans); font-variant-numeric: tabular-nums; color: var(--c-ink-2); }
+.bar-t.r { left: auto; right: 0; }
+.bar-t span { font: var(--w-medium) var(--t-label)/1 var(--font-mono); letter-spacing: var(--t-label-track); }
+.is-build .bar-t, .is-vote .bar-t { color: var(--c-ink); }
+/* a line breaks where it meets lettering: the time label sits over the now line with a ground-coloured knockout, so the line never runs through digits */
+.tt .bar { z-index: 5; }
+.tt .bar-t { paint-order: stroke fill; -webkit-text-stroke: 5px var(--c-ground); }
+/* once the pick is made, the nine other names step back one ink; the picked city keeps full ink (rule 16: one extra element) */
+.tt:has(.row.is-pick) .row:not(.is-pick) .name { color: var(--c-ink-2); }
+
+/* ---------------- masthead ---------------- */
+.mh { position: relative; z-index: 3; display: grid; align-items: center; column-gap: var(--g); padding: 0 var(--m); }
+.mh p { margin: 0; }
+.mh-mark { display: inline-flex; align-items: center; min-height: 44px; gap: var(--s-2); font-size: var(--t-lg); letter-spacing: var(--track-snug); white-space: nowrap; }
+.mh-mark svg { width: 20px; height: 21px; flex: none; fill: var(--brand, var(--c-accent)); }   /* the logo is never recoloured */
+.mh-mark .lo { fill: color-mix(in oklch, var(--brand, var(--c-accent)) 62%, var(--c-ground)); }
+.mh-mark span { font-weight: var(--w-semibold); }
+.mh-mark b { font-weight: var(--w-regular); color: var(--c-ink-2); }
+.mh-date { display: grid; font-size: calc(var(--fact) * 1px); line-height: 1; font-weight: var(--w-medium); letter-spacing: var(--track-d48); white-space: nowrap; }
+.mh-sub { margin-top: var(--s-2); color: var(--c-ink-2); letter-spacing: var(--t-label-track); }
+.mh-status { font-size: var(--t-xl); line-height: 1.25; letter-spacing: var(--track-snug); text-wrap: pretty; color: var(--c-ink); max-width: 40ch; }
+.mh-act { justify-self: end; display: inline-flex; align-items: center; height: 36px; padding: 0 var(--s-4); white-space: nowrap; font: var(--w-medium) var(--t-sm)/1 var(--font-sans);
+  box-shadow: inset 0 0 0 var(--line-thin) var(--c-ink); color: var(--c-ink); transition: background-color var(--dur-hover) ease-out; }
+button.mh-act { border: 0; border-radius: var(--r-0); background: none; cursor: pointer; }
+.mh-act.g { background: var(--c-accent); color: var(--c-accent-ink); box-shadow: none; }
+.mh-act:active { transform: scale(0.98); transition: transform var(--dur-press) var(--ease-out); }
+@media (hover: hover) and (pointer: fine) { .mh-act:not(.g):hover { background: var(--c-tint-1); } .mh-act.g:hover { background: color-mix(in oklch, var(--c-accent) 90%, var(--c-ink)); } }
+/* the band: one row over the table, its columns on the table's columns */
+.mh-band { height: 64px; grid-template-columns: calc(var(--cw) * 2 - var(--g)) calc(var(--nameW) - var(--cw) * 2) var(--stripW) var(--slotW); box-shadow: inset 0 calc(-1 * var(--hair)) 0 var(--c-line); }
+.mh-band .mh-date { font-size: min(calc(var(--fact) * 1px), var(--t-h1)); letter-spacing: var(--track-tight); }   /* 32px: at 40 the date sat 3px from the top edge of the 64px band */
+
+
+/* ---------------- the strip (one city's day) ---------------- */
+.strip { position: relative; display: block; height: 100%; overflow: hidden; }
+.day { position: absolute; top: 0; bottom: 0; opacity: var(--bandk); background: linear-gradient(90deg, transparent, var(--c-day) var(--s), var(--c-day) calc(100% - var(--s)), transparent); }
+.bar { position: absolute; top: 50%; height: var(--barh); transform: translateY(-50%); }
+.bar-b, .bar-v { position: absolute; top: 0; bottom: 0; outline: var(--hair) dashed var(--c-ink-3); outline-offset: calc(-1 * var(--hair)); }
+.bar-b { left: 0; width: var(--bf); }
+.bar-v { left: var(--bf); right: 0; }
+.bar-run { position: absolute; left: 0; top: 0; bottom: 0; width: var(--fill); background: var(--c-ink); }
+/* rule 13: hatched means closed, whatever the running style */
+.is-done .bar-run { background: repeating-linear-gradient(-45deg, var(--c-ink-2) 0 var(--line-thin), transparent var(--line-thin) 4px); box-shadow: inset 0 0 0 var(--hair) var(--c-ink-2); }
+.is-done .bar-b, .is-done .bar-v, .is-build .bar-b { outline-style: solid; outline-color: var(--c-line); }
+.wire { position: absolute; top: 50%; right: calc(-1 * var(--g)); height: var(--hair); background: var(--c-ink-3); transform-origin: left center; display: none; }
+.is-done .wire { display: block; }
+.is-pick .wire { background: var(--c-accent); }
+
+/* ---------------- the state slot: one place for state, fixed size ---------------- */
+.slot { position: relative; display: grid; grid-template-columns: calc(var(--shot) * 16 / 9 * 1px) minmax(0, 1fr); grid-template-rows: auto auto auto; column-gap: var(--s-3); align-content: center; align-items: center; min-width: 0; }
+.slot-pic { grid-row: 1 / 4; position: relative; width: calc(var(--shot) * 16 / 9 * 1px); height: calc(var(--shot) * 1px); }
+.pic { display: block; width: 100%; height: 100%; object-fit: cover; object-position: top left; box-shadow: 0 0 0 var(--hair) var(--c-line); background: var(--c-ground); }
+.pic-empty { background: none; box-shadow: none; outline: var(--hair) dashed var(--c-ink-3); outline-offset: calc(-1 * var(--hair)); }
+.slot-k { color: var(--c-ink-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; align-items: center; gap: 6px; }
+.slot-a { font-size: var(--t-sm); font-weight: var(--w-medium); line-height: 1.35; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-variant-numeric: tabular-nums; }
+.slot-b { font-size: var(--t-xs); line-height: 1.35; color: var(--c-ink-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-variant-numeric: tabular-nums; }
+.is-next .slot-a { font-variant-numeric: tabular-nums; }
+.gsq { width: 6px; height: 6px; flex: none; background: var(--c-accent); }
+.g .slot-k, .is-pick .slot-k { color: var(--c-accent); }
+.peek { position: absolute; right: calc(100% + var(--s-3)); top: 50%; width: 288px; height: 162px; max-width: none; z-index: 5; opacity: 0; pointer-events: none;
+  transform: translateY(-50%) scale(0.96); transform-origin: right center; box-shadow: 0 0 0 var(--hair) var(--c-line), 0 12px 32px -12px var(--c-shade);
+  transition: opacity var(--dur-hover) ease-out, transform var(--dur-hover) var(--ease-out); }
+@media (hover: hover) and (pointer: fine) { .row:hover .peek { opacity: 1; transform: translateY(-50%) scale(1); } }
+.row:focus-within .peek { opacity: 1; transform: translateY(-50%) scale(1); }   /* keyboard gets the same peek as the pointer */
+
+/* ---------------- ties, trunk, join (the Draw) ---------------- */
+.tie { position: absolute; top: 50%; right: calc(var(--tx) - var(--m)); width: calc(var(--m) - var(--tx) + var(--s-3)); height: var(--hair);
+  background: repeating-linear-gradient(90deg, var(--c-ink-3) 0 3px, transparent 3px 6px); transform-origin: left center; }
+.is-done .tie { background: var(--c-ink-3); }
+.is-pick .tie { background: var(--c-accent); height: var(--line-thick); }
+.trunk, .trunk-g { position: absolute; right: var(--tx); width: var(--hair); top: calc(var(--ah) + var(--rh) / 2); height: calc(var(--rh) * 9.5 + 12px);
+  background: repeating-linear-gradient(180deg, var(--c-ink-3) 0 3px, transparent 3px 6px); transform-origin: top center; }
+.tt:has(.join.is-full) .trunk { background: var(--c-ink-3); }
+.trunk-g { background: var(--c-accent); width: var(--line-thick); top: calc(var(--ah) + var(--rh) * (var(--pi) + 0.5)); height: calc(var(--rh) * (9.5 - var(--pi)) + 12px); }
+.join { position: absolute; right: calc(var(--tx) - var(--jo) / 2); top: calc(var(--ah) + var(--rh) * 10 + 12px); display: flex; align-items: center; gap: var(--s-3); }
+.join-o { position: relative; display: grid; place-items: center; width: var(--jo); height: var(--jo); flex: none; border-radius: var(--r-round); outline: var(--line-thin) dashed var(--c-ink-2); outline-offset: -1px; color: var(--c-accent); }
+.join.is-picked .join-o { outline: var(--line-thick) solid var(--c-accent); }
+.join-o .seal { position: absolute; width: 40px; height: 40px; }
+.join-lbl { color: var(--c-ink-2); white-space: nowrap; }
+.join.is-picked .join-lbl { color: var(--c-accent); }
+.mark { position: absolute; right: calc(var(--tx) - var(--m) - 12px); top: 50%; width: 24px; height: 24px; transform: translateY(-50%); color: var(--c-ink-2); background: var(--c-ground); pointer-events: none; }
+.mark .seal { width: 24px; height: 24px; display: block; }
+.is-pick .mark { color: var(--c-accent); }
+
+/* ---------------- axis and now ---------------- */
+.axis { position: relative; height: var(--ah); color: var(--c-ink-2); }
+.tick { position: absolute; bottom: 0; width: 0; }
+.tick span { position: absolute; bottom: 8px; left: 0; transform: translateX(-50%); white-space: nowrap; }
+.tick::before { content: ""; position: absolute; left: 0; top: 0; width: var(--hair); height: calc(var(--rh) * 10 + 4px); background: var(--c-tint-2); }
+.tick::after { content: ""; position: absolute; left: 0; bottom: 0; width: var(--hair); height: 4px; background: var(--c-ink-3); }
+.axis-utc { position: absolute; right: calc(100% + var(--s-3)); bottom: 8px; }
+.now { position: absolute; z-index: 4; pointer-events: none; }
+.now b { position: absolute; inset: 0; display: block; }
+.now i { position: absolute; left: -1px; top: 0; bottom: 0; width: 2px; background: var(--c-accent); }
+.now span { position: absolute; left: 0; top: 4px; transform: translateX(-50%); padding: 3px 4px 2px; background: var(--c-accent); color: var(--c-accent-ink); }
+.pnow { display: none; }
+
+/* ================= Timetable (the lead) ================= */
+.tt { position: relative; padding: 0 var(--m) 72px; }
+.tt-axis { margin-left: calc(var(--nameW) + var(--g)); width: var(--stripW); }
+.rows { list-style: none; margin: 0; padding: 0; }
+.tt-row { position: relative; display: grid; grid-template-columns: var(--nameW) var(--stripW) var(--slotW); column-gap: var(--g); height: var(--rowh); }
+.tt-row::before { content: ""; position: absolute; left: calc(var(--nameW) + var(--g)); right: calc(-1 * var(--m) / 2); top: 0; height: var(--hair); background: var(--c-line); transform-origin: left center; }
+.tt-row:last-child::after { content: ""; position: absolute; left: calc(var(--nameW) + var(--g)); right: calc(-1 * var(--m) / 2); bottom: 0; height: var(--hair); background: var(--c-line); }
+.tt .name { --nf: min(calc(var(--disp) * 1px), calc(var(--rowh) / 0.86), calc(var(--nameW) / var(--fitk))); font-size: var(--nf); line-height: var(--rowh); }
+.tt .slot { height: var(--rowh); }
+.tt-now { left: calc(var(--m) + var(--nameW) + var(--g)); width: var(--stripW); top: 0; height: calc(var(--ah) + var(--rowh) * 10); }
+
+/* ================= below the hero ================= */
+.pk, .how, .qa, .past, .ft { position: relative; margin: 0 var(--m); }
+.pk { display: grid; grid-template-columns: calc(var(--cw) * 5 - var(--g)) calc(var(--cw) * 5 - var(--g)) calc(var(--cw) * 2 - var(--g)); column-gap: var(--g); align-items: center; padding: var(--s-6) 0; box-shadow: inset 0 var(--hair) 0 var(--c-line); }
+.pk-pic { aspect-ratio: 16 / 9; }
+.pk-tx { min-height: 168px; }
+.pk-name { margin: 0; font-size: min(calc(var(--fact) * 1px), var(--t-d48)); line-height: 1.05; letter-spacing: var(--track-d48); font-weight: var(--w-medium); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pk.is-picked .pk-name { color: var(--c-ink); }
+.pk-wait { color: var(--c-ink-2); }
+.pk-who { margin: var(--s-3) 0 0; font-size: var(--t-lg); color: var(--c-ink); }
+.pk-pitch { margin: var(--s-2) 0 0; font-size: var(--t-md); color: var(--c-ink-2); max-width: 48ch; min-height: 3em; text-wrap: pretty; }
+.pk-seal { justify-self: end; width: 160px; height: 160px; color: var(--c-accent); }
+.pk-seal .seal { width: 160px; height: 160px; display: block; }
+.pk-line { position: absolute; right: calc(var(--tx) - var(--m)); top: -72px; height: calc(72px + 50%); width: var(--hair); background: repeating-linear-gradient(180deg, var(--c-ink-3) 0 3px, transparent 3px 6px); }
+.pk-line::after { content: ""; position: absolute; right: 0; bottom: 0; width: calc(var(--m) / 2); height: inherit; background: inherit; height: var(--hair); }
+.pk.is-picked .pk-line { background: var(--c-accent); width: var(--line-thick); }
+.pk.is-picked .pk-line::after { background: var(--c-accent); height: var(--line-thick); }
+.how { padding: var(--s-6) 0; box-shadow: inset 0 var(--hair) 0 var(--c-line); }
+.how ol { list-style: none; margin: 0; padding: 0; }
+.how li { display: grid; grid-template-columns: calc(var(--cw) * 2 - var(--g)) minmax(0, 1fr); column-gap: var(--g); align-items: baseline; padding: var(--s-3) 0; font-size: var(--t-xl); line-height: 1.3; letter-spacing: var(--track-snug); }
+.how li + li { box-shadow: inset 0 var(--hair) 0 var(--c-line); }
+.how-k { color: var(--c-ink-2); }
+/* questions: the question on the left two-fifths, the answer beside it */
+.qa { padding: var(--s-6) 0; box-shadow: inset 0 var(--hair) 0 var(--c-line); }
+.qa dl { margin: 0; }
+.qa dl > div { display: grid; grid-template-columns: calc(var(--cw) * 5 - var(--g)) minmax(0, 1fr); column-gap: var(--g); padding: var(--s-4) 0; font-size: var(--t-md); line-height: 1.45; }
+.qa dl > div + div { box-shadow: inset 0 var(--hair) 0 var(--c-line); }
+.qa dt { font-weight: var(--w-medium); color: var(--c-ink); text-wrap: balance; }
+.qa dd { margin: 0; color: var(--c-ink-2); max-width: 60ch; text-wrap: pretty; }
+.past { padding: var(--s-6) 0; box-shadow: inset 0 var(--hair) 0 var(--c-line); }
+.past ol { list-style: none; margin: 0; padding: 0; }
+.past li { display: grid; grid-template-columns: calc(var(--cw) * 2 - var(--g)) calc(var(--cw) * 4 - var(--g)) calc(var(--cw) * 2 - var(--g)) calc(var(--cw) * 1 - var(--g)) calc(var(--cw) * 2 - var(--g)) calc(var(--cw) * 1 - var(--g)); column-gap: var(--g); align-items: center; min-height: 56px; padding: var(--s-2) 0; font-size: var(--t-sm); box-shadow: inset 0 calc(-1 * var(--hair)) 0 var(--c-line); }
+.ps-d, .ps-f, .ps-e, .ps-w { color: var(--c-ink-2); font-variant-numeric: tabular-nums; }
+.ps-n { font-size: var(--t-md); font-weight: var(--w-medium); color: var(--c-ink); }
+.ps-pic { aspect-ratio: 16 / 9; }
+.ps-fold .ps-w { color: var(--c-ink); }
+.ft { display: flex; justify-content: space-between; gap: var(--s-4); padding: var(--s-6) 0 var(--s-8); font-size: var(--t-xs); color: var(--c-ink-2); box-shadow: inset 0 var(--hair) 0 var(--c-line); }
+
+/* ================= phone (time runs down the screen) ================= */
+@container day (max-width: 719px) {
+  .dl-page { --m: 16px; --g: 8px; --ah: 0px; --tx: 12px; --jo: 20px; }
+  .join-o .seal { width: 28px; height: 28px; }
+  .mh, .mh-band { height: auto; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "mark act" "date date" "status status"; row-gap: var(--s-4); padding: var(--s-4) var(--m) var(--s-5); }
+  .mh-mark { grid-area: mark; } .mh-act { grid-area: act; height: 44px; } .mh-date { grid-area: date; } .mh-status { grid-area: status; font-size: var(--t-md); min-height: 2.5em; }   /* two lines held, so rows never move between moments */
+  .mh-band .mh-date, .mh .mh-date { font-size: var(--t-h1); }
+  .mh-mark span b { display: none; }
+  .axis, .tt-now, .day, .wire, .peek { display: none !important; }
+  .pnow { display: block; position: absolute; left: var(--m); right: var(--m); top: calc(var(--rh) * var(--ny)); height: 2px; margin-top: -1px; background: var(--c-accent); z-index: 4; pointer-events: none; }
+  .pnow span { position: absolute; left: 0; bottom: 2px; padding: 3px 4px 2px; background: var(--c-accent); color: var(--c-accent-ink); }
+  .rows { position: relative; }
+  .tt { padding-bottom: 64px; --rh: 112px; }
+  .tt-row { height: 112px; grid-template-columns: minmax(0, 1fr) auto; grid-template-rows: 56px 48px; column-gap: var(--s-3); padding-right: var(--s-5); align-content: center; box-shadow: inset 0 var(--hair) 0 var(--c-line); }
+  .tt-row::before, .tt-row:last-child::after { display: none; }
+  .tt .name { --nf: min(calc(var(--disp) * 0.5px), 44px, calc((100cqw - 2 * var(--m) - 112px) / var(--fitk))); grid-column: 1 / -1; line-height: 56px; }
+  .tt .strip { grid-row: 2; grid-column: 1; height: 48px; overflow: visible; }
+  .tt .bar { left: 0 !important; width: 100% !important; --barh: 10px; }
+  .tt .bar-t { display: none; }
+  .tt .loc { display: grid; top: 50%; transform: translateY(-50%); }
+  .tt .slot { grid-row: 2; grid-column: 2; height: 48px; width: calc(var(--shot) * 16 / 9 * 1px + 132px); --shot: 36; }
+  .tie { width: calc(var(--m) - var(--tx) + var(--s-5)); }
+  .mark { display: none; }
+  .pk { grid-template-columns: minmax(0, 1fr); row-gap: var(--s-4); }
+  .pk-tx { min-height: 0; }
+  .pk-seal { display: none; }
+  .pk-pitch { min-height: 4.5em; }
+  .how li { grid-template-columns: minmax(0, 1fr); font-size: var(--t-lg); row-gap: var(--s-1); }
+  .qa dl > div { grid-template-columns: minmax(0, 1fr); row-gap: var(--s-1); }
+  .past li { grid-template-columns: minmax(0, 1fr) 96px; grid-template-areas: "n pic" "d pic" "e pic"; row-gap: 2px; padding: var(--s-3) 0; }
+  .ps-n { grid-area: n; } .ps-d { grid-area: d; } .ps-e { grid-area: e; } .ps-f, .ps-w { display: none; } .ps-pic { grid-area: pic; }
+  .ps-fold .ps-w { display: block; grid-area: e; }
+  .ps-fold .ps-e { display: none; }
+  .ft { flex-direction: column; }
+}
+@container day (min-width: 720px) and (max-width: 1199px) {
+  .dl-page { --m: 24px; --g: 12px; }
+  .mh-band { grid-template-columns: auto minmax(0, 1fr) auto; }
+  .mh-band .mh-date { display: none; }
+  .tt .slot { --shot: 28; }
+  .tt .slot-b { display: none; }
+}
+
+/* ================= motion (brand.css tokens, transform and opacity only) ================= */
+@keyframes day-pen { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+@keyframes day-peny { from { transform: scaleY(0); } to { transform: scaleY(1); } }
+@keyframes day-land { from { opacity: 0; transform: translateY(-50%) translateX(-8px); } to { opacity: 1; transform: translateY(-50%); } }
+@keyframes day-swap { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+@keyframes day-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes day-ink { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
+/* arrival, once per session: the pen draws the strip, then the ten bars land east to west (under --dur-scene) */
+.arrive .tick::before, .arrive .tt-row::before { animation: day-pen calc(var(--dur-draw) / var(--speed)) var(--ease-draw) both; transform-origin: left; }
+.arrive .tick::before { transform-origin: top; animation-name: day-peny; }
+.arrive .bar { animation: day-land calc(var(--dur-panel) / var(--speed)) var(--ease-out) both; animation-delay: calc((200ms + var(--i) * 40ms) / var(--speed)); }
+/* a city changes state: only its slot swaps */
+.swap .slot { animation: day-swap calc(var(--dur-panel) / var(--speed)) var(--ease-out) both; animation-delay: var(--age, 0ms); }
+/* a winner lands: its line draws from the bar to the trunk */
+.land .wire, .land .tie { animation: day-pen calc(var(--dur-draw) / var(--speed)) var(--ease-draw) both; animation-delay: var(--age, 0ms); }
+/* the pick: staged inside --dur-reveal. The line continues, the ring closes, the seal is drawn by the pen. */
+.reveal .trunk-g { animation: day-peny calc(var(--dur-reveal) * 0.35 / var(--speed)) var(--ease-draw) both; animation-delay: calc(var(--rage) + var(--dur-reveal) * 0.1 / var(--speed)); }
+.reveal .join-o { animation: day-fade calc(var(--dur-reveal) * 0.15 / var(--speed)) ease-out both; animation-delay: calc(var(--rage) + var(--dur-reveal) * 0.4 / var(--speed)); }
+.reveal .seal-merged path { stroke-dasharray: 1; animation: day-ink calc(var(--dur-reveal) * 0.45 / var(--speed)) var(--ease-draw) both; animation-delay: calc(var(--rage) + var(--dur-reveal) * (0.5 + var(--k, 0) * 0.05) / var(--speed)); }
+.reveal .join-lbl, .reveal .pk-tx, .reveal .pk-pic { animation: day-fade calc(var(--dur-panel) / var(--speed)) var(--ease-out) both; animation-delay: calc(var(--rage) + var(--dur-reveal) * 0.85 / var(--speed)); }
+.reveal .pk-line { animation: day-peny calc(var(--dur-reveal) * 0.25 / var(--speed)) var(--ease-draw) both; transform-origin: top; animation-delay: calc(var(--rage) + var(--dur-reveal) * 0.45 / var(--speed)); }
+@media (prefers-reduced-motion: reduce) { .dl-page *, .dl-page *::before, .dl-page *::after { animation: none !important; } }
+
+
+/* ================= the row is the link to its city (city.html) ================= */
+/* a stretched link from the city name: the strip and the slot open the city too */
+/* .name is the positioned box (its .loc hangs off it), so the overlay is sized to the row: it starts at the name's
+   left edge, which is the row's, and runs the full row width */
+.tt-row .name::after { content: ""; position: absolute; left: 0; top: 0; width: calc(100cqw - 2 * var(--m)); height: var(--rowh); z-index: 6; }
+@container day (max-width: 719px) { .tt-row .name::after { top: -4px; height: 112px; } }   /* the phone row is 112px: 56 + 48, centred */
+.tt-row .name:focus-visible { outline: none; }
+.tt-row:has(> .name:focus-visible) { outline: 2px solid var(--c-ink); outline-offset: -2px; }
+@media (hover: hover) and (pointer: fine) { .tt-row:hover { background: var(--c-tint-1); } }
+
+/* home to city and back: the city's name and bar travel (cross-document view transition, an enhancement) */
+@view-transition { navigation: auto; }
+::view-transition-group(city-name), ::view-transition-group(city-bar) { animation-duration: var(--dur-panel); animation-timing-function: var(--ease-move); }
+::view-transition-old(root), ::view-transition-new(root) { animation-duration: var(--dur-panel); }
+html:active-view-transition-type(back)::view-transition-group(*), html:active-view-transition-type(back)::view-transition-old(*), html:active-view-transition-type(back)::view-transition-new(*) { animation-duration: calc(var(--dur-panel) * 0.8); }
+@media (prefers-reduced-motion: reduce) { @view-transition { navigation: none; } }
+
+/* light grounds: green labels stay green. The accent there is the deep green (L 0.46, 5.5:1), set in palette.js. */

@@ -1,0 +1,9 @@
+node_modules/
+.DS_Store
+.env
+.env.*
+# screenshot runs and their browser profiles
+shots/
+*.profile/
+# save history written by the tuning pages (the *.config.json files are kept)
+saved/*-20*.json
