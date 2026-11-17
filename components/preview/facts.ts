@@ -1,4 +1,5 @@
 import day from '@/saved/day.config.json';
+import { RULES, SERVER, sayIt } from '@/lib/hackday-server';
 import { CITIES, EPOCH, EVENT, SCHED, mulberry32, sched } from '@/lib/day-data';
 import { hhmm } from '@/lib/format';
 import { PRIZES } from '@/lib/prizes';
@@ -45,7 +46,9 @@ export function ourWheel(): OurWheel {
       ['The pick', `${EVENT.pickers} pick one of the ${top * n}`],
     ],
     how: [
-      ['How do I enter?', `Come to your city on ${EVENT.day} December. Building opens at ${hhmm(cfg.startHour * 60)} local time and runs ${cfg.buildMin} minutes. Submit your project on your city’s page, then share it: anyone with the link can vote.`],
+      ['How do I enter?', `Come to your city on ${EVENT.day} December. Building opens at ${hhmm(cfg.startHour * 60)} local time and runs ${cfg.buildMin} minutes. Submit your project from your editor or on your city’s page, then share it: anyone with the link can vote.`],
+      ['How do I submit?', `From your editor: add the Hackday server, then say “${sayIt()}” It fills in the name, the pitch and the repository and sends them. Or on your city’s page, in the browser. Both run the same checks.${SERVER.live ? '' : ' The server is not open yet; the line to add it will be in Get ready.'}`],
+      ['What is checked?', `${RULES.join(' ')} A repository made before the day is refused.`],
       ['Who can vote?', `Anyone with the link, after confirming an email once. Voting opens when building starts and closes ${cfg.voteAfter} minutes after it ends.`],
       ['Who goes to the final?', `The top ${top} by votes in each city, so ${top * n} finalists. First place in each city wins ${cityPrize}.`],
       ['What do the judges do?', `Each judge has ${EVENT.judgeVotes} votes and can put several on one project. Their votes count in the same tally as everyone's.`],

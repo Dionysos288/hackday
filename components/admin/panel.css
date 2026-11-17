@@ -27,6 +27,7 @@
 .lab-rail button { font: var(--w-medium) var(--t-label)/1 var(--font-mono); }
 .lab-toggle { position: fixed; z-index: 91; right: var(--s-3); bottom: var(--s-3); height: 32px; padding: 0 var(--s-3); border: 1px solid var(--c-line); background: var(--c-paper); color: var(--c-ink); font: var(--w-medium) var(--t-xs)/1 var(--font-sans); cursor: pointer; }
 html:not(.lab-closed) .lab-toggle { right: calc(300px + var(--s-5)); }
+@media (pointer: coarse) { .lab-toggle { height: 44px; } }
 .no-lab .lab-toggle, .no-lab .proto-picker { display: none; }
 html.has-lab-cursor .dl-page { cursor: crosshair; }
 

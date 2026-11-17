@@ -8,7 +8,7 @@ import { hhmm } from '@/lib/format';
 import { clampParts, partsVars, type PartsCfg } from '@/components/board/config';
 import { HeaderRow } from '@/components/board/header-row';
 import { Announce } from '@/components/board/announce';
-import { SoundKey, step } from '@/components/board/prefs';
+import { ScreenKey, SoundKey, step } from '@/components/board/prefs';
 import { useTick } from '@/components/board/clock';
 import { dayWord, homeAt, wireItems } from '@/components/board/day-model';
 import { DayProvider } from '@/components/home/day-context';
@@ -20,7 +20,10 @@ import screenCfg from '@/saved/screen.config.json';
 import { clampScreen } from '@/components/screen/config';
 import { DayScreen, dayOf, useLabClock } from './shared';
 import { HowItWorks, PrizeBlock } from './explain';
-import { dayFinalOf, Board, DayFooter, Fastext, Hero, Prizes, Thirty, Wall, homeKeys, type Href, type Look } from './home-parts';
+import { dayFinalOf, Board, Fastext, Hero, Prizes, Thirty, Wall, homeKeys, type Href, type Look } from './home-parts';
+import { DayFooter } from './footer';
+import { clampFoot, type FootCfg } from './footer-config';
+import footSaved from '@/saved/footer.config.json';
 import { useRealClock, pageQuery } from './page-clock';
 import '@/components/board/board.css';
 import '@/components/home/day.css';
@@ -48,8 +51,10 @@ const GROUPS: Group[] = [
 const L = lookCfg as { finRh: number; curve: number };
 
 /* page: the real home, with the server's time; base: the lab's baseline (today's home, framed) at a t on its own scale */
-export function DayHome({ saved, parts, q, page, base }: {
+export function DayHome({ saved, parts, q, page, base, foot }: {
   saved: Partial<DayHomeCfg>; parts: Partial<PartsCfg>; q: Record<string, string | undefined>; page?: { nowMs: number }; base?: (t: number, worst: number) => ReactNode;
+  /* the footer's look: saved/footer.config.json, or the footer lab's knobs */
+  foot?: Partial<FootCfg>;
 }) {
   const P = clampParts(parts), real = !!page, admin = !real || q.admin !== undefined;
   const DIRS = real ? DIRS_ALL.slice(1) : DIRS_ALL, CHOICES: Record<string, string[]> = { dir: DIRS.map(([d]) => d), final: ['thirty', 'diagram'] };
@@ -115,15 +120,16 @@ export function DayHome({ saved, parts, q, page, base }: {
         <>
           <DayScreen />
           <main className="bd dl" style={partsVars(P) as CSSProperties} data-face={P.face} data-dir={cfg.dir} data-fastext={cfg.fastext ? '' : undefined}>
-            <HeaderRow title="Supabase Hackday" state={dayWord(W, day)} clock={clock} first={cfg.t} zone="UTC" homeHref={real ? '/' + carry(bm) : '/lab/day-home'} right={P.sound === 'steps' ? <SoundKey /> : undefined} />
+            <HeaderRow title="Supabase Hackday" state={dayWord(W, day)} clock={clock} first={cfg.t} zone="UTC" homeHref={real ? '/' + carry(bm) : '/lab/day-home'} right={<span className="hr-keys">{P.sound === 'steps' ? <SoundKey /> : null}<ScreenKey /></span>} />
             <Announce items={wireItems(W, 12)} mode={P.announce} dwell={P.dwell} crawl={P.crawl} flap={flap} startPaused={!cfg.live} />
             <Hero W={W} day={day} clock={clock} first={cfg.t} href={href} segSecs={!!P.segSecs} globe="edge" />
             {cfg.dir === 'wall' ? <Wall W={W} day={day} look={look} href={href} /> : <Board W={W} day={day} look={look} href={href} tick={P.tick} strips={cfg.dir === 'strips'} pic={!!cfg.leaderPic} />}
             {final}
             {cfg.how ? <div className="dl-ex"><HowItWorks f={day} id="dl-how" day={dayFinal} /><PrizeBlock id="day-prizes" day={dayFinal} winner={W.picked ? W.final.p.name + ', ' + W.final.city.name : null} /></div> : <Prizes W={W} />}
-            <DayFooter href={href} sound={P.sound === 'steps'} />
             {cfg.fastext ? <Fastext keys={homeKeys(W, href)} /> : null}
           </main>
+          <DayFooter W={W} day={day} href={href} sound={P.sound === 'steps'} cfg={clampFoot(foot ?? (footSaved as Partial<FootCfg>))} minute={bm} fastext={!!cfg.fastext}
+            sections={{ how: cfg.how ? '#dl-how' : '/preview#how', prizes: '#day-prizes' }} style={partsVars(P) as CSSProperties} face={P.face} />
         </>
       )}
       {bare ? null : (

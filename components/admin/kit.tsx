@@ -22,13 +22,18 @@ export function useLabSave(name: string, storeKey: string) {
   const rail = useMemo((): Cfg[] => { try { return JSON.parse(raw); } catch { return []; } }, [raw]);
   const save = useCallback((out: Cfg) => {
     const json = JSON.stringify(out, null, 2) + '\n';
-    try { navigator.clipboard.writeText(json).catch(() => {}); } catch { /* no clipboard */ }
+    /* the message says what really happened: copied only when the clipboard took it, and the save's own status */
+    let copy: Promise<boolean>;
+    try { copy = navigator.clipboard.writeText(json).then(() => true, () => false); } catch { copy = Promise.resolve(false); }
     try { const l = rail.filter((s) => JSON.stringify(s) !== JSON.stringify(out)); l.unshift(out); localStorage.setItem(storeKey, JSON.stringify(l.slice(0, 10))); } catch { /* storage blocked */ }
     railListeners.forEach((f) => f());
     return fetch('/api/save?name=' + name, { method: 'POST', headers: { 'content-type': 'application/json' }, body: json })
       .then((r) => (r.ok ? r.json() : Promise.reject(r.status)))
-      .then((j: { path: string }) => { setMsg('Saved to ' + j.path + ' and copied.'); })
-      .catch(() => { setMsg('Copied. There is no dev server here to write the file.'); });
+      .then(async (j: { path: string }) => { setMsg('Saved to ' + j.path + ((await copy) ? ' and copied.' : '. Not copied: the clipboard refused.')); })
+      .catch(async (e: unknown) => {
+        const c = (await copy) ? 'Copied. ' : 'Not copied (the clipboard refused). ';
+        setMsg(c + (typeof e === 'number' ? 'The file was not written: the save answered ' + e + '.' : 'There is no dev server here to write the file.'));
+      });
   }, [name, storeKey, rail]);
   return { save, msg, rail };
 }
@@ -64,10 +69,16 @@ export function LabPanel({ tab = 'Lab', title, cfg, bounds, choices, groups, set
   out: (k: string) => string; optionLabel?: (k: string, v: string) => string;
   buttons: [string, () => void, boolean?][]; meter: { text: string; bad: boolean }; msg: string; rail: Cfg[]; railLabel: (s: Cfg) => string; apply: (s: Cfg) => void; children?: ReactNode;
 }) {
+  /* on a phone the panel would cover the page: it starts closed there, and the toggle opens it */
+  useEffect(() => {
+    if (!window.matchMedia('(max-width: 640px)').matches) return;
+    document.documentElement.classList.add('lab-closed');
+    document.querySelector('.lab-toggle')?.setAttribute('aria-expanded', 'false');
+  }, []);
   return (
     <>
       <aside className="lab" aria-label={title}>
-        <div className="lab-h"><h2>{title}</h2><span className="lab-seed">Seed {String(cfg.seed)}</span></div>
+        <div className="lab-h"><h2>{title}</h2>{cfg.seed === undefined || cfg.seed === '–' ? null : <span className="lab-seed">Seed {String(cfg.seed)}</span>}</div>
         <div className="lab-moments">{moments.map((m, i) => <button key={m[0]} type="button" aria-pressed={i === momentIdx} onClick={() => set('t', m[2])}>{m[1]}</button>)}</div>
         {groups.map((g) => (
           <fieldset key={g.name}><legend>{g.name}</legend>

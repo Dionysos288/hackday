@@ -136,6 +136,10 @@
   --dur-slide: 220ms;                            /* the wire's new line slides in */
   --dur-draw: 480ms; --stagger: 60ms; --dur-scene: 900ms; --dur-flash: 1600ms;
   --dur-reveal: 2400ms;                          /* the pick reveal: once, ever, staged inside this one duration */
+  --tour-step: 12000ms;                          /* How it works: each step of the tour, at least */
+  --dur-jump: 700ms;                             /* How it works: a press moves the drawing to its step */
+  --dur-dot: 360ms;                              /* the footer: Screen off collapses to a line and a dot */
+  --dur-turn: 420ms;                             /* the footer: the globe turns to the city pointed at */
 }
 
 /* paper and mint (data-paper="graphite"): the shadow goes neutral */
@@ -158,7 +162,7 @@ html[data-paper="night"] {
 html.preload *, html.preload *::before, html.preload *::after { transition: none !important; }
 
 @media (prefers-reduced-motion: reduce) {
-  :root { --dur-press: 0ms; --dur-hover: 0ms; --dur-wash: 0ms; --dur-panel: 0ms; --dur-panel-exit: 0ms; --dur-vt: 0ms; --dur-slide: 0ms; --dur-draw: 0ms; --stagger: 0ms; --dur-scene: 0ms; --dur-flash: 0ms; --dur-reveal: 0ms; --press: 1; --preview-scale: 1; }
+  :root { --dur-press: 0ms; --dur-hover: 0ms; --dur-wash: 0ms; --dur-panel: 0ms; --dur-panel-exit: 0ms; --dur-vt: 0ms; --dur-slide: 0ms; --dur-draw: 0ms; --stagger: 0ms; --dur-scene: 0ms; --dur-flash: 0ms; --dur-reveal: 0ms; --dur-jump: 0ms; --dur-dot: 0ms; --dur-turn: 0ms; --press: 1; --preview-scale: 1; }
 }
 
 /* ---- the page itself ---- */

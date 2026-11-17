@@ -40,12 +40,29 @@ export function SoundKey() {
   );
 }
 
+/* the Screen switch's change can be dressed (the footer's white dot): the dresser calls commit when the screen is dark */
+type ScreenFx = (next: boolean, commit: () => void) => void;
+let screenFx: ScreenFx | null = null;
+export function setScreenFx(fx: ScreenFx | null) { screenFx = fx; }
+function flipScreen(next: boolean) { const commit = () => write('screen', next); if (screenFx) screenFx(next, commit); else commit(); }
+
+/* the Screen switch, small, for the header row: both switches sit at the top of the page as well as in the footer */
+export function ScreenKey() {
+  const [scr] = usePref('screen');
+  return (
+    <button type="button" className="hr-snd hr-scr" aria-label="Screen" aria-pressed={scr} onClick={() => flipScreen(!scr)}>
+      <span className="hr-snd-w" aria-hidden="true">Screen<span className="hr-snd-s">{scr ? 'on' : 'off'}</span></span>
+      <svg className="hr-snd-i" viewBox="0 0 20 20" width="20" height="20" aria-hidden="true"><rect x="2.5" y="4" width="15" height="11" fill="none" stroke="currentColor" strokeWidth="1.5" />{scr ? <path d="M5 8h10M5 11h10" stroke="currentColor" strokeWidth="1" /> : <circle cx="10" cy="9.5" r="1.2" fill="currentColor" />}<path d="M7 17.5h6" stroke="currentColor" strokeWidth="1.5" /></svg>
+    </button>
+  );
+}
+
 export function Switches({ sound }: { sound: boolean }) {
-  const [snd, setSnd] = usePref('sound'), [scr, setScr] = usePref('screen');
+  const [snd, setSnd] = usePref('sound'), [scr] = usePref('screen');
   return (
     <div className="sw" role="group" aria-label="Page settings">
-      {sound ? <button type="button" className="sw-b" aria-label="Sound" aria-pressed={snd && scr} disabled={!scr} title={scr ? undefined : 'Sound needs the screen on'} onClick={() => { wake(); setSnd(!snd); }}>Sound<span className="sw-s">{snd && scr ? 'on' : 'off'}</span></button> : null}
-      <button type="button" className="sw-b" aria-label="Screen" aria-pressed={scr} onClick={() => setScr(!scr)}>Screen<span className="sw-s">{scr ? 'on' : 'off'}</span></button>
+      {sound ? <button type="button" className="sw-b" aria-label="Sound" aria-pressed={snd && scr} disabled={!scr} title={scr ? undefined : 'Sound needs the screen on'} onClick={() => { wake(); setSnd(!snd); }}>Sound<span className="sw-s">{scr ? (snd ? 'on' : 'off') : 'needs Screen'}</span></button> : null}
+      <button type="button" className="sw-b" aria-label="Screen" aria-pressed={scr} onClick={() => flipScreen(!scr)}>Screen<span className="sw-s">{scr ? 'on' : 'off'}</span></button>
     </div>
   );
 }

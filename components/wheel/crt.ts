@@ -23,6 +23,9 @@ const f = (n: number, d = 4) => n.toFixed(d);
 export function glassGlsl(c: WheelCfg) {
   return `
   float gYaw; vec2 gCity; float gGlow;
+  /* the globe leans back by gTilt (radians) so a southern city can face the viewer; 0 everywhere but the kit's half
+     globes, so the wheel and the day globe draw as before */
+  float gTilt = 0.;
   float room(vec3 d) {
     float spot = pow(max(dot(d, normalize(vec3(.25, -.55, .8))), 0.), 220.);
     float soft = pow(max(dot(d, normalize(vec3(-.45, .7, .55))), 0.), 14.);
@@ -52,6 +55,11 @@ export function glassGlsl(c: WheelCfg) {
     vec3 axis = normalize(vec3(-.22, .92, .32));
     vec3 side = normalize(cross(axis, vec3(0., 0., 1.)));
     vec3 front = cross(side, axis);
+    /* the lean turns the whole globe about the screen's horizontal axis */
+    float ct = cos(gTilt), st = sin(gTilt);
+    axis = vec3(axis.x, axis.y * ct - axis.z * st, axis.y * st + axis.z * ct);
+    side = vec3(side.x, side.y * ct - side.z * st, side.y * st + side.z * ct);
+    front = vec3(front.x, front.y * ct - front.z * st, front.y * st + front.z * ct);
     vec3 light = vec3(glassLight(n, 1.3 - ${f(c.glassSplit)}), glassLight(n, 1.3), glassLight(n, 1.3 + ${f(c.glassSplit)}));
     vec3 color = light * vec3(.95, 1., .97) + vec3(.012, .018, .016);
     vec2 from = normalize(vec2(-.5, .86));

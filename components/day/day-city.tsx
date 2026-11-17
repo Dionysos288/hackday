@@ -7,7 +7,7 @@ import { hhmm } from '@/lib/format';
 import { clampParts, partsVars, type PartsCfg } from '@/components/board/config';
 import { HeaderRow } from '@/components/board/header-row';
 import { Announce } from '@/components/board/announce';
-import { SoundKey, step } from '@/components/board/prefs';
+import { ScreenKey, SoundKey, step } from '@/components/board/prefs';
 import { useTick } from '@/components/board/clock';
 import { cityAt, cityWord, homeAt, wireItems, CODE } from '@/components/board/day-model';
 import { useForms } from '@/components/forms/forms-provider';
@@ -18,7 +18,11 @@ import screenCfg from '@/saved/screen.config.json';
 import { clampScreen } from '@/components/screen/config';
 import { DayScreen, dayOf, useLabClock } from './shared';
 import { HowItWorks, PrizeBlock } from './explain';
-import { DayFooter, dayFinalOf } from './home-parts';
+import { GetReady } from './get-ready';
+import { dayFinalOf } from './home-parts';
+import { DayFooter } from './footer';
+import { clampFoot, type FootCfg } from './footer-config';
+import footSaved from '@/saved/footer.config.json';
 import { CityHero, ProjectSheet, Pylon, Ranking, TopWall, Two, type CLook, type RankView } from './city-parts';
 import { PIC_BOUNDS, PIC_DEF, PIC_MODES, clampPics, type PicCfg, type PicMode } from './rank-pictures';
 import { pageQuery, useRealClock } from './page-clock';
@@ -55,9 +59,11 @@ const at = (min: number) => new Date(EPOCH + min * 60000);
 
 /* page: the real page, with the server's time and the city; slug: the project open in the address; base: the lab's
    baseline at a t on its own scale */
-export function DayCity({ saved, parts, q, page, base }: {
+export function DayCity({ saved, parts, q, page, base, foot }: {
   saved: Partial<DayCityCfg>; parts: Partial<PartsCfg>; q: Record<string, string | undefined>;
   page?: { nowMs: number; city: string; slug?: string }; base?: (city: string, t: number, worst: number) => ReactNode;
+  /* the footer's look: saved/footer.config.json, or the footer lab's knobs */
+  foot?: Partial<FootCfg>;
 }) {
   const P = clampParts(parts), real = !!page, admin = !real || q.admin !== undefined;
   const DIRS = real ? DIRS_ALL.slice(1) : DIRS_ALL;
@@ -169,7 +175,7 @@ export function DayCity({ saved, parts, q, page, base }: {
         <>
           <DayScreen />
           <main className="bd dl dc" style={partsVars(P) as CSSProperties} data-face={P.face} data-dir={cfg.dir} data-view={view}>
-            <HeaderRow title={W.city.name} state={word} clock={clock} first={cfg.t} offset={W.off} zone={'Local · ' + CODE[cfg.city]} homeHref={real ? '/' + carry(bm) : '/lab/day-home?m=' + bm.toFixed(2)} right={P.sound === 'steps' ? <SoundKey /> : undefined} />
+            <HeaderRow title={W.city.name} state={word} clock={clock} first={cfg.t} offset={W.off} zone={'Local · ' + CODE[cfg.city]} homeHref={real ? '/' + carry(bm) : '/lab/day-home?m=' + bm.toFixed(2)} right={<span className="hr-keys">{P.sound === 'steps' ? <SoundKey /> : null}<ScreenKey /></span>} />
             <Announce items={wireItems(H, 12, i, W.off)} mode={P.announce} dwell={P.dwell} crawl={P.crawl} flap={flap} startPaused={!cfg.live} label={'Announcements in ' + W.city.name} empty={'Nothing yet. ' + W.city.name + ' opens at ' + hhmm(W.x.start + W.off) + ' local.'} />
             <CityHero W={W} hx={hx} mon={cfg.dir !== 'wall'} clock={clock} first={cfg.t} look={look} onRemind={remind} reminded={reminded} onSubmit={submit} pick={pk} elsewhere={H.picked && !pk ? { name: H.final.p.name, city: H.final.city.name } : null} />
             {cfg.dir === 'wall' ? (
@@ -178,10 +184,15 @@ export function DayCity({ saved, parts, q, page, base }: {
                 <Ranking {...rankProps} mode="rest" from={3} title={W.ranked.length > 3 ? 'The rest' : 'The ranking'} />
               </>
             ) : <Two main={<Ranking {...rankProps} mode={cfg.dir === 'scope' ? 'scope' : 'board'} title="The ranking" />} side={pylon} />}
-            {cfg.how ? <div className="dl-ex"><HowItWorks f={day} id="dc-how" day={dayFinalOf(H)} /><PrizeBlock id="dc-prize" day={dayFinalOf(H)} winner={H.picked ? H.final.p.name + ', ' + H.final.city.name : null} /></div> : null}
-            <DayFooter href={href} sound={P.sound === 'steps'} />
+            {/* before its doors open, a city page says how to get ready; once building, the submit sheet holds both ways in */}
+            {cfg.how || W.state === 'next' ? <div className="dl-ex">
+              {W.state === 'next' ? <GetReady id="dc-ready" city={W.city.name} cityId={W.city.id} /> : null}
+              {cfg.how ? <><HowItWorks f={day} id="dc-how" day={dayFinalOf(H)} /><PrizeBlock id="dc-prize" day={dayFinalOf(H)} winner={H.picked ? H.final.p.name + ', ' + H.final.city.name : null} /></> : null}
+            </div> : null}
             <ProjectSheet o={open} W={W} look={look} vote={vote} close={close} />
           </main>
+          <DayFooter W={H} day={day} href={href} sound={P.sound === 'steps'} city={cfg.city} cfg={clampFoot(foot ?? (footSaved as Partial<FootCfg>))} minute={bm}
+            sections={{ how: cfg.how ? '#dc-how' : '/#dl-how', prizes: cfg.how ? '#dc-prize' : '/#day-prizes' }} style={partsVars(P) as CSSProperties} face={P.face} />
         </>
       )}
       {bare ? null : (

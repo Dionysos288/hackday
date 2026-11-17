@@ -5,8 +5,13 @@ import { CHECKS, cityLabel, pictureError, atCity, withScheme, type FieldName } f
 import { emit, store, type Entry } from './store';
 import { FM_ACT, FM_DONE, FM_F, FM_FORM, FM_H, FM_L, FM_NOTE, FM_P, FM_T, ErrBox, Sheet, useSheet } from './sheet';
 import type { Who } from './sign-in-sheet';
+import { FromEditor } from '@/components/day/get-ready';
+import { RULES, SERVER } from '@/lib/hackday-server';
+import { submit } from '@/lib/submit';
 
-/* Submit: one entry per person. The same sheet edits it until building closes, then says so. */
+/* Submit: one entry per person. The same sheet edits it until building closes, then says so. A new entry gets two
+   parts under one sentence about the rules: from your editor first (the sentence to say), then in the browser (this
+   form). Both run the same checks. Editing an entry is the form alone. */
 export type SubmitOpts = { city?: string; cityName?: string; deadline?: Date | string; off?: number };
 type Fields = { name: string; pitch: string; repo: string; demo: string; video: string; rules: boolean };
 const NAMES: FieldName[] = ['name', 'pitch', 'repo', 'demo', 'video', 'rules'];
@@ -62,7 +67,18 @@ function SubmitForm({ o, who, mine, cityName, nameRef, onSaved }: { o: SubmitOpt
     if (deadline && isPast(deadline)) { setClosed(true); headRef.current?.focus(); return; }
     busyRef.current = true; setBusy(true);
     const fields = { name: f.name.trim(), pitch: f.pitch.trim(), repo: withScheme(f.repo), demo: f.demo.trim() ? withScheme(f.demo) : '', video: f.video.trim() ? withScheme(f.video) : '', city: city || '', cityName: cityName || '', deadline: deadline ? new Date(deadline).toISOString() : '' };
-    store.saveEntry(who.handle, fields, pic.file, pic.keep).then((entry) => { busyRef.current = false; emit(); if (!openRef.current) return; onSaved(entry); });
+    /* the same checks as the editor's way in (lib/submit.ts); the stand-in store saves */
+    submit(fields, { now: new Date(), hasEntry: edit, off: o.off }, (d) => store.saveEntry(who.handle, d, pic.file, pic.keep)).then(({ verdict, entry }) => {
+      busyRef.current = false;
+      if (!entry) {
+        setBusy(false);
+        if (verdict.refused.some((r) => r.check === 'closed')) { setClosed(true); headRef.current?.focus(); return; }
+        const r = verdict.refused.find((x) => x.check === 'repo') ?? verdict.refused[0];
+        if (r) { setErr((e) => ({ ...e, repo: r.say })); (formRef.current?.elements.namedItem('repo') as HTMLElement | null)?.focus(); }
+        return;
+      }
+      emit(); if (!openRef.current) return; onSaved(entry);
+    });
   };
 
   const attrs = (n: FieldName) => ({ className: 'fm-i', id: id + '-' + n, name: n, 'aria-describedby': id + '-e-' + n, 'aria-invalid': err[n] ? true : undefined, ref: n === 'name' ? nameRef : undefined });
@@ -78,6 +94,12 @@ function SubmitForm({ o, who, mine, cityName, nameRef, onSaved }: { o: SubmitOpt
       <p className={FM_P}>{closed
         ? 'Submissions for ' + cityName + ' closed at ' + untilT + '. Your entry was not saved.'
         : <>{otherCity ? 'You already have an entry in ' + cityName + '. One entry per person, so this edits it. ' : ''}Entering as <b>@{who.handle}</b>. One entry per person.{untilT ? ' You can edit it until ' + untilT + '.' : ''}</>}</p>
+      {/* the editor door shows once the server is open; until then one line says so, and the form is the way in */}
+      {edit || closed ? null : SERVER.live ? <div className="gr-two mt-3">
+        <p className={FM_NOTE}>The rules, for both ways in: {RULES.join(' ')}</p>
+        <FromEditor city={cityName || undefined} rules={false} />
+        <h3 className="gr-in">In the browser</h3>
+      </div> : <p className={FM_NOTE + ' mt-3'}>{RULES.join(' ')} Submitting from your editor opens later; for now, submit here.</p>}
       <form ref={formRef} className={FM_FORM} noValidate onSubmit={onSubmit}>
         {field('name', 'Project name', <input {...attrs('name')} {...text('name')} type="text" maxLength={40} autoComplete="off" spellCheck={false} enterKeyHint="next" />)}
         {field('pitch', 'One-line pitch', <input {...attrs('pitch')} {...text('pitch')} type="text" maxLength={100} autoComplete="off" spellCheck enterKeyHint="next" />,

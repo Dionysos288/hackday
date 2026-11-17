@@ -5,6 +5,17 @@ export const PLACE: Record<string, [number, number]> = {
   lagos: [6.52, 3.38], london: [51.51, -0.13], 'sao-paulo': [-23.55, -46.63], 'new-york': [40.71, -74.01], 'san-francisco': [37.77, -122.42],
 };
 
+/* each city's time zone (IANA). The local time is worked out from it in the browser, never from a typed offset: the
+   offsets change with the clocks in Sydney, Berlin, London, New York and San Francisco. */
+export const ZONE: Record<string, string> = {
+  sydney: 'Australia/Sydney', tokyo: 'Asia/Tokyo', singapore: 'Asia/Singapore', bengaluru: 'Asia/Kolkata', berlin: 'Europe/Berlin',
+  lagos: 'Africa/Lagos', london: 'Europe/London', 'sao-paulo': 'America/Sao_Paulo', 'new-york': 'America/New_York', 'san-francisco': 'America/Los_Angeles',
+};
+/* the time in a city at ms, as 09:41 */
+export function localTime(id: string, ms: number): string {
+  return new Intl.DateTimeFormat('en-GB', { timeZone: ZONE[id], hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).format(ms);
+}
+
 /* the three letters a board shows for a city */
 export const CODE: Record<string, string> = {
   sydney: 'SYD', tokyo: 'TYO', singapore: 'SIN', bengaluru: 'BLR', berlin: 'BER',

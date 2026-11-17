@@ -4,7 +4,6 @@
    fx fastext. */
 
 .dl { min-height: 100vh; background: var(--bd-ground); }
-.dl[data-fastext] { padding-bottom: calc(var(--bd-u) * 8); }
 .dl a { color: inherit; }
 .dl-kitframe { position: fixed; inset: 0; width: 100vw; height: 100dvh; border: 0; background: #0c0d0d; }
 .db-mute { color: var(--bd-muted); }
@@ -12,7 +11,7 @@
 /* ---------- the opening ---------- */
 .dh { position: relative; overflow: hidden; padding: calc(var(--bd-u) * 8) var(--bd-m) calc(var(--bd-u) * 7); border-bottom: 1px solid var(--bd-rule); }
 .dh-text { position: relative; z-index: 1; max-width: min(760px, 58vw); }
-.dh[data-globe='none'] .dh-text { max-width: 760px; }
+.dh[data-hero-globe='none'] .dh-text { max-width: 760px; }
 .dh-k { margin: 0; }
 .dh-h { margin: calc(var(--bd-u) * 1.5) 0 calc(var(--bd-u) * 2.5); font-size: clamp(48px, 7.2vw, 104px); line-height: 0.95; font-weight: 500; letter-spacing: -0.045em; }
 .dh-sub { margin: 0; max-width: 58ch; font-size: 17px; line-height: 1.45; color: var(--bd-muted); text-wrap: pretty; }
@@ -198,9 +197,9 @@
 /* after the pick the heading is the project's name, under a small "Picked" */
 .dh-hk { margin: 28px 0 10px; font: 500 var(--bd-label)/1 var(--bd-face); letter-spacing: 0.02em; color: var(--bd-muted); }
 /* the edge globe is never sliced by a short opening */
-.dh[data-globe='edge'] { min-height: calc(min(640px, 52vw) + 64px); }
+.dh[data-hero-globe='edge'] { min-height: calc(min(640px, 52vw) + 64px); }
 @media (max-width: 640px) {
-  .dh[data-globe='edge'] { min-height: 0; }
+  .dh[data-hero-globe='edge'] { min-height: 0; }
   .fx ul { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .fx a { height: 48px; font-size: 13px; border-top: 1px solid var(--bd-rule); }
   .fx li:nth-child(odd) a { border-left: 0; }

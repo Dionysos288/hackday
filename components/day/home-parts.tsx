@@ -67,7 +67,7 @@ export function Hero({ W, day, clock, first, href, segSecs, globe, children }: {
   const now = W.picked ? null : W.allDone ? { k: 'The final', t: 'The pick is at ' + hhmm(W.S.pickAt) + ' UTC' }
     : { k: fx.name, t: n.what + ' at ' + hhmm(n.at) + ' local' };
   return (
-    <section className="dh" aria-labelledby="dh-h" data-globe={globe ?? 'none'}>
+    <section className="dh" aria-labelledby="dh-h" data-hero-globe={globe ?? 'none'}>
       <div className="dh-text">
         <p className="bd-k dh-k"><span className="dh-kp">{DATE}</span> <span className="dh-kp"><span className="dh-dot">· </span>ten cities, east to west</span></p>
         {W.picked ? <><p className="dh-hk">Picked</p><h1 id="dh-h" className="dh-h dh-hp">{W.final.p.name}</h1></> : <h1 id="dh-h" className="dh-h">Supabase Hackday</h1>}

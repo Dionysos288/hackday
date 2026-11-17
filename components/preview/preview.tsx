@@ -5,7 +5,9 @@ import type { WheelEngine } from '@/components/wheel/engine';
 import { Wheel, type MarkMode } from '@/components/wheel/wheel';
 import { WHEEL_GROUPS, WHEEL_INT, WHEEL_LABELS } from '@/components/wheel/knobs';
 import { LabPanel, togglePanel, useLabSave } from '@/components/admin/kit';
-import { HowItWorks, PrizeBlock, lumaHref } from '@/components/day/explain';
+import { HowItWorks, PrizeBlock } from '@/components/day/explain';
+import { GetReady } from '@/components/day/get-ready';
+import { lumaHref } from '@/lib/luma';
 import { countdown, nearestCity, type OurFact, type OurWheel } from './facts';
 import './preview.css';
 import '@/components/day/explain.css';
@@ -35,6 +37,12 @@ type SheetProps = { cfg: WheelCfg; noGl: boolean; mark: MarkMode; engineRef: Ref
 /* the wheel with the Details sheet: registrations on Luma for now, the link under the wheel and the sheet's first button */
 export function SheetWheel({ cfg, noGl, mark, engineRef, ours, forced }: SheetProps) {
   const { cities, start } = useOurCities(ours, forced), sheet = useRef<HTMLDialogElement>(null);
+  /* the day pages' footer links here for the questions: #how and #questions open the sheet at that part */
+  useEffect(() => {
+    const id = window.location.hash.slice(1), d = sheet.current;
+    if (!d || (id !== 'questions' && id !== 'how')) return;
+    d.showModal(); const el = document.getElementById(id === 'how' ? 'wd-how-h' : 'questions'); el?.scrollIntoView({ block: 'start' }); if (id === 'questions') el?.focus({ preventScroll: true });
+  }, []);
   const reg = cities.map((c) => ({ ...c, href: lumaHref(c.id), action: c.status === 'full' ? 'Join the waiting list in ' + c.name : 'Register for ' + c.name }));
   const f = { buildMin: ours.buildMin, voteAfter: ours.voteAfter, startHour: ours.startHour, date: ours.date };
   return (
@@ -49,9 +57,10 @@ export function SheetWheel({ cfg, noGl, mark, engineRef, ours, forced }: SheetPr
           </div>
           <p className="wd-lede">Ten cities, one day: {ours.date}. Each city starts at its own local time, builds for {ours.buildMin} minutes, and votes until {ours.voteAfter} minutes after.</p>
           <p className="wd-reg"><a className="ex-reg" href={lumaHref()}>Register on Luma<span aria-hidden="true">→</span></a></p>
+          <GetReady compact id="wd-ready" level={3} register={false} />
           <HowItWorks f={f} compact id="wd-how" level={3} />
           <PrizeBlock compact id="wd-prize" level={3} />
-          <h3 className="wd-qh">Questions</h3>
+          <h3 className="wd-qh" id="questions" tabIndex={-1}>Questions</h3>
           <dl className="wd-faq">{ours.how.map(([q, a]) => <div key={q}><dt>{q}</dt><dd>{a}</dd></div>)}</dl>
         </div>
       </dialog>

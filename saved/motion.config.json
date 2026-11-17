@@ -15,5 +15,9 @@
   "durDraw": 480,
   "stagger": 60,
   "durReveal": 2400,
-  "slow": 1
+  "tourStep": 12000,
+  "durJump": 700,
+  "slow": 1,
+  "durDot": 360,
+  "durTurn": 420
 }

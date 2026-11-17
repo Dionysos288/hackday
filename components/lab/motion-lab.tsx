@@ -31,6 +31,8 @@ const GROUPS: Group[] = [
   { name: 'The wire', knobs: [{ k: 'slide', kind: 'range', label: 'Slide' }, { k: 'durFlash', kind: 'range', label: 'Lit for' }] },
   { name: 'Finalists landing', knobs: [{ k: 'durDraw', kind: 'range', label: 'Draw' }, { k: 'stagger', kind: 'range', label: 'Stagger' }] },
   { name: 'The pick', knobs: [{ k: 'durReveal', kind: 'range', label: 'Reveal' }] },
+  { name: 'How it works', knobs: [{ k: 'tourStep', kind: 'range', label: 'Each step, at least' }, { k: 'durJump', kind: 'range', label: 'Jump to a step' }] },
+  { name: 'Footer', knobs: [{ k: 'durDot', kind: 'range', label: 'Screen off: line and dot' }, { k: 'durTurn', kind: 'range', label: 'Globe turns to a city' }] },
   { name: 'Looking', knobs: [{ k: 'slow', kind: 'range', label: 'Slower ×' }] },
 ];
 const LABELS: Record<string, string> = { drawer: 'Drawer', out: 'Out', expo: 'Expo out', quart: 'Quart out', exit: 'Exit', 'in-quad': 'In (quad)', 'in-out': 'In and out', edge: 'The edge', nudge: 'A nudge' };

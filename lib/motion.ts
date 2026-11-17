@@ -18,6 +18,12 @@ export type MotionCfg = {
   durDraw: number; stagger: number;
   /* the pick, once: the line turns green and the join fills, all inside durReveal */
   durReveal: number;
+  /* How it works, stepped through: each step of the tour lasts tourStep at least (or its drawing, if longer), and a
+     press on a step moves the drawing there in durJump */
+  tourStep: number; durJump: number;
+  /* the footer: Screen off collapses the picture to a line and a dot (durDot, on also opens from the line); pointing
+     at a city on the horizon turns the globe to it in durTurn */
+  durDot: number; durTurn: number;
   /* the tuning page only: everything runs this many times slower, to look at it */
   slow: number;
 };
@@ -30,6 +36,7 @@ export const MOTION_DEF: MotionCfg = {
   slide: 220, durFlash: 1600,
   durDraw: 480, stagger: 60,
   durReveal: 2400,
+  tourStep: 12000, durJump: 700, durDot: 360, durTurn: 420,
   slow: 1,
 };
 
@@ -41,6 +48,7 @@ export const MOTION_BOUNDS: Record<string, [number, number, number]> = {
   slide: [0, 600, 10], durFlash: [0, 4000, 100],
   durDraw: [120, 1600, 20], stagger: [0, 240, 10],
   durReveal: [800, 6000, 100],
+  tourStep: [12000, 30000, 500], durJump: [300, 990, 10], durDot: [160, 400, 10], durTurn: [0, 600, 10],
   slow: [1, 10, 1],
 };
 
@@ -83,6 +91,7 @@ export function motionVars(c: MotionCfg, slow = 1): Record<string, string> {
     '--dur-slide': ms(c.slide), '--dur-flash': ms(c.durFlash),
     '--dur-draw': ms(c.durDraw), '--stagger': ms(c.stagger),
     '--dur-reveal': ms(c.durReveal),
+    '--tour-step': ms(c.tourStep), '--dur-jump': ms(c.durJump), '--dur-dot': ms(c.durDot), '--dur-turn': ms(c.durTurn),
   };
 }
 /* the saved values as CSS for the root layout: only when motion is allowed, so the reduced-motion zeros in
