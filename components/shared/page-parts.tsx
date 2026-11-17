@@ -15,7 +15,7 @@ export const BELOW = 'relative mx-(--m) rule-t';
 export function MastheadMark({ href, label }: { href: string; label: string }) {
   return (
     <a className="mh-mark inline-flex min-h-11 items-center gap-2 whitespace-nowrap text-lg tracking-snug" href={href} aria-label={label}>
-      <SupabaseMark /><span className="font-semibold">supabase <b className="font-regular text-ink-2 phone:hidden">hackathon</b></span>
+      <SupabaseMark /><span className="font-semibold">supabase <b className="font-regular text-ink-2 phone:hidden">hackday</b></span>
     </a>
   );
 }
@@ -29,7 +29,7 @@ export function HowItWorksList({ id, title, steps, first, cls }: { id: string; t
         {steps.map((s, j) => (
           <li key={s[0]} className={clsx('grid items-baseline gap-x-(--g) py-3 text-xl leading-[1.3] tracking-snug phone:grid-cols-[minmax(0,1fr)] phone:gap-y-1',
             first === 'c2' ? 'grid-cols-[var(--c2)_minmax(0,1fr)] phone:text-lg' : 'grid-cols-[var(--nameW)_minmax(0,1fr)] phone:text-lg', j > 0 && 'rule-t')}>
-            <span className={LABEL}>{s[0]}</span><span>{s[1]}</span>
+            <span className={LABEL}>{s[0]}</span><span className="max-w-[65ch]">{s[1]}</span>
           </li>
         ))}
       </ol>

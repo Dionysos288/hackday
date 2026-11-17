@@ -19,7 +19,7 @@ import './lab-legacy.css';
 import './day-lab.css';
 import './city-lab.css';
 
-/* The tuning page for a city: the real city page, driven by the config's t (a position in the city's window, from an
+/* The tuning page for a city (/lab/city-sheet): the real city page, driven by the config's t (a position in the city's window, from an
    hour before it starts to half an hour after the pick), played forward at the Live clock rate. Three more layouts,
    the knob panel and Save (saved/city.config.json). ?ht= takes the home lab's clock, so a link from it lands on the
    same moment. Keys (besides J, K, V, Enter, Escape): 1-4 layouts, left/right move time 5 min (shift: 30), N new seed,

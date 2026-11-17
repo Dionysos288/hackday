@@ -1,0 +1,18 @@
+import type { Group } from '@/components/admin/kit';
+
+/* Every knob of the wheel, the glass and the screen, as the wheel lab and the preview's admin panel show them. */
+export const WHEEL_GROUPS: Group[] = [
+  { name: 'Wheel', knobs: [{ k: 'step', kind: 'range', label: 'Angle step' }, { k: 'hubY', kind: 'range', label: 'Hub height' }, { k: 'hubOfHeight', kind: 'range', label: 'Radius / height' }, { k: 'hubOfWidth', kind: 'range', label: 'Radius / width' }] },
+  { name: 'Mode', knobs: [{ k: 'font', kind: 'select', label: 'Face' }, { k: 'mark', kind: 'select', label: 'Mark' }] },
+  { name: 'Names', knobs: [ { k: 'labelSize', kind: 'range', label: 'Size' }, { k: 'labelFrom', kind: 'range', label: 'Start' }, { k: 'labelPush', kind: 'range', label: 'Active out' }, { k: 'track', kind: 'range', label: 'Tracking' }, { k: 'ink', kind: 'range', label: 'Ink' }, { k: 'dim', kind: 'range', label: 'Others' }, { k: 'fadeFrom', kind: 'range', label: 'Fade from' }, { k: 'fadeTo', kind: 'range', label: 'Gone at' }] },
+  { name: 'Globe', knobs: [{ k: 'face', kind: 'range', label: 'City faces' }, { k: 'core', kind: 'range', label: 'Land ball' }, { k: 'glassSplit', kind: 'range', label: 'Colour split' }, { k: 'openScale', kind: 'range', label: 'Link hover' }] },
+  { name: 'Turning', knobs: [{ k: 'wheelPx', kind: 'range', label: 'Wheel px' }, { k: 'dragPx', kind: 'range', label: 'Drag px' }, { k: 'ease', kind: 'range', label: 'Names ease' }, { k: 'yawEase', kind: 'range', label: 'Globe ease' }, { k: 'openEase', kind: 'range', label: 'Hover ease' }] },
+  { name: 'Smear', knobs: [{ k: 'ghosts', kind: 'range', label: 'Ghosts' }, { k: 'ghostAlpha', kind: 'range', label: 'Ghost alpha' }, { k: 'ghostGap', kind: 'range', label: 'Ghost gap' }, { k: 'ghostFrom', kind: 'range', label: 'From' }] },
+  { name: 'At rest', knobs: [{ k: 'settleFrom', kind: 'range', label: 'Cells from' }, { k: 'settleTo', kind: 'range', label: 'Cells gone' }, { k: 'pulseLow', kind: 'range', label: 'Light low' }, { k: 'pulseRate', kind: 'range', label: 'Breath rate' }, { k: 'statusDelay', kind: 'range', label: 'Said after' }] },
+  { name: 'Glass edge', knobs: [{ k: 'edgeFrom', kind: 'range', label: 'From' }, { k: 'edgeTo', kind: 'range', label: 'To' }, { k: 'edgeReach', kind: 'range', label: 'Reach' }, { k: 'edgeTaps', kind: 'range', label: 'Taps' }] },
+  { name: 'Names in the glass', knobs: [{ k: 'mirrorStart', kind: 'range', label: 'Start' }, { k: 'mirrorSize', kind: 'range', label: 'Size' }, { k: 'mirrorTip', kind: 'range', label: 'Tip' }, { k: 'mirrorDepth', kind: 'range', label: 'Depth' }, { k: 'mirrorSqueeze', kind: 'range', label: 'Squeeze' }, { k: 'mirrorBlur', kind: 'range', label: 'Blur' }, { k: 'mirrorGlow', kind: 'range', label: 'Glow' }, { k: 'mirrorSplit', kind: 'range', label: 'Split' }, { k: 'mirrorStrength', kind: 'range', label: 'Strength' }] },
+  { name: 'Screen', knobs: [{ k: 'paper', kind: 'range', label: 'Paper' }, { k: 'fringe', kind: 'range', label: 'Fringe' }, { k: 'grain', kind: 'range', label: 'Grain' }, { k: 'vignette', kind: 'range', label: 'Vignette' }, { k: 'lineAlpha', kind: 'range', label: 'Lines' }, { k: 'linePeriod', kind: 'range', label: 'Line pitch' }] },
+  { name: 'Sound', knobs: [{ k: 'sound', kind: 'toggle', label: 'Clicks and notes' }, { k: 'volume', kind: 'range', label: 'Volume' }] },
+];
+export const WHEEL_LABELS: Record<string, string> = { study: 'Study (Helvetica Neue)', geist: 'Geist', hack: 'HACK alone', both: 'With the Supabase mark', name: 'HACK and the name' };
+export const WHEEL_INT = new Set(['ink', 'wheelPx', 'dragPx', 'ghosts', 'edgeTaps', 'paper', 'linePeriod', 'statusDelay']);

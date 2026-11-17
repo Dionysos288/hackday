@@ -1,9 +1,9 @@
 'use client';
 import { createContext, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode, type RefObject } from 'react';
-import { EPOCH } from '@/lib/day-data';
-import { clampCfg, pageOrder, rowById, slugOf, trueTop, world, type CityCfg, type CityWorld, type Extra, type Links } from '@/lib/city';
+import { EPOCH, EVENT } from '@/lib/day-data';
+import { clampCfg, pageOrder, projectPath, rowById, slugOf, trueTop, world, type CityCfg, type CityWorld, type Extra, type Links } from '@/lib/city';
 import type { ClockInit } from '@/lib/clock';
-import { store, useVotes } from '@/components/forms/store';
+import { store, useFormsState, useJudged, useVotes, type Entry } from '@/components/forms/store';
 import { useForms } from '@/components/forms/forms-provider';
 import { applyGround } from '@/components/ground/apply-ground';
 
@@ -12,8 +12,15 @@ import { applyGround } from '@/components/ground/apply-ground';
    (the order the sheet shows, which rows just got a vote) is worked out in the tick, not in render, because it
    depends on the pointer and focus; everything else is derived from the minute during render. */
 type Ui = { sort?: string; q?: string; more?: number };
+/* who is looking: anyone, a builder with a project in this city, or a judge (50 votes, several on one project if they
+   like). How a project opens: a sheet from the right edge, the row opening in place, or a sheet in the middle. */
+export type Who = 'visitor' | 'builder' | 'judge';
+export type PView = 'side' | 'row' | 'centred';
+/* a judge's own votes on this page, by project id, and how many are left */
+export type Judge = { put: Readonly<Record<string, number>>; left: number; add: (id: number, d: number) => void };
 export type CityValue = {
   cfg: CityCfg; W: CityWorld; L: Links; votes: Readonly<Record<string, 1>>;
+  who: Who; pview: PView; judge: Judge; entry: Entry | null; share: boolean; setShare: (on: boolean) => void;
   shownIds: number[]; flash: Readonly<Record<number, number>>;
   openId: number | null; openProject: (id: number, from?: HTMLElement | null) => void; closeProject: () => void;
   vote: (id: number) => void; setUi: (u: Ui) => void; cur: RefObject<number>;
@@ -28,16 +35,21 @@ const REDUCED = '(prefers-reduced-motion: reduce)';
 
 /* live: the page follows the clock. The tuning page sets it false and passes the minute in cfg itself; frame says
    whether that change is time running forward (votes flash, rows batch) or a knob (everything resets).
-   onKey: the tuning page's extra keys. openSlug: the project in the URL (?p=). */
-export function CityProvider({ cfg: cfgIn, clock, links, live = true, frame = 'set', extra, openSlug, onKey, children }: {
-  cfg: CityCfg; clock: ClockInit; links: Links; live?: boolean; frame?: 'live' | 'set'; extra?: Extra; openSlug?: string | null; onKey?: (e: KeyboardEvent) => void; children: ReactNode;
+   onKey: the tuning page's extra keys. openSlug: the project in the address (/city/<city>/p/<slug>).
+   who: who is looking; without it, a person whose entry is in this city is its builder, anyone else a visitor.
+   pview: how a project opens. */
+export function CityProvider({ cfg: cfgIn, clock, links, live = true, frame = 'set', extra, openSlug, onKey, who: whoIn, pview = 'side', children }: {
+  cfg: CityCfg; clock: ClockInit; links: Links; live?: boolean; frame?: 'live' | 'set'; extra?: Extra; openSlug?: string | null; onKey?: (e: KeyboardEvent) => void; who?: Who; pview?: PView; children: ReactNode;
 }) {
   const [ui, setUiState] = useState<Ui>({});
   const cfg = useMemo(() => clampCfg({ ...cfgIn, ...ui }, extra), [cfgIn, ui, extra]);
-  const voteKey = cfg.city + ':' + cfg.seed, votes = useVotes(voteKey), forms = useForms();
+  const fs = useFormsState(), entry = fs.entry && fs.entry.city === cfg.city ? fs.entry : null;
+  const who: Who = whoIn || (entry ? 'builder' : 'visitor');
+  const voteKey = cfg.city + ':' + cfg.seed, votes = useVotes(voteKey), judged = useJudged(voteKey, who === 'judge'), forms = useForms();
   const [tick, setTick] = useState<Tick>(() => ({ now: clock.at, shown: null, flash: {}, n: 0 }));
   const now = live ? tick.now : (cfgIn.now as number | undefined);
-  const W = useMemo(() => world({ ...cfg, now }, votes), [cfg, now, votes]);
+  const W = useMemo(() => world({ ...cfg, now }, votes, who === 'judge' ? judged : undefined), [cfg, now, votes, judged, who]);
+  const [share, setShare] = useState(false);
   /* the sheet's order: the tick's, while it still belongs to this city, seed, layout and phase; else the true order */
   const sKey = cfg.city + cfg.seed + cfg.mode + cfg.top;
   const shownRef = useRef<Shown | null>(null), ts = tick.shown;
@@ -48,8 +60,9 @@ export function CityProvider({ cfg: cfgIn, clock, links, live = true, frame = 's
   const opener = useRef<HTMLElement | null>(null);
 
   /* the latest of everything, for the clock and the listeners (refs, so they are set up once) */
-  const latest = useRef({ cfg, W, live, links, shownIds, openId, votes, forms, onKey });
-  useLayoutEffect(() => { latest.current = { cfg, W, live, links, shownIds, openId, votes, forms, onKey }; });
+  const latest = useRef({ cfg, W, live, links, shownIds, openId, votes, forms, onKey, who });
+  useLayoutEffect(() => { latest.current = { cfg, W, live, links, shownIds, openId, votes, forms, onKey, who }; });
+  const judgedNow = (key: string) => (latest.current.who === 'judge' ? store.judged(key) : undefined);
 
   const run = useRef({ prevW: null as CityWorld | null, prevV: {} as Record<number, number>, flash: {} as Record<number, number>, tops: null as Record<string, number> | null, closeTm: 0 });
   /* one frame of the clock. live: time ran forward (a vote since the last frame lands as a tick and a flash; the
@@ -57,7 +70,7 @@ export function CityProvider({ cfg: cfgIn, clock, links, live = true, frame = 's
   const step = useCallback((mode: boolean | 'scrub', minute?: number) => {
     const L = latest.current, c = L.cfg, R = run.current;
     const n = minute != null ? minute : (L.live ? clockNow(clock) : (c.now as number));
-    const W = world({ ...c, now: n }, store.votes(c.city + ':' + c.seed)), tnow = performance.now(), prevW = R.prevW;
+    const W = world({ ...c, now: n }, store.votes(c.city + ':' + c.seed), judgedNow(c.city + ':' + c.seed)), tnow = performance.now(), prevW = R.prevW;
     if (mode && prevW && W.voting && W.now > prevW.now && prevW.c.city === c.city && prevW.c.seed === c.seed) {
       W.rows.forEach((o) => { const pv = R.prevV[o.p.id]; if (pv != null && o.v - o.mine > pv) R.flash[o.p.id] = tnow; });
     } else if (!mode) R.flash = {};
@@ -94,7 +107,8 @@ export function CityProvider({ cfg: cfgIn, clock, links, live = true, frame = 's
   /* the page's clock: once a second, unless stopped or hidden */
   useEffect(() => {
     if (!live) return;
-    run.current.prevW = world({ ...latest.current.cfg, now: clock.at }, store.votes(latest.current.cfg.city + ':' + latest.current.cfg.seed));
+    const k0 = latest.current.cfg.city + ':' + latest.current.cfg.seed;
+    run.current.prevW = world({ ...latest.current.cfg, now: clock.at }, store.votes(k0), judgedNow(k0));
     document.documentElement.dataset.ready = '1';
     if (clock.still) return;
     const id = window.setInterval(() => { if (!document.hidden) step(true); }, 1000);
@@ -106,11 +120,22 @@ export function CityProvider({ cfg: cfgIn, clock, links, live = true, frame = 's
   useEffect(() => { applyGround(cfg.ground); }, [cfg.ground]);
 
   /* ---------------- the project sheet ---------------- */
-  /* the open project is in the URL (?p=<slug>), so it can be linked; replaceState, so Back still leaves the page */
+  /* the open project has its own address (/city/<city>/p/<slug>), so it can be linked. Opening one from the page
+     pushes that address, so Back closes it; moving to another project while one is open replaces it. Closing goes
+     back to the city's address: by going Back when this page pushed, by replacing it when the page was opened on a
+     project's address. */
+  const pushed = useRef(false), popping = useRef(false);
   const urlProject = useCallback((slug: string | null) => {
-    if (latest.current.links.kind !== 'page') return;
-    const u = new URL(location.href); if (slug) u.searchParams.set('p', slug); else u.searchParams.delete('p');
-    history.replaceState(history.state, '', u);
+    const L = latest.current; if (L.links.kind !== 'page') return;
+    const onP = /\/p\/[^/]+$/.test(location.pathname), city = L.W.city.id;
+    if (slug) {
+      const path = projectPath(city, slug); if (location.pathname === path) return;
+      if (onP) history.replaceState(history.state, '', path + location.search);
+      else { history.pushState(history.state, '', path + location.search); pushed.current = true; }
+    } else if (onP) {
+      if (pushed.current) { pushed.current = false; history.back(); }
+      else history.replaceState(history.state, '', '/city/' + city + location.search);
+    }
   }, []);
   const openProject = useCallback((id: number, from?: HTMLElement | null) => {
     if (from) opener.current = from;
@@ -118,9 +143,20 @@ export function CityProvider({ cfg: cfgIn, clock, links, live = true, frame = 's
     setOpenId(id);
   }, [urlProject]);
   const closeProject = useCallback(() => { const d = dlgRef.current; if (d && d.open) d.close(); }, []);
+  /* Back and Forward: the address says which project is open */
+  useEffect(() => {
+    const on = () => {
+      const m = location.pathname.match(/\/p\/([^/]+)$/), d = dlgRef.current;
+      if (!m) { pushed.current = false; if (d && d.open) { popping.current = true; d.close(); } return; }
+      const o = latest.current.W.arrived.find((r) => slugOf(r.p) === m[1]);
+      if (o && latest.current.openId !== o.p.id) setOpenId(o.p.id);
+    };
+    window.addEventListener('popstate', on); return () => window.removeEventListener('popstate', on);
+  }, []);
   /* the dialog's close event: the URL forgets the project and focus goes back to its row */
   const onDialogClose = useCallback(() => {
-    const id = latest.current.openId; setOpenId(null); urlProject(null);
+    const id = latest.current.openId; setOpenId(null);
+    if (popping.current) popping.current = false; else urlProject(null);
     const page = mainRef.current;
     const row = page && (page.querySelector<HTMLElement>('.cl-sheet [data-pid="' + id + '"]') || page.querySelector<HTMLElement>('[data-pid="' + id + '"]'));
     (row || opener.current || document.body).focus({ preventScroll: false });
@@ -130,7 +166,7 @@ export function CityProvider({ cfg: cfgIn, clock, links, live = true, frame = 's
     const d = dlgRef.current; if (!d) return;
     d.addEventListener('close', onDialogClose); return () => d.removeEventListener('close', onDialogClose);
   }, [onDialogClose]);
-  /* ?p=<slug> opens that project, once */
+  /* the project in the address opens, once */
   const opened = useRef(false);
   useEffect(() => {
     if (opened.current || !openSlug) return; opened.current = true;
@@ -140,12 +176,12 @@ export function CityProvider({ cfg: cfgIn, clock, links, live = true, frame = 's
 
   /* the tab's title follows the city and the open project */
   const openName = openId != null ? rowById(W, openId)?.p.name : undefined;
-  useEffect(() => { const t = (openName ? openName + ' · ' : '') + W.city.name + ' · Supabase Hackathon'; if (document.title !== t) document.title = t; }, [openName, W.city.name]);
+  useEffect(() => { const t = (openName ? openName + ' · ' : '') + W.city.name + ' · Supabase Hackday'; if (document.title !== t) document.title = t; }, [openName, W.city.name]);
 
   /* ---------------- voting ---------------- */
   /* a vote counts once the person has confirmed an email (the forms). Without forms on the page, it counts locally. */
   const vote = useCallback((id: number) => {
-    const L = latest.current; if (!L.W.voting) return;
+    const L = latest.current; if (!L.W.voting || L.who === 'judge') return;
     const key = L.cfg.city + ':' + L.cfg.seed, mine = store.votes(key);
     if (mine[id]) { const next = { ...mine }; delete next[id]; store.setVotes(key, next); step(true); return; }
     const ok = L.forms ? L.forms.ensureVoter() : Promise.resolve(true);
@@ -154,6 +190,17 @@ export function CityProvider({ cfg: cfgIn, clock, links, live = true, frame = 's
       store.setVotes(key, { ...store.votes(key), [id]: 1 }); step(true);
     }, () => { /* the email step failed: the vote is not counted */ });
   }, [step]);
+
+  /* a judge's press: one more or one fewer on a project, within the 50 */
+  const jkey = voteKey, used = Object.values(judged).reduce((a, n) => a + n, 0), left = EVENT.judgeVotes - used;
+  const add = useCallback((id: number, d: number) => {
+    if (!latest.current.W.voting) return;
+    const put = store.judged(jkey), u = Object.values(put).reduce((a, n) => a + n, 0), l = EVENT.judgeVotes - u;
+    const n = Math.max(0, (put[id] || 0) + (d > 0 ? Math.min(d, l) : d)), next = { ...put };
+    if (n) next[id] = n; else delete next[id];
+    store.setJudged(jkey, next); step(true);
+  }, [jkey, step]);
+  const judge = useMemo<Judge>(() => ({ put: judged, left, add }), [judged, left, add]);
 
   /* the table's own controls (sort, search, show all): the sheet's order and the flashes start again */
   const setUi = useCallback((u: Ui) => { setUiState((x) => ({ ...x, ...u })); shownRef.current = null; run.current.flash = {}; setTick((t) => ({ ...t, shown: null, flash: {}, n: t.n + 1 })); }, []);
@@ -182,8 +229,8 @@ export function CityProvider({ cfg: cfgIn, clock, links, live = true, frame = 's
     return () => document.removeEventListener('keydown', keys);
   }, [vote]);
 
-  const value = useMemo<CityValue>(() => ({ cfg, W, L: links, votes, shownIds, flash: tick.flash, openId, openProject, closeProject, vote, setUi, cur, mainRef, dlgRef }),
-    [cfg, W, links, votes, shownIds, tick.flash, openId, openProject, closeProject, vote, setUi]);
+  const value = useMemo<CityValue>(() => ({ cfg, W, L: links, votes, who, pview, judge, entry, share, setShare, shownIds, flash: tick.flash, openId, openProject, closeProject, vote, setUi, cur, mainRef, dlgRef }),
+    [cfg, W, links, votes, who, pview, judge, entry, share, shownIds, tick.flash, openId, openProject, closeProject, vote, setUi]);
   return <CityContext.Provider value={value}>{children}</CityContext.Provider>;
 }
 

@@ -6,7 +6,14 @@
 .cl-city { view-transition-name: city-name; }
 .cl-bar .bar { view-transition-name: city-bar; }
 .pv-strip .cl-bar .bar { view-transition-name: none; }   /* the project sheet's copy of the bar is not the shared one */
-::view-transition-group(city-name), ::view-transition-group(city-bar) { animation-duration: var(--dur-panel); animation-timing-function: var(--ease-move); }
-::view-transition-old(root), ::view-transition-new(root) { animation-duration: var(--dur-panel); }
-html:active-view-transition-type(back)::view-transition-group(*), html:active-view-transition-type(back)::view-transition-old(*), html:active-view-transition-type(back)::view-transition-new(*) { animation-duration: calc(var(--dur-panel) * 0.8); }
+::view-transition-group(city-name), ::view-transition-group(city-bar) { animation-duration: var(--dur-vt); animation-timing-function: var(--ease-move); }
+/* the name: both snapshots hug the letters (w-fit on both), so they scale as one word. The bar: only the plain bar
+   travels. Going in, the home's snapshot carries the row's time label, which would grow huge, so the city's bar
+   alone moves from the row's box to its place; coming back, the city's bar alone shrinks into the row. */
+::view-transition-old(city-bar) { display: none; }
+::view-transition-new(city-bar) { animation: none; }
+html:active-view-transition-type(back)::view-transition-old(city-bar) { display: block; animation: none; }
+html:active-view-transition-type(back)::view-transition-new(city-bar) { display: none; }
+::view-transition-old(root), ::view-transition-new(root) { animation-duration: var(--dur-vt); }
+html:active-view-transition-type(back)::view-transition-group(*), html:active-view-transition-type(back)::view-transition-old(*), html:active-view-transition-type(back)::view-transition-new(*) { animation-duration: calc(var(--dur-vt) * 0.8); }
 @media (prefers-reduced-motion: reduce) { @view-transition { navigation: none; } }

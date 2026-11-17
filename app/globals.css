@@ -1,4 +1,4 @@
-/* globals.css: the one set of design tokens for the Supabase Hackathon site, and the Tailwind setup that reads them.
+/* globals.css: the one set of design tokens for the Supabase Hackday site, and the Tailwind setup that reads them.
    app/layout.tsx loads it first. Everything else reads these names; new styles must not introduce raw colours, curves,
    sizes or spacing.
    The base palette (--ground, --ink, --ink2, --minor, --major, --green, --tagink, --brand) is written on <html> before
@@ -87,6 +87,7 @@
 @utility knockout { paint-order: stroke fill; -webkit-text-stroke: 5px var(--c-ground); }   /* a line breaks where it meets lettering */
 @utility underline-link { text-decoration: underline; text-decoration-thickness: from-font; text-underline-offset: 3px; }
 @utility stretched { &::after { content: ""; position: absolute; inset: 0; z-index: 1; } }   /* a link that covers its whole (positioned) row */
+@utility wash { transition: background-color var(--dur-wash) var(--ease-out); }   /* a row's hover tint fades; keyboard focus does not */
 @utility focus-row { outline: 2px solid var(--c-ink); outline-offset: -2px; }       /* a row whose link has keyboard focus */
 
 /* ---- the tokens ---- */
@@ -124,10 +125,16 @@
   /* the daylight band on the timetable: one lifted tone of the ground */
   --c-day: color-mix(in oklch, var(--ground) 88%, white);
 
-  /* ---- motion: every duration on the page comes from here (the curves are in the theme above) ---- */
-  --dur-press: 90ms; --dur-hover: 140ms;
+  /* ---- motion: every duration on the page comes from here (the curves are in the theme above). These are the
+     fallbacks: the root layout writes the saved values from saved/motion.config.json over them (/lab/motion). ---- */
+  --dur-press: 90ms; --press: 0.97;              /* a pressed button scales to --press */
+  --dur-hover: 140ms; --dur-wash: 120ms;         /* colours; a row's hover wash (0 is a snap) */
+  --preview-scale: 0.98;                         /* the home's hover preview grows from this */
   --dur-panel: 280ms; --dur-panel-exit: 200ms;   /* dialogs, drawers, list reorders */
-  --dur-draw: 480ms; --dur-scene: 900ms; --dur-flash: 1600ms;
+  --sheet-from: 100%; --sheet-fade: 1;           /* the project sheet comes from this far right, at this opacity */
+  --dur-vt: 280ms;                               /* home to city: the shared name and bar */
+  --dur-slide: 220ms;                            /* the wire's new line slides in */
+  --dur-draw: 480ms; --stagger: 60ms; --dur-scene: 900ms; --dur-flash: 1600ms;
   --dur-reveal: 2400ms;                          /* the pick reveal: once, ever, staged inside this one duration */
 }
 
@@ -151,7 +158,7 @@ html[data-paper="night"] {
 html.preload *, html.preload *::before, html.preload *::after { transition: none !important; }
 
 @media (prefers-reduced-motion: reduce) {
-  :root { --dur-press: 0ms; --dur-hover: 0ms; --dur-panel: 0ms; --dur-panel-exit: 0ms; --dur-draw: 0ms; --dur-scene: 0ms; --dur-reveal: 0ms; }
+  :root { --dur-press: 0ms; --dur-hover: 0ms; --dur-wash: 0ms; --dur-panel: 0ms; --dur-panel-exit: 0ms; --dur-vt: 0ms; --dur-slide: 0ms; --dur-draw: 0ms; --stagger: 0ms; --dur-scene: 0ms; --dur-flash: 0ms; --dur-reveal: 0ms; --press: 1; --preview-scale: 1; }
 }
 
 /* ---- the page itself ---- */

@@ -6,7 +6,7 @@
    unchanged cells do not move; heavier weight means live; green only for now, the leader or winner, you, the main
    action; a city announces only its top result; ten become one through joining lines; dashed means not yet, hatched
    means closed; every picture is a project picture. */
-import { CITIES, EVENT, TA, cityState, nowOf, sched, seedData, tOf, type CityState, type Sched } from './day-data';
+import { CITIES, EVENT, TA, cityState, nowOf, sched, seedFor, tOf, type CityState, type Sched, type Top } from './day-data';
 import { NB, dur, hhmm, plural } from './format';
 
 export type HomeCfg = {
@@ -64,14 +64,20 @@ export type HomeCity = CityState & { win?: { p: CityState['list'][number]['p']; 
 export type HomeWorld = {
   S: Sched; now: number; cs: HomeCity[]; live: HomeCity[]; done: HomeCity[]; allDone: boolean; picked: boolean; archived: boolean; early: boolean;
   pick: HomeCity & { win: { p: CityState['list'][number]['p']; v: number } }; total: number;
+  /* the final: every finalist in so far (three per closed city, east to west, first place first), and the one Ant and
+     Copple pick, which is one of the thirty (today's page reads pick, which is that city's first place) */
+  finalists: (Top & { city: HomeCity })[];
+  final: Top & { city: HomeCity };
 };
 export function world(c: HomeCfg): HomeWorld {
-  const S = sched(c), now = minuteOf(c, S), SD = seedData(c.seed), archived = now > S.winEnd;
+  const S = sched(c), now = minuteOf(c, S), SD = seedFor(c), archived = now > S.winEnd;
   /* each city's state, and its leader, come from the full seeded list it shares with its own page */
   const cs: HomeCity[] = S.cs.map((x, i) => cityState(x, SD.cities[i], now));
   const live = cs.filter((x) => x.state === 'build' || x.state === 'vote'), done = cs.filter((x) => x.state === 'done');
   const picked = now >= S.pickAt, pc = cs[SD.pick]; pc.win = { p: pc.list[0].p, v: pc.list[0].votes };
-  return { S, now, cs, live, done, allDone: done.length === 10, picked, archived, early: now < S.winStart, pick: pc as HomeWorld['pick'], total: cs.reduce((a, x) => a + x.entries, 0) };
+  const finalists = done.flatMap((x) => x.top.map((t) => ({ ...t, city: x })));
+  const fc = cs[SD.final.city], ft = cityState(S.cs[fc.i], SD.cities[fc.i], S.cs[fc.i].end).top[SD.final.place - 1];
+  return { S, now, cs, live, done, allDone: done.length === 10, picked, archived, early: now < S.winStart, pick: pc as HomeWorld['pick'], total: cs.reduce((a, x) => a + x.entries, 0), finalists, final: { ...ft, city: fc } };
 }
 
 /* ---------------- links (they carry the preview parameters) ---------------- */
@@ -124,6 +130,7 @@ export function action(W: HomeWorld, c: HomeCfg, href: (x: HomeCity) => string):
 }
 export function slotText(x: HomeCity, W: HomeWorld): { k: string; a: string; b: string } {
   if (x.state === 'next') return { k: 'Starts in', a: dur(x.wait!, true), b: 'Entries open then' };
+  if (!x.lead) return x.state === 'done' ? { k: 'Closed', a: 'No entries', b: '' } : { k: 'Building', a: 'No entries yet', b: '' };
   if (x.state === 'build') return { k: 'Leading', a: x.lead!.p.name, b: plural(x.lead!.v, 'vote') + ' · ' + plural(x.n!, 'project') };
   if (x.state === 'vote') return { k: 'Leading', a: x.lead!.p.name, b: plural(x.lead!.v, 'vote') + ' · ' + dur(x.left!, true) + ' left' };
   const pk = W.picked && W.pick === x;

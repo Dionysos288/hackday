@@ -8,7 +8,7 @@ const nextConfig: NextConfig = {
     return [
       { source: '/index.html', destination: '/', permanent: true },
       { source: '/lab/day-lab.html', destination: '/lab/day', permanent: true },
-      { source: '/lab/city-lab.html', destination: '/lab/city', permanent: true },
+      { source: '/lab/city-lab.html', destination: '/lab/city-sheet', permanent: true },
       { source: '/lab/seal-lab.html', destination: '/lab/seal', permanent: true },
       { source: '/lab/forms-lab.html', destination: '/lab/forms', permanent: true },
     ];

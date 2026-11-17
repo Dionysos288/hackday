@@ -44,7 +44,7 @@ function Lab({ ground: g0 }: { ground: string }) {
   return (
     <main className="mx-auto box-content max-w-[960px] px-6 pt-8 pb-18">
       <header className="flex flex-wrap items-end justify-between gap-4 pb-4 [box-shadow:inset_0_calc(-1*var(--line-hair))_0_var(--c-line)]">
-        <div><p className={K}>Supabase Hackathon</p><h1 className="text-h1 leading-[1.1] font-regular tracking-tight">Forms lab</h1></div>
+        <div><p className={K}>Supabase Hackday</p><h1 className="text-h1 leading-[1.1] font-regular tracking-tight">Forms lab</h1></div>
         <div className="lab-seg inline-flex" role="group" aria-label="Ground">{GROUNDS.map(([k, t]) => <button key={k} className="fm-b" type="button" aria-pressed={ground === k} onClick={() => setGround(k)}>{t}</button>)}</div>
       </header>
       <section className={SEC} aria-labelledby="k-flows">

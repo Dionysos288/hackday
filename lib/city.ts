@@ -6,7 +6,7 @@
    moves under the pointer or focus; one winner, one cut line; nothing listed twice; vote where you look, no toast; no
    ranking while building; vote traces are step lines; every vote lands as a tick at the now line; the rest of the
    day is always one click away; the winner's mark is the city's seal. */
-import { CITIES, CITY_IDS, EVENT, TA, all, arriveAt, cityState, minOfVote, mulberry32, sched, seedData, shuffle, slug, tOf, votesAtMin, type CitySched, type CityState, type Entry, type Sched, type SeedCity, type SeedDay } from './day-data';
+import { CITIES, CITY_IDS, EVENT, TA, all, arriveAt, cityState, judgeOf, minOfVote, mulberry32, sched, seedFor, shuffle, slug, tOf, votesAtMin, type CitySched, type CityState, type Entry, type Sched, type SeedCity, type SeedDay } from './day-data';
 import type { Project } from './data';
 import { NB, clamp, dur as durAny, fmtN, hhmm, ord, pluralN as plural, r2, tz } from './format';
 
@@ -88,22 +88,26 @@ export function homeT(now: number, S: Sched): number { return now > S.winEnd ? 1
 
 /* ---------------- the world ---------------- */
 export type Votes = Readonly<Record<string, 1>>;
-export type Row = { r: Entry; p: Project; k: number; a: number; arrive: number; v: number; mine: number; rank: number };
+/* v: votes now, yours included; mine: yours (one as a visitor, any number as a judge); j: how many are judges' (a
+   judge's own included) */
+export type Row = { r: Entry; p: Project; k: number; a: number; arrive: number; v: number; mine: number; rank: number; j: number };
 export type CityWorld = {
   c: CityCfg; S: Sched; x: CitySched; Wn: Win; i: number; city: CitySched['city']; off: number; sd: SeedCity; SD: SeedDay; now: number;
   st: CityState; state: CityState['state']; f: number; votesOn: boolean; voting: boolean;
   rows: Row[]; arrived: Row[]; ranked: Row[]; lead: Row | null; second: Row | undefined; total: number; topV: number; scaleV: number;
   picked: boolean; isPick: boolean; pickCity: typeof CITIES[number]; pickWin: Project; you: Row | null; last: boolean; inDay: boolean; day: CityState[];
 };
-/* voted: this visitor's own votes, by project id */
-export function world(c: CityCfg, voted: Votes): CityWorld {
-  const Wn = win(c), S = Wn.S, x = Wn.x, i = cityIndex(c), SD = seedData(c.seed), sd = SD.cities[i], entries = all(sd), now = minuteOf(c, Wn);
+/* voted: this visitor's own votes, by project id. judged: a judge's own votes (several may go on one project); they
+   move the order like anyone's. Both show while voting is open; once it closes, the day's data is the count both
+   pages show */
+export function world(c: CityCfg, voted: Votes, judged?: Readonly<Record<string, number>>): CityWorld {
+  const Wn = win(c), S = Wn.S, x = Wn.x, i = cityIndex(c), SD = seedFor(c), sd = SD.cities[i], entries = all(sd), now = minuteOf(c, Wn);
   const st = cityState(x, sd, now), city = x.city, off = city.offset;
   /* voting opens with building: votes show from the first entry; you can vote while building or voting is on */
   const votesOn = st.state !== 'next', voting = st.state === 'build' || st.state === 'vote', f = st.state === 'vote' ? st.f! : st.state === 'done' ? 1 : 0;
   const rows: Row[] = entries.map((r) => {
-    const v = votesOn ? votesAtMin(r, x, now) : 0, mine = voting && voted[r.p.id] ? 1 : 0;
-    return { r, p: r.p, k: r.k, a: r.a, arrive: arriveAt(r, x), v: v + mine, mine, rank: 0 };
+    const v = votesOn ? votesAtMin(r, x, now) : 0, jm = voting && judged ? judged[r.p.id] || 0 : 0, mine = (voting && voted[r.p.id] ? 1 : 0) + jm;
+    return { r, p: r.p, k: r.k, a: r.a, arrive: arriveAt(r, x), v: v + mine, mine, rank: 0, j: judgeOf(r, v) + jm };
   });
   const arrived = st.state === 'next' ? [] : st.state === 'build' ? rows.filter((o) => o.a < st.n!) : rows;
   const ranked = votesOn ? arrived.slice().sort((a, b) => b.v - a.v || a.k - b.k) : arrived.slice().sort((a, b) => b.a - a.a);
@@ -147,8 +151,10 @@ export function status(W: CityWorld): string {
   const s = W.st, nm = W.city.name;
   if (s.state === 'next') return nm + ' starts at ' + local(W, W.x.start) + (s.wait! >= 1440 ? ' on ' + EVENT.date : '') + '. That is in ' + dur(s.wait!) + '.';
   if (s.state === 'build') return nm + ' is building and voting is open. Entries close in ' + dur(s.left!) + '.';
-  if (s.state === 'vote') return 'Voting closes in ' + dur(s.left!) + '.';
-  return W.lead!.p.name + ' won ' + nm + '.';   /* the pick is said once, on the line under the table */
+  if (s.state === 'vote') return W.lead ? 'Voting closes in ' + dur(s.left!) + '.' : 'No entries came in. Entries closed at ' + local(W, W.x.buildEnd) + '.';
+  if (!W.lead) return nm + ' had no entries.';
+  const fin = W.ranked.slice(0, EVENT.finalists).map((o) => o.p.name);
+  return (fin.length > 1 ? fin.slice(0, -1).join(', ') + ' and ' + fin[fin.length - 1] + ' are' : fin[0] + ' is') + ' in the final.';   /* the pick is said once, on the line under the table */
 }
 /* the main action. Remind me and Submit open forms, so they are buttons; the rest are links.
    While building, voting is open too: Submit stays the main action (entries close first), and every row has Vote. */
@@ -157,14 +163,24 @@ export function action(W: CityWorld, L: Links): Action {
   const s = W.state;
   if (s === 'next') return { t: 'Remind me', act: 'remind' };
   if (s === 'build') return { t: 'Submit your project', act: 'submit' };
-  if (s === 'vote') return { t: 'Vote', href: '#sheet' };
-  return W.picked ? { t: 'See the winner', href: homeHref(W, '#pick', L) } : { t: 'See the ten', href: homeHref(W, '', L) };
+  if (s === 'vote') return W.lead ? { t: 'Vote', href: '#sheet' } : { t: 'See the other cities', href: homeHref(W, '', L) };
+  return W.picked ? { t: 'See the pick', href: homeHref(W, '#final', L) } : { t: 'See the 30 finalists', href: homeHref(W, '#final', L) };
 }
 export function gapText(W: CityWorld, o: Row): string {
   if (!W.votesOn || !W.lead) return '';
   if (o === W.lead) return !W.second ? 'The only project' : o.v === W.second.v ? 'Level with 2nd' : fmtN(o.v - W.second.v) + ' ahead of 2nd';
   return o.v === W.lead.v ? 'Level with 1st' : fmtN(W.lead.v - o.v) + ' behind 1st';
 }
+/* the gap that matters with a final: to the cut under 3rd. Inside the top 3: how far clear of 4th; below it: how far
+   behind 3rd. Ties go to the earlier entry, so level is said as level. */
+export function gapCut(W: CityWorld, o: Row): string {
+  if (!W.votesOn || !W.lead) return '';
+  const n = EVENT.finalists, third = W.ranked[n - 1], fourth = W.ranked[n];
+  if (o.rank <= n) return !fourth ? (W.ranked.length <= n ? 'In the top ' + n : '') : o.v === fourth.v ? 'Level with ' + ord(n + 1) : fmtN(o.v - fourth.v) + ' clear of ' + ord(n + 1);
+  return !third ? '' : o.v === third.v ? 'Level with ' + ord(n) : fmtN(third.v - o.v) + ' behind ' + ord(n);
+}
+/* the top 3 now, as rows: the contenders while live, the finalists once closed */
+export function finalists(W: CityWorld): Row[] { return W.votesOn ? W.ranked.slice(0, EVENT.finalists) : []; }
 export function cutText(W: CityWorld, c: CityCfg): string {
   if (c.cut === 'off') return '';
   const done = W.state === 'done';
@@ -203,7 +219,7 @@ export function facts(W: CityWorld): [string, string][] {
   else if (s.state === 'vote') { k1 = 'Voting closes in'; v1 = dur(s.left!, true); }
   else { k1 = 'Voting closed at'; v1 = local(W, W.x.end); }
   const n = W.state === 'next' ? 0 : W.state === 'build' ? s.n! : W.sd.entries;
-  return [[k1, v1], ['Local time, ' + tz(W.off), local(W, W.now)], [W.votesOn ? 'Projects' : 'Entries', fmtN(n)], ['Votes', W.votesOn ? fmtN(W.total) : '–']];
+  return [[k1, v1], ['Local time, ' + tz(W.off), local(W, W.now)], ['Projects', fmtN(n)], ['Votes', W.votesOn ? fmtN(W.total) : '–']];
 }
 
 /* ---------------- links between the pages (they carry the preview parameters) ---------------- */
@@ -230,13 +246,21 @@ export function cityHref(W: CityWorld, id: string, L: Links): string {
   return '/city/' + id + (u ? '?' + u.slice(1) : '');
 }
 export function homeHref(W: CityWorld, hash: string, L: Links): string {
-  if (L.kind === 'lab') return '/lab/day?mode=timetable&t=' + tOf(W.now, W.S).toFixed(4) + '&from=' + W.city.id + labTail(W, L) + (hash || '');
+  if (L.kind === 'lab') return '/lab/home?t=' + tOf(W.now, W.S).toFixed(4) + '&from=' + W.city.id + labTail(W, L) + (hash || '');
   const u = carry(L, homeT(W.now, W.S));
   return '/' + (u ? '?' + u.slice(1) : '') + (hash || '');
 }
+/* a project has its own address under its city; the city page draws it with the project open */
 export function projectHref(W: CityWorld, p: Project, L: Links): string {
   if (L.kind === 'lab') return '#p-' + slugOf(p);
-  return '/city/' + W.city.id + '?p=' + slugOf(p) + carry(L, (W.now - W.Wn.w0) / (W.Wn.w1 - W.Wn.w0));
+  const u = carry(L, (W.now - W.Wn.w0) / (W.Wn.w1 - W.Wn.w0));
+  return projectPath(W.city.id, slugOf(p)) + (u ? '?' + u.slice(1) : '');
+}
+export function projectPath(city: string, slug: string): string { return '/city/' + city + '/p/' + slug; }
+/* the city page's own address, with the preview parameters, for when a project closes */
+export function cityPath(W: CityWorld, L: Links): string {
+  const u = carry(L, (W.now - W.Wn.w0) / (W.Wn.w1 - W.Wn.w0));
+  return '/city/' + W.city.id + (u ? '?' + u.slice(1) : '');
 }
 
 /* ---------------- geometry: the session strip (the city's bar, opened) ---------------- */
@@ -302,7 +326,7 @@ export function miniDay(W: CityWorld) {
 export function restOfDay(W: CityWorld) {
   const S = W.S, span = S.winEnd - S.winStart, X = (m: number) => (m - S.winStart) / span * 100, nx = X(Math.min(W.now, S.winEnd));
   const rows = W.day.filter((_, j) => j !== W.i).map((y) => {
-    const t: [string, string] = y.state === 'next' ? ['Starts in', dur(y.wait!, true)] : y.state === 'build' || y.state === 'vote' ? ['Leading', y.lead!.p.name] : [(W.picked && W.SD.pick === y.i ? 'Picked' : 'Winner'), y.lead!.p.name];
+    const t: [string, string] = y.state === 'next' ? ['Starts in', dur(y.wait!, true)] : !y.lead ? ['Closed', 'No entries'] : y.state === 'build' || y.state === 'vote' ? ['Leading', y.lead.p.name] : ['1st', y.lead.p.name];
     const l = X(y.start), w = X(y.end) - l, { bf, fill } = barFill(y);
     return { y, t, l: r2(l), w: r2(w), bf: r2(bf), fill: r2(fill), loc: hhmm(y.start + y.city.offset) + '–' + hhmm(y.end + y.city.offset) + ' ' + tz(y.city.offset) };
   });

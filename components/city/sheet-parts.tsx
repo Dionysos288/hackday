@@ -72,7 +72,7 @@ export function SheetHead({ W, V }: { W: CityWorld; V: View }) {
 
 /* ---------------- a row ---------------- */
 /* a row of the sheet: the grid is in city.css (.cl-row), the rest is here */
-export const ROW = 'relative grid h-(--rowh) items-center gap-x-(--g) hover:bg-tint-1 phone:h-16 phone:content-center phone:gap-x-3 phone:rule-t';
+export const ROW = 'relative grid h-(--rowh) items-center gap-x-(--g) wash hover:bg-tint-1 phone:h-16 phone:content-center phone:gap-x-3 phone:rule-t';
 /* a row's li attributes: its key for the glide, its place for the arrival stagger, a fresh vote's flash */
 export function useRowAttrs() {
   const { flash } = useCity();
@@ -93,7 +93,7 @@ export function useOpenRow() {
 /* the rank before a name: none before the first votes; green on the leader while the city is live */
 export function rankCls(W: CityWorld, o: Row | null): string {
   const g = !!o && o === W.lead && (W.state === 'build' || W.state === 'vote');
-  return clsx('rk flex-none text-right tracking-[0] tabular-nums', g ? 'text-accent' : 'text-ink-3');
+  return clsx('rk flex-none text-right tracking-[0] tabular-nums', g ? 'text-accent' : 'text-ink-2');
 }
 /* the name is the row's link: a stretched link, so the strip and the slot open the project too */
 export const NAME = 'cl-pn flex min-w-0 items-center gap-3 leading-none tracking-d48 whitespace-nowrap text-ink outline-none';
@@ -118,7 +118,7 @@ export function VoteBtn({ o, at = 'row' }: { o: Row; at?: keyof typeof VB_AT }) 
   return (
     <button type="button" data-vote={o.p.id} aria-pressed={v} disabled={!on} hidden={!on}
       className={clsx('vb relative z-3 cursor-pointer justify-self-end font-sans text-sm/none font-medium before:absolute before:-inset-x-1 before:-inset-y-1.5 before:content-[""] pointer-coarse:h-11',
-        '[transition:background-color_var(--dur-hover)_ease-out,scale_var(--dur-press)_var(--ease-out)] active:scale-[0.97]', VB_AT[at], v ? 'bg-ink text-ground' : 'edge-line text-ink hover:bg-tint-2')}
+        '[transition:background-color_var(--dur-hover)_ease-out,scale_var(--dur-press)_var(--ease-out)] active:scale-(--press)', VB_AT[at], v ? 'bg-ink text-ground' : 'edge-line text-ink hover:bg-tint-2')}
       aria-label={(v ? 'Take back your vote for ' : 'Vote for ') + o.p.name} onClick={(e) => { e.preventDefault(); vote(o.p.id); }}>{v ? 'Voted' : 'Vote'}</button>
   );
 }

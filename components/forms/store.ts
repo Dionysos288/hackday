@@ -78,6 +78,9 @@ export const store = {
   /* this visitor's own votes, per city and seed */
   votes(key: string): Record<string, 1> { return read<Record<string, Record<string, 1>>>('votes', {})[key] || {}; },
   setVotes(key: string, v: Record<string, 1>) { const all = read<Record<string, Record<string, 1>>>('votes', {}); all[key] = v; write('votes', all); emit(); },
+  /* a judge's votes, per city and seed: several may go on one project (by project id) */
+  judged(key: string): Record<string, number> { return read<Record<string, Record<string, number>>>('judged', {})[key] || {}; },
+  setJudged(key: string, v: Record<string, number>) { const all = read<Record<string, Record<string, number>>>('judged', {}); all[key] = v; write('judged', all); emit(); },
 
   reset() { const drop: string[] = []; try { for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (k && k.indexOf(PREFIX) === 0) drop.push(k); } drop.forEach((k) => localStorage.removeItem(k)); } catch { /* storage blocked */ } },
 };
@@ -92,7 +95,7 @@ function snapshot(): FormsState {
   return cached;
 }
 /* after any write the sheets make: everyone reading the state renders again */
-export function emit() { cached = null; voteCache.clear(); subs.forEach((fn) => fn()); }
+export function emit() { cached = null; voteCache.clear(); judgedCache.clear(); subs.forEach((fn) => fn()); }
 let listening = false;
 function onStorage(e: StorageEvent) { if (e.key && e.key.indexOf(PREFIX) === 0) emit(); }
 function subscribe(fn: () => void) {
@@ -111,3 +114,8 @@ const voteCache = new Map<string, Readonly<Record<string, 1>>>();
 const NO_VOTES: Readonly<Record<string, 1>> = Object.freeze({});
 function votesSnapshot(key: string) { let v = voteCache.get(key); if (!v) { v = Object.freeze(store.votes(key)); voteCache.set(key, v); } return v; }
 export function useVotes(key: string): Readonly<Record<string, 1>> { return useSyncExternalStore(subscribe, () => votesSnapshot(key), () => NO_VOTES); }
+/* a judge's votes for one city and seed; none on the server and in the first render */
+const judgedCache = new Map<string, Readonly<Record<string, number>>>();
+const NO_JUDGED: Readonly<Record<string, number>> = Object.freeze({});
+function judgedSnapshot(key: string) { let v = judgedCache.get(key); if (!v) { v = Object.freeze(store.judged(key)); judgedCache.set(key, v); } return v; }
+export function useJudged(key: string, on: boolean): Readonly<Record<string, number>> { return useSyncExternalStore(subscribe, () => (on ? judgedSnapshot(key) : NO_JUDGED), () => NO_JUDGED); }

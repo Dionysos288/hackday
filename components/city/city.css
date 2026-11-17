@@ -12,7 +12,7 @@
     --vbw: 64px; --headh: 48px; --foot: 40px; --hair: var(--line-hair);
   }
   @container day (max-width: 719px) { .dl-page.cl { --headh: 32px; --vbw: 44px; } .cl-mh .mini { grid-area: date; } }
-  @container day (min-width: 720px) and (max-width: 1199px) { .dl-page.cl { --vbw: 56px; } }
+  @container day (min-width: 720px) and (max-width: 1199px) { .dl-page.cl { --vbw: 56px; } .cl-mh.mh-band { grid-template-columns: auto minmax(96px, 160px) minmax(0, 1fr) auto; } }   /* four parts: mark, mini day, status, action. Token candidate: the mini day 96-160px */
 
   /* ---------------- the mini day in the masthead: the home's ten bars in miniature, each a link to its city ---------------- */
   .mini-b { position: absolute; left: var(--l); width: var(--w); top: calc(var(--j) * 4px); height: 4px; display: block; }
@@ -22,6 +22,8 @@
   .mini-b.is-done i { background: var(--c-ink-2); }
   .mini-b.is-me i { top: 0; height: 4px; background: linear-gradient(90deg, var(--c-ink) var(--fill), color-mix(in oklch, var(--c-ink) 35%, transparent) var(--fill)); box-shadow: 0 0 0 1px var(--c-ground); }
   .mini-b:focus-visible { outline-offset: 1px; }
+  /* on touch the bars are too small to aim at (4px): the plot is not a set of targets there; keyboard still reaches each */
+  @media (pointer: coarse) { .mini-b { pointer-events: none; } }
   @media (hover: hover) and (pointer: fine) { .mini-b:not(.is-me):hover i { background: var(--c-ink); } .mini-home:hover .mini-v { text-decoration: underline; text-underline-offset: 3px; } }
 
   /* ---------------- the title: the city name is the largest thing on the page ---------------- */

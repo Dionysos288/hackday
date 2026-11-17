@@ -113,7 +113,7 @@ function SignInBody({ o, start, emRef, firstDigit, onSignedIn }: { o: SignInOpts
           <legend className="sr-only">Six-digit code</legend>
           {digits.map((d, i) => (
             <input key={i} ref={(el) => { ins.current[i] = el; if (i === 0) firstDigit.current = el; }} type="text" inputMode="numeric" pattern="[0-9]*" autoComplete={i ? 'off' : 'one-time-code'} autoCapitalize="none" autoCorrect="off" spellCheck={false} enterKeyHint="done"
-              aria-label={'Digit ' + (i + 1) + ' of 6'} data-1p-ignore data-lpignore="true" value={d} readOnly={checking} aria-invalid={bad[i] ? true : undefined}
+              aria-label={'Digit ' + (i + 1) + ' of 6'} aria-describedby={id + '-ce'} data-1p-ignore data-lpignore="true" value={d} readOnly={checking} aria-invalid={bad[i] ? true : undefined}
               onChange={(e) => onDigit(i, e.target.value)} onKeyDown={(e) => onKey(i, e)} onPaste={(e) => onPaste(i, e)} onFocus={(e) => e.target.select()} />
           ))}
         </fieldset>
@@ -121,8 +121,7 @@ function SignInBody({ o, start, emRef, firstDigit, onSignedIn }: { o: SignInOpts
         <p className="sr-only" role="status" id={id + '-st'}>{status}</p>
         <button className="fm-b g w-full" type="submit" disabled={checking} aria-busy={checking || undefined}>{checking ? 'Checking code…' : (o.verb || 'Sign in')}</button>
         <div className={FM_ACT}>
-          <button className={FM_T} type="button" data-resend disabled={cool > 0} onClick={resend}>{cool > 0 ? 'Send a new code in ' + cool + ' s' : 'Send a new code'}</button>
-          <span aria-hidden="true">&nbsp;</span>
+          <button className={FM_T + ' tabular-nums'} type="button" data-resend disabled={cool > 0} onClick={resend}>{cool > 0 ? 'Send a new code in ' + cool + ' s' : 'Send a new code'}</button>
           <button className={FM_T} type="button" data-back onClick={back}>Use a different email</button>
         </div>
       </form>

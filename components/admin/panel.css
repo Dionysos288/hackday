@@ -1,4 +1,4 @@
-/* lab.css: the tuning pages' own chrome, shared by /lab/day and /lab/city: the knob panel, its
+/* panel.css: the tuning chrome, for the pages under /lab and the real pages under ?admin: the knob panel, its
    toggle and the layout picker. Not part of the site. */
 .lab { position: fixed; z-index: 90; right: var(--s-3); top: var(--s-3); bottom: var(--s-3); width: 300px; overflow: auto; padding: var(--s-4); overscroll-behavior: contain;
   background: var(--c-paper); color: var(--c-ink); box-shadow: 0 0 0 1px var(--c-line), 0 16px 40px -16px var(--c-shade); font-size: var(--t-xs); }

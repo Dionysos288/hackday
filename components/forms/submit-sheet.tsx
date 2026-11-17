@@ -1,13 +1,13 @@
 'use client';
 import clsx from 'clsx';
 import { useEffect, useRef, useState, type DragEvent, type FormEvent } from 'react';
-import { CHECKS, cityLabel, pictureError, utc, withScheme, type FieldName } from '@/lib/forms';
+import { CHECKS, cityLabel, pictureError, atCity, withScheme, type FieldName } from '@/lib/forms';
 import { emit, store, type Entry } from './store';
 import { FM_ACT, FM_DONE, FM_F, FM_FORM, FM_H, FM_L, FM_NOTE, FM_P, FM_T, ErrBox, Sheet, useSheet } from './sheet';
 import type { Who } from './sign-in-sheet';
 
 /* Submit: one entry per person. The same sheet edits it until building closes, then says so. */
-export type SubmitOpts = { city?: string; cityName?: string; deadline?: Date | string };
+export type SubmitOpts = { city?: string; cityName?: string; deadline?: Date | string; off?: number };
 type Fields = { name: string; pitch: string; repo: string; demo: string; video: string; rules: boolean };
 const NAMES: FieldName[] = ['name', 'pitch', 'repo', 'demo', 'video', 'rules'];
 const isPast = (d: Date | string) => Date.now() > new Date(d).getTime();
@@ -26,7 +26,7 @@ export function SubmitSheet({ o, who, done, again, share }: { o: SubmitOpts; who
   );
 }
 function deadlineOf(edit: boolean, mine: Entry | null, o: SubmitOpts) { return edit ? (mine!.deadline || o.deadline) : o.deadline; }
-function until(edit: boolean, mine: Entry | null, o: SubmitOpts) { const d = deadlineOf(edit, mine, o); return d ? utc(d) : ''; }
+function until(edit: boolean, mine: Entry | null, o: SubmitOpts) { const d = deadlineOf(edit, mine, o); return d ? atCity(d, o.off) : ''; }
 
 function SubmitForm({ o, who, mine, cityName, nameRef, onSaved }: { o: SubmitOpts; who: Who; mine: Entry | null; cityName: string; nameRef: React.RefObject<HTMLInputElement | null>; onSaved: (e: Entry) => void }) {
   const { id, busy: busyRef, open: openRef } = useSheet(), edit = !!mine;
@@ -110,7 +110,7 @@ function SubmitForm({ o, who, mine, cityName, nameRef, onSaved }: { o: SubmitOpt
         <div className={FM_F}>
           <label className="fm-chk"><input type="checkbox" name="rules" aria-describedby={id + '-e-rules'} aria-invalid={err.rules ? true : undefined} checked={f.rules}
             onChange={(e) => { setF((x) => ({ ...x, rules: e.target.checked })); if (err.rules) check('rules', e.target.checked); }} />
-          <span>I built this during the hackathon and I have read the rules.</span></label>
+          <span>I built this during the hackathon.</span></label>
           <ErrBox id={id + '-e-rules'} msg={err.rules || ''} />
         </div>
         <div className={FM_ACT}><button className="fm-b g" type="submit" disabled={busy || closed} aria-busy={busy || undefined}>{busy ? (edit ? 'Saving changes…' : 'Submitting project…') : (edit ? 'Save changes' : 'Submit project')}</button></div>

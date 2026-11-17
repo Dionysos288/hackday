@@ -1,0 +1,81 @@
+/* wheel.css: the city wheel. One screen that does not scroll: the mouse wheel, a drag, the arrow keys and a click on a
+   name turn the wheel. The values are the study's; the ones that are taste are knobs (the paper, the lines, the face). */
+
+:root:has(.wh-pin) { overflow: hidden; scrollbar-gutter: auto; overscroll-behavior: none; }
+.wh-pin {
+  --wh-ink: #f4f4f2; --wh-muted: #8a8a86; --wh-rule: #6b6c6b;
+  --wh-gutter: clamp(20px, 4.6vw, 88px);
+  position: fixed; inset: 0; overflow: clip;
+  background: var(--wh-paper); color: var(--wh-ink); font-family: var(--wh-sans);
+  -webkit-font-smoothing: antialiased; color-scheme: dark;
+  /* the wheel turns on a drag, so the browser must not scroll or zoom on it */
+  touch-action: none; user-select: none; overscroll-behavior: none;
+}
+.wh-canvas { position: absolute; inset: 0; display: block; width: 100%; height: 100%; }
+
+/* the lines of a tube screen, over the canvas and the page text. The two globes have none: the wheel sets the place
+   and the radius of each. The centre of the big globe is on the right edge. */
+.wh-pin::after {
+  content: ''; position: absolute; inset: 0; pointer-events: none;
+  background: repeating-linear-gradient(to bottom, transparent 0 calc(var(--wh-line-p) - 1px), rgb(0 0 0 / var(--wh-line-a)) calc(var(--wh-line-p) - 1px) var(--wh-line-p));
+  mask-image:
+    radial-gradient(circle var(--globe-radius, 0px) at 100% var(--globe-y, 50%), transparent calc(100% - 1px), #000 100%),
+    radial-gradient(circle var(--small-radius, 0px) at var(--small-x, 0px) var(--small-y, 0px), transparent calc(100% - 1px), #000 100%);
+  mask-composite: intersect;
+}
+
+.wh-wordmark { position: absolute; left: var(--wh-gutter); margin: 0; }
+/* the link, and anything a page sets under it, from the bottom left corner up */
+.wh-foot { position: absolute; left: var(--wh-gutter); right: var(--wh-gutter); bottom: 30px; display: flex; flex-direction: column; align-items: flex-start; gap: 24px; pointer-events: none; }
+.wh-foot > * { pointer-events: auto; }
+/* the mark is over the screen lines, so its pixels stay whole */
+.wh-wordmark { top: 28px; z-index: 1; color: var(--wh-ink); line-height: 0; }
+/* two CSS pixels for each cell of the letters, so they stay square and sharp; the globe's lines are smooth */
+.wh-wordmark svg {
+  display: block; width: 90px; height: 42px;
+  /* a tube screen does not put its red and its blue on the same place */
+  filter: drop-shadow(0.75px 0 rgb(255 70 70 / 0.5)) drop-shadow(-0.75px 0 rgb(70 130 255 / 0.5)) drop-shadow(0 0 7px rgb(61 61 255 / 0.9));
+}
+.wh-wordmark[data-mark='both'], .wh-wordmark[data-mark='name'] { display: flex; align-items: center; gap: 14px; }
+/* the name beside the mark, in the face and size of the page's other top-line words */
+.wh-name { font: 500 17px/1 var(--wh-sans); letter-spacing: -0.01em; white-space: nowrap; }
+.wh-wordmark[data-mark='both'] > svg:first-child { filter: none; width: 20px; height: 21px; }
+.wh-mark-lines { fill: none; stroke: currentColor; }
+.wh-mark-word { fill: currentColor; shape-rendering: crispEdges; }
+
+/* the facts of the active city as a row of table cells, over the lines and with no colour step, so small text stays sharp */
+.wh-cells {
+  position: absolute; top: 0; left: 0; z-index: 1; display: flex; margin: 0;
+  /* the wheel sets translate to where the row ends, and this puts its end there */
+  transform: translate(-100%, -50%);
+  font: 500 13px/1 var(--wh-mono); white-space: nowrap; color: var(--wh-ink);
+}
+.wh-cells > div:not(.sr-only) {
+  display: flex; align-items: center; gap: 7px; margin: 0 -1px -1px 0; padding: 9px 12px;
+  /* two cells share a border line, so the colour must not be see-through */
+  border: 1px solid var(--wh-rule); background: var(--wh-paper);
+}
+.wh-cells dd { margin: 0; }
+.wh-cells svg { flex: none; width: 12px; height: 12px; }
+/* dark text on a light cell, at 7 to 1 or more */
+.wh-cells[data-status='nearing'] .wh-status { border-color: #f8d3a0; background-color: #f8d3a0; color: #6b2a00; }
+.wh-cells[data-status='open'] .wh-status { border-color: #dcfce7; background-color: #dcfce7; color: #14532d; }
+.wh-cells.is-stacked { flex-direction: column; }
+.wh-cells.is-docked { top: var(--wh-dock, 88px); left: var(--wh-gutter); right: var(--wh-gutter); flex-wrap: wrap; transform: none; }
+
+/* the call to action is a link with a small copy of the glass globe; the screen pass draws that globe where .wh-lens is */
+.wh-cta {
+  display: flex; align-items: center; gap: 18px;
+  color: var(--wh-ink); font-size: 20px; font-weight: 500; line-height: 1.4; letter-spacing: -0.01em; text-decoration: none;
+  text-shadow: 1.2px 0 rgb(255 70 70 / 0.5), -1.2px 0 rgb(70 130 255 / 0.5);
+}
+.wh-cta:focus-visible { outline: 2px solid var(--wh-ink); outline-offset: 8px; }
+.wh-lens { flex: none; width: 64px; height: 64px; }
+.wh-cta-text { display: flex; flex-direction: column; color: var(--wh-muted); }
+.wh-cta-action { color: var(--wh-ink); text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 5px; }
+/* a phone: the name and the sheet's link share the top line, so the mark and the name step down a size */
+@media (max-width: 480px) {
+  .wh-wordmark[data-mark='name'] { gap: 10px; }
+  .wh-wordmark[data-mark='name'] svg { width: 72px; height: 34px; }
+  .wh-name { font-size: 15px; }
+}

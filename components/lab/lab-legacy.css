@@ -1,4 +1,4 @@
-/* lab-legacy.css: the layouts not chosen (/lab/day Index, Wall and Dial; /lab/city Race, Gallery and Leader) were drawn
+/* lab-legacy.css: the layouts not chosen (/lab/day Index, Wall and Dial; /lab/city-sheet Race, Gallery and Leader) were drawn
    on the stylesheet the site had before its pages moved to utilities, and they still are. These are those rules, as they
    were, scoped to a lab frame showing one of those layouts. The chosen layouts (Timetable, Tower) never match the scope,
    so the real pages and their copies in the lab draw from their utilities only. Not part of the site. */

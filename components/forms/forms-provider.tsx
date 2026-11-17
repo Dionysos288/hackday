@@ -50,7 +50,7 @@ export function FormsProvider({ children }: { children: ReactNode }) {
       if (submitRun.current) return submitRun.current;
       /* Edit entry, from the done view: the sheet closes, then opens again on the entry */
       const again = () => { window.setTimeout(() => { submit(o); }, token('--dur-panel-exit')); };
-      const run = emailStep({}).then((who) => (who ? show<Entry | null>((done) => <SubmitSheet o={o} who={who} done={done} again={again} share={(e) => { share(projectOf(e)); }} />) : null))
+      const run = emailStep({ label: 'Submit', title: 'Sign in to submit your project', reason: 'Your project is tied to your email, so only you can edit it.' }).then((who) => (who ? show<Entry | null>((done) => <SubmitSheet o={o} who={who} done={done} again={again} share={(e) => { share(projectOf(e)); }} />) : null))
         .then((r) => { submitRun.current = null; return r; });
       submitRun.current = run; return run;
     };
@@ -58,7 +58,10 @@ export function FormsProvider({ children }: { children: ReactNode }) {
       signIn: () => emailStep({}),
       ensureVoter: () => {
         const s = store.session(); if (s && s.voter) return Promise.resolve(true);
-        return emailStep({ label: 'Vote', title: 'Confirm your email to vote', reason: 'One vote per project, so we need an email.', verb: 'Confirm email' }).then((r) => !!r);
+        const o: SignInOpts = { label: 'Vote', title: 'Confirm your email to vote', reason: 'One vote per project, so we need an email.', verb: 'Confirm email' };
+        /* signed in but not yet confirmed as a voter: the email step runs anyway (emailStep would pass the session through) */
+        if (s) return show<Who | null>((done) => <SignInSheet o={o} done={done} />).then((r) => !!r);
+        return emailStep(o).then((r) => !!r);
       },
       submit,
       remind: (o) => show<boolean>((done) => <RemindSheet o={o} done={done} />),

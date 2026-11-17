@@ -3,6 +3,8 @@ import { Geist, Geist_Mono } from 'next/font/google';
 import type { ReactNode } from 'react';
 import dayCfg from '@/saved/day.config.json';
 import cityCfg from '@/saved/city.config.json';
+import motionCfg from '@/saved/motion.config.json';
+import { clampMotion, motionCss } from '@/lib/motion';
 import { headScript } from '@/components/ground/head-script';
 import './globals.css';
 
@@ -16,6 +18,9 @@ const HEAD = headScript({
   city: { ground: cityCfg.ground, speed: cityCfg.speed, reduced: cityCfg.reduced },
 });
 
+/* the motion tokens, from the motion tuning page's saved config */
+const MOTION = motionCss(clampMotion(motionCfg));
+
 export const metadata: Metadata = {
   icons: { icon: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 109 113'><path fill='%2324a06a' d='M63.7 110.3c-2.9 3.6-8.7 1.6-8.7-3L54 40.1h45.2c8.2 0 12.8 9.5 7.7 15.9z'/><path fill='%233ecf8e' d='M45.3 2.1c2.9-3.6 8.7-1.6 8.7 3l.5 67.2H9.8c-8.2 0-12.8-9.5-7.7-15.9z'/></svg>" },
 };
@@ -28,6 +33,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
     <html lang="en" data-paper="night" className={geist.variable + ' ' + geistMono.variable} suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: HEAD }} />
+        <style dangerouslySetInnerHTML={{ __html: MOTION }} />
       </head>
       <body>{children}</body>
     </html>

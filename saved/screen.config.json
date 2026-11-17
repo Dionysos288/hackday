@@ -1,0 +1,14 @@
+{
+  "depth": "big",
+  "ground": "wheel",
+  "lineAlpha": 0.34,
+  "linePitch": 3,
+  "fringe": 1.2,
+  "fringeAlpha": 0.5,
+  "grain": 0.045,
+  "grainCell": 1.5,
+  "corners": 0.45,
+  "bigFrom": 28,
+  "globe": 1,
+  "lift": 1
+}

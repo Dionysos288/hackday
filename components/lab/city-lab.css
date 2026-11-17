@@ -1,4 +1,4 @@
-/* city-lab.css: the city lab's own layouts and knob variants (/lab/city). Loads after components/home/day.css,
+/* city-lab.css: the city lab's own layouts and knob variants (/lab/city-sheet). Loads after components/home/day.css,
    components/city/city.css, lab.css and day-lab.css. The production city page never loads it. */
 
 /* ---------------- title: poster ---------------- */

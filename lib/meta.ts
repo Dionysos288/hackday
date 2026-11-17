@@ -5,7 +5,7 @@ export function pageMeta(title: string, description: string): Metadata {
   return {
     title,
     description,
-    openGraph: { type: 'website', siteName: 'Supabase Hackathon', title, description },
+    openGraph: { type: 'website', siteName: 'Supabase Hackday', title, description },
     twitter: { card: 'summary' },
   };
 }

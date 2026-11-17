@@ -47,11 +47,15 @@ function boot(B: Boot) {
      works without it). The city page names its title and session bar the same in its CSS. */
   type VT = { viewTransition: { ready: Promise<unknown>; finished: Promise<unknown>; types?: Set<string>; skipTransition(): void } | null };
   const CITY_URL = /\/city\/([a-z-]+)/;
+  /* the names go in a stylesheet of their own, not on the elements: this runs before React hydrates, and a style
+     written onto the row would not match the server's HTML */
   const nameRow = (id: string) => {
-    const r = document.querySelector<HTMLElement>('.tt-row [data-city="' + id + '"]'); if (!r) return null;
-    const li = r.closest('li'), b = li && li.querySelector<HTMLElement>('.bar');
-    r.style.viewTransitionName = 'city-name'; if (b) b.style.viewTransitionName = 'city-bar';
-    return () => { r.style.viewTransitionName = ''; if (b) b.style.viewTransitionName = ''; };
+    const row = ':is(.tt-row, .hs-row) [data-city="' + id + '"]';
+    if (!document.querySelector(row)) return null;
+    const st = document.createElement('style');
+    st.textContent = row + ' { view-transition-name: city-name; } :is(.tt-row, .hs-row):has([data-city="' + id + '"]) .bar { view-transition-name: city-bar; }';
+    document.head.appendChild(st);
+    return () => { st.remove(); };
   };
   window.addEventListener('pagereveal', (ev) => {
     const e = ev as unknown as VT; if (!e.viewTransition) return;

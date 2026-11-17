@@ -1,32 +1,42 @@
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
+import saved from '@/saved/day-city.config.json';
+import parts from '@/saved/parts.config.json';
 import { CITY_IDS, cityById } from '@/lib/day-data';
-import type { Query } from '@/lib/clock';
 import { pageMeta } from '@/lib/meta';
-import { CityPage } from '@/components/city/city-page';
+import { flatQuery as flat } from '@/components/day/day';
+import type { PartsCfg } from '@/components/board/config';
+import { FormsProvider } from '@/components/forms/forms-provider';
+import { DayCity, type DayCityCfg } from '@/components/day/day-city';
 
-const DESCRIPTION = 'One city’s hackathon: build for 90 minutes from 09:00 local. Voting opens at 09:00 and closes 30 minutes after building ends. The project with the most votes wins the city.';
+const DESCRIPTION = 'Build for 90 minutes from 09:00 local time. Voting is open from the start until 30 minutes after building ends, and the top 3 by votes go to the final.';
 
 /* The ten cities are known, so any other id is a 404 */
 export const dynamicParams = false;
 export function generateStaticParams() { return CITY_IDS.map((city) => ({ city })); }
 
-type Props = { params: Promise<{ city: string }>; searchParams: Promise<Query> };
+type Q = Record<string, string | string[] | undefined>;
+type Props = { params: Promise<{ city: string }>; searchParams: Promise<Q> };
 export async function generateMetadata({ params }: Props) {
   const c = cityById((await params).city);
-  return c ? pageMeta(c.name + ' · Supabase Hackathon', DESCRIPTION) : {};
+  return c ? pageMeta(c.name + ' · Supabase Hackday', DESCRIPTION) : {};
 }
 
-/* Dynamic: the first frame is drawn at the moment the URL asks for (?moment=, ?t=), or at the real time of the
-   request, so the page arrives finished instead of filling in after load. */
+/* Dynamic: the first frame is drawn at the real time of the request (or the moment the URL asks for: ?moment=, ?m=),
+   so the page arrives finished. ?still=1 stops the clock; ?admin shows the panel. */
 function requestTime() { return Date.now(); }
 
 export default async function City({ params, searchParams }: Props) {
   const { city } = await params;
   if (!cityById(city)) notFound();
-  const q = await searchParams;
+  const q = flat(await searchParams);
+  /* the old project address (?p=<slug>) moved to /city/<city>/p/<slug> */
+  if (q.p) {
+    const rest = new URLSearchParams(); Object.entries(q).forEach(([k, v]) => { if (k !== 'p' && v != null) rest.set(k, v); });
+    redirect('/city/' + city + '/p/' + encodeURIComponent(q.p) + (rest.size ? '?' + rest : ''));
+  }
   return (
     <>
-      <CityPage id={city} q={q} nowMs={requestTime()} />
+      <FormsProvider><DayCity saved={saved as Partial<DayCityCfg>} parts={parts as Partial<PartsCfg>} q={q} page={{ nowMs: requestTime(), city }} /></FormsProvider>
       <noscript><p className="m-0 p-8 text-lg text-ink-2">This page needs JavaScript to follow the clock and to vote.</p></noscript>
     </>
   );

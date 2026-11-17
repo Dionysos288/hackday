@@ -10,8 +10,8 @@ export function CityHow({ c }: { c: CityCfg }) {
   return (
     <HowItWorksList id="how-h" title={'How it works in ' + nm} first="name" steps={[
       ['Build', 'Build from ' + local(x.start) + ' to ' + local(x.buildEnd) + ', ' + nm + ' time (' + hhmm(x.start) + ' to ' + hhmm(x.buildEnd) + ' UTC).'],
-      ['Vote', 'Vote from ' + local(x.start) + ' to ' + local(x.end) + ', on any project as soon as it is in. The project with the most votes wins ' + nm + '.'],
-      ['Pick', EVENT.pickers + ' pick one of the ten city winners at ' + local(S.pickAt) + '.'],
+      ['Vote', 'Vote from ' + local(x.start) + ' to ' + local(x.end) + ', on any project as soon as it is in. Judges add their votes to the same count. The top ' + EVENT.finalists + ' go to the final, and 1st wins the city prize.'],
+      ['The final', EVENT.pickers + ' pick one of the 30 finalists at ' + local(S.pickAt) + '. The pick wins the global prize.'],
     ]} />
   );
 }

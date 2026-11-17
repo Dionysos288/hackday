@@ -61,5 +61,4 @@ export const PAST: PastEvent[] = [
 export const FAQ: [string, string][] = [
   ['How do I enter?', 'Open your city’s page and submit your project while building is open, from 09:00 to 10:30 local time.'],
   ['How do I vote?', 'Open the city’s page while voting is open, from 09:00 to 11:00 local time, and press Vote on a project. You can vote on a project as soon as it is in. The first time, you confirm your email.'],
-  ['What is still to be announced?', 'Venues, prizes, team size and who can vote. They will be announced on this page.'],
 ];

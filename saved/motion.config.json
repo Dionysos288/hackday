@@ -1,0 +1,19 @@
+{
+  "press": 0.97,
+  "durPress": 90,
+  "durHover": 140,
+  "wash": 120,
+  "previewScale": 0.98,
+  "durPanel": 280,
+  "durPanelExit": 200,
+  "easeDrawer": "drawer",
+  "easeExit": "exit",
+  "sheetFrom": "edge",
+  "durVt": 280,
+  "slide": 220,
+  "durFlash": 1600,
+  "durDraw": 480,
+  "stagger": 60,
+  "durReveal": 2400,
+  "slow": 1
+}

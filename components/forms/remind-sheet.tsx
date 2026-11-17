@@ -1,11 +1,11 @@
 'use client';
 import { useEffect, useRef, useState, type FormEvent } from 'react';
-import { cityLabel, emailOK, utc } from '@/lib/forms';
+import { cityLabel, emailOK, atCity } from '@/lib/forms';
 import { emit, store } from './store';
 import { FM_ACT, FM_DONE, FM_F, FM_FORM, FM_H, FM_L, FM_P, ErrBox, Sheet, useSheet } from './sheet';
 
 /* Remind me: one email, for one city's start */
-export type RemindOpts = { city: string; cityName?: string; when?: Date | string };
+export type RemindOpts = { city: string; cityName?: string; when?: Date | string; off?: number };
 
 export function RemindSheet({ o, done }: { o: RemindOpts; done: (ok: boolean) => void }) {
   const ok = useRef(false), emRef = useRef<HTMLInputElement>(null);
@@ -17,7 +17,7 @@ export function RemindSheet({ o, done }: { o: RemindOpts; done: (ok: boolean) =>
 }
 
 function RemindBody({ o, emRef, onSaved }: { o: RemindOpts; emRef: React.RefObject<HTMLInputElement | null>; onSaved: () => void }) {
-  const { id, busy: busyRef, open: openRef } = useSheet(), cityName = o.cityName || cityLabel(o.city), when = o.when ? utc(o.when) : '';
+  const { id, busy: busyRef, open: openRef } = useSheet(), cityName = o.cityName || cityLabel(o.city), when = o.when ? atCity(o.when, o.off) : '';
   const [init] = useState(() => { const s = store.session(), already = store.reminders()[o.city]; return { already, email: (s && s.email) || already || store.lastEmail() || '' }; });
   const [value, setValue] = useState(init.email), [err, setErr] = useState(''), [busy, setBusy] = useState(false), [doneAddr, setDoneAddr] = useState('');
   const h = useRef<HTMLHeadingElement>(null);
