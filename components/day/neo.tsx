@@ -29,6 +29,8 @@ export type NeoDraw = { cities: string[]; won?: string[]; mono: string; sans: st
 /* one picture: ctx is set to CSS pixels (w by h) by the caller */
 export function renderNeo(p: CanvasRenderingContext2D, w: number, h: number, c: NeoLook, t: number, d: NeoDraw) {
   p.clearRect(0, 0, w, h);
+  /* a canvas not laid out yet (a closed sheet, a hidden tab) has no room to draw in */
+  if (w < 120 || h < 60) return;
   const r = rng(c.seed), won = new Set(d.won ?? []), codes = d.cities.length ? d.cities : ['SYD', 'TYO', 'SIN', 'BLR', 'BER', 'LOS', 'LON', 'SAO', 'NYC', 'SFO'];
   /* a rim: bright where the light is (left), gone by the right */
   const rim = (x0: number, y0: number, x1: number, y1: number, a: number, lw = 1) => {
@@ -63,7 +65,7 @@ export function renderNeo(p: CanvasRenderingContext2D, w: number, h: number, c: 
 
   if (c.mode === 'stack') {
     /* ten closed laptops on a shelf, the first city on top. The pitch never lets two labels touch */
-    const labW = c.label * 3.2, W = Math.min(w * c.width, w - labW - 28), th = W * c.thick, D = W * c.depth * 0.5;
+    const labW = c.label * 3.2, W = Math.max(40, Math.min(w * c.width, w - labW - 28)), th = W * c.thick, D = W * c.depth * 0.5;
     const pitch = Math.max(th + th * c.gap, c.label + 3), total = pitch * 9 + th + D, y0 = Math.max(4, (h - total) / 2) + D;
     const offs = codes.map(() => (r() - 0.5) * 2 * c.jitter * W * 0.03), reach = Math.max(0, ...offs), cx = (w - labW - 14 - reach) / 2, inset = W * c.persp;
     /* the codes stand just right of the stack, in one column */
