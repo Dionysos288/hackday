@@ -127,7 +127,7 @@ function inOrder(ids: number[], byId: Map<number, Row>): Row[] {
   ids.forEach((id) => { const o = byId.get(id); if (o) out.push(o.rank === out.length + 1 ? o : { ...o, rank: out.length + 1 }); });
   return out;
 }
-const tallyOf = (o: Row, P: PicCfg) => !P.tally ? undefined : o.rank === 1 ? 'air' : o.mine ? 'you' : undefined;
+const tallyOf = (o: Row, P: PicCfg) => !P.tally ? undefined : o.mine ? 'you' : undefined;
 
 /* a row's picture: a button for the pointer and touch (the name is the same action for the keyboard) */
 function RowPic({ o, P, open }: { o: Row; P: PicCfg; open: (o: Row) => void }) {

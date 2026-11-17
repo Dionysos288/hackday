@@ -54,14 +54,14 @@
 .cr-row[data-cut] { margin-bottom: 22px; border-bottom-color: var(--bd-ink); }
 .cr-row[data-cut]::after { content: attr(data-cut); position: absolute; right: 0; bottom: 0; transform: translateY(calc(50% + 1px)); padding-left: 10px; background: var(--bd-ground); font: 500 var(--bd-label)/1 var(--bd-face); color: var(--bd-ink); }
 /* the box sits 8px outside the row, so the row's columns stay on the list's lines */
-.cr-row[data-catching]::before { content: ''; position: absolute; inset: 0 -8px; border: 1px solid #ff7a1a; pointer-events: none; }
+.cr-row[data-catching]::before { content: ''; position: absolute; inset: 0 -8px; border: 1px solid #3ecf8e; pointer-events: none; }
 .cr-more { margin: calc(var(--bd-u) * 3) 0 0; }
 .cr-sp, .cr-tr { display: block; min-width: 0; }
 .cr-spark { display: block; width: 96px; height: 20px; }
 .cs-trace { display: block; width: 100%; height: 56px; }
 :is(.cr-spark, .cs-trace) polyline { fill: none; stroke: var(--bd-ink); stroke-width: 1.5; }
 .cr-spark polyline { stroke: var(--bd-muted); }
-:is(.cr-spark, .cs-trace) circle { fill: #ff7a1a; }
+:is(.cr-spark, .cs-trace) circle { fill: #3ecf8e; }
 .cs-grat line { stroke: rgb(244 244 242 / 0.08); stroke-width: 1; vector-effect: non-scaling-stroke; }
 .cs-grat .cs-be { stroke: rgb(244 244 242 / 0.3); stroke-dasharray: 2 3; }
 

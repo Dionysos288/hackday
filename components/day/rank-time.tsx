@@ -13,7 +13,7 @@ import { Thumb } from './rank-pictures';
      buttons that open the project, so the chart works from the keyboard too.
    - The lines draw in once when the view opens (--dur-draw, a step of --stagger apart); not under reduced motion. */
 
-export const LINE = ['#ff7a1a', '#4d6bff', '#f4f4f2'];
+export const LINE = ['#3ecf8e', '#4d6bff', '#f4f4f2'];
 export const lineOf = (rank: number) => LINE[rank - 1] ?? '#6b6c6b';
 const PAD = { l: 44, r: 16, t: 16, b: 34 }, LABEL_W = 300, GAP = 26, H = 460;
 
