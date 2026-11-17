@@ -8,8 +8,8 @@ Read this before changing how anything looks, reads or moves.
 
 | Scale | Rows are | The strip spans | Page |
 |---|---|---|---|
-| Day | ten cities | the whole day, in UTC | `index.html` |
-| City | projects | that city's session, in local time | `city.html` |
+| Day | ten cities | the whole day, in UTC | `/` |
+| City | projects | that city's session, in local time | `/city/<id>` |
 | Project | one project | the same session | the project sheet |
 
 Time runs across. Things hang on it in rows. One green line marks now. On the home, each city's winner sits on a line, and the ten lines join into one: the pick.
@@ -48,13 +48,13 @@ The family is the row, not a colour. A row is always a name, a strip and a slot,
 20. One winner, one cut line, under first place.
 21. Two densities and no duplicates: the top ten are rows in the drawing, everyone else is a compact table that starts at 11. Your own project is always in view.
 22. You vote in the row and the row answers. No toast for a vote that worked.
-23. While a city is building there is no ranking: entries are in arrival order, newest first, with no counts.
+23. Voting opens when building opens. From the first entry, projects are ranked by votes, and a project can be voted on as soon as it is in. Before a city starts there is no ranking.
 24. Every vote lands where you can see it: a tick at the now line on its row.
 25. The rest of the day is always in reach: a miniature of the home drawing sits in every city page's masthead.
 
 ## Colour
 
-All colour is OKLCH and comes from `shared/palette.js` (the base five) and `shared/brand.css` (the roles derived from them). Never write a raw colour in new CSS.
+All colour is OKLCH and comes from `lib/palette.ts` (the base five) and `app/globals.css` (the roles derived from them). Never write a raw colour in new CSS.
 
 | Ground | Value | Ink on ground | Green for lines and labels |
 |---|---|---|---|
@@ -82,7 +82,7 @@ All colour is OKLCH and comes from `shared/palette.js` (the base five) and `shar
 
 ## Motion
 
-Every duration and curve is a token in `shared/brand.css`. Animate transform and opacity only. Every motion has a reduced-motion version: the finished state.
+Every duration and curve is a token in `app/globals.css`. Animate transform and opacity only. Every motion has a reduced-motion version: the finished state.
 
 | Moment | How often | Spec |
 |---|---|---|

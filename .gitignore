@@ -7,3 +7,7 @@ shots/
 *.profile/
 # save history written by the tuning pages (the *.config.json files are kept)
 saved/*-20*.json
+# Next.js output
+.next/
+next-env.d.ts
+*.tsbuildinfo

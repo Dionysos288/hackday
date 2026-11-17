@@ -1,0 +1,75 @@
+/* globals.css: the one set of design tokens for the Supabase Hackathon site. app/layout.tsx loads it first.
+   Everything else reads these names; new CSS must not introduce raw colours, curves, sizes or spacing.
+   The base palette (--ground, --ink, --ink2, --minor, --major, --green, --tagink, --brand) is written on <html> before
+   first paint (components/ground), from one OKLCH object per ground in lib/palette.ts; the roles below derive from it, so changing
+   the ground re-tints the whole page. */
+:root {
+  /* ---- colour roles (derived, never hardcoded) ---- */
+  --c-ground: var(--ground);
+  --c-paper: color-mix(in oklch, var(--ground) 88%, white);            /* cards, panels, plates */
+  --c-ink: var(--ink);                                                  /* text, strokes */
+  --c-ink-2: var(--ink2);                                               /* secondary text */
+  --c-ink-3: color-mix(in oklch, var(--ink2) 72%, var(--ground));       /* faint text, axis labels */
+  --c-line: color-mix(in oklch, var(--ink) 28%, transparent);           /* hairline rules and edges */
+  --c-tint-1: color-mix(in oklch, var(--ink) 6%, transparent);          /* hover wash */
+  --c-tint-2: color-mix(in oklch, var(--ink) 12%, transparent);         /* pressed, zebra */
+  --c-tint-3: color-mix(in oklch, var(--ink) 40%, transparent);         /* disabled ink, dashed rules */
+  --c-accent: var(--green);                                             /* green means: leader, you, now, the main action */
+  --c-accent-ink: var(--tagink);
+  --c-shade: oklch(0.15 0.08 262);                                      /* shadow colour */
+
+  /* ---- type: Geist 400/500/600 and Geist Mono 500 are the only faces loaded (next/font, app/layout.tsx) ---- */
+  --font-sans: var(--font-geist), ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, "SF Mono", Menlo, monospace;
+  --t-label: 10px;   --t-label-track: 0.06em;   /* mono caps labels */
+  --t-xs: 12px; --t-sm: 14px; --t-md: 16px; --t-lg: 18px; --t-xl: 22px; --t-h2: 28px; --t-h1: 32px;
+  --w-regular: 400; --w-medium: 500; --w-semibold: 600;
+  --track-tight: -0.02em; --track-snug: -0.01em;
+  /* display type: city names and the facts in the first viewport. Tracking tightens as size grows. */
+  --t-d48: 48px; --t-d72: 72px; --t-d96: 96px; --t-d128: 128px;
+  --track-d48: -0.025em; --track-d72: -0.03em; --track-d96: -0.035em; --track-d128: -0.04em;
+
+  /* ---- space: 4px base ---- */
+  --s-1: 4px; --s-2: 8px; --s-3: 12px; --s-4: 16px; --s-5: 24px; --s-6: 32px; --s-7: 48px; --s-8: 72px;
+
+  /* ---- lines ---- */
+  --line-hair: 1px; --line-thin: 1px; --line-thick: 1.5px;
+  --r-0: 0; --r-round: 50%;                       /* square everything; only true markers are round */
+
+  /* the daylight band on the timetable: one lifted tone of the ground */
+  --c-day: color-mix(in oklch, var(--ground) 88%, white);
+
+  /* ---- motion: every duration and curve on the page comes from here ---- */
+  --dur-press: 90ms; --dur-hover: 140ms;
+  --dur-panel: 280ms; --dur-panel-exit: 200ms;   /* dialogs, drawers, list reorders */
+  --dur-draw: 480ms; --dur-scene: 900ms; --dur-flash: 1600ms;
+  --dur-reveal: 2400ms;                          /* the pick reveal: once, ever, staged inside this one duration */
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);     /* enters, hover, press */
+  --ease-exit: cubic-bezier(0.4, 0, 1, 1);        /* exits only */
+  --ease-move: cubic-bezier(0.77, 0, 0.175, 1);   /* things already on screen moving: reorders */
+  --ease-draw: cubic-bezier(0.65, 0, 0.35, 1);    /* pen strokes, bars filling */
+  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);  /* drawers */
+}
+
+/* paper and mint (data-paper="graphite"): the shadow goes neutral */
+html[data-paper="graphite"] {
+  --c-shade: oklch(0.08 0 0);
+}
+/* night (the default ground): Supabase's near-black, hue 157.5. Lines and washes are lighter on a dark ground. */
+html[data-paper="night"] {
+  color-scheme: dark;
+  --c-paper: color-mix(in oklch, var(--ground) 90%, white);
+  --c-line: color-mix(in oklch, var(--ink) 16%, transparent);
+  --c-tint-1: color-mix(in oklch, var(--ink) 5%, transparent);
+  --c-tint-2: color-mix(in oklch, var(--ink) 9%, transparent);
+  --c-day: color-mix(in oklch, var(--ground) 91%, white);
+  --c-shade: oklch(0.08 0.002 157.5);
+}
+@media (min-resolution: 2dppx) { :root { --line-hair: 0.5px; --line-thin: 0.75px; } }
+
+/* nothing transitions while the page boots: states set by script before first paint must not animate in */
+html.preload *, html.preload *::before, html.preload *::after { transition: none !important; }
+
+@media (prefers-reduced-motion: reduce) {
+  :root { --dur-press: 0ms; --dur-hover: 0ms; --dur-panel: 0ms; --dur-panel-exit: 0ms; --dur-draw: 0ms; --dur-scene: 0ms; --dur-reveal: 0ms; }
+}

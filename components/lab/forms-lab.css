@@ -1,0 +1,15 @@
+/* forms-lab.css: the forms tuning page (/lab/forms). Not part of the site. */
+html { background: var(--c-ground); scrollbar-gutter: stable; }
+body { margin: 0; min-height: 100vh; background: var(--c-ground); color: var(--c-ink); font: var(--w-regular) var(--t-md)/1.5 var(--font-sans); -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+.lab { max-width: 960px; margin: 0 auto; padding: var(--s-6) var(--s-5) var(--s-8); }
+.lab-h { display: flex; justify-content: space-between; align-items: end; gap: var(--s-4); flex-wrap: wrap; padding-bottom: var(--s-4); box-shadow: inset 0 calc(-1 * var(--line-hair)) 0 var(--c-line); }
+.lab h1 { margin: 0; font-size: var(--t-h1); line-height: 1.1; font-weight: var(--w-regular); letter-spacing: var(--track-tight); }
+.lab-k { margin: 0 0 var(--s-2); font: var(--w-medium) var(--t-label)/1.2 var(--font-mono); letter-spacing: var(--t-label-track); text-transform: uppercase; color: var(--c-ink-2); }
+.lab-sec { padding: var(--s-5) 0; box-shadow: inset 0 calc(-1 * var(--line-hair)) 0 var(--c-line); }
+.lab-row { display: flex; flex-wrap: wrap; gap: var(--s-2); }
+.lab-seg { display: inline-flex; }
+.lab-seg .fm-b { box-shadow: inset 0 0 0 var(--line-thin) var(--c-line); }
+.lab-seg .fm-b[aria-pressed="true"] { background: var(--c-ink); color: var(--c-ground); box-shadow: none; }
+.lab-state, .lab-log { margin: 0; font: var(--w-medium) var(--t-xs)/1.6 var(--font-mono); color: var(--c-ink-2); white-space: pre-wrap; overflow-wrap: anywhere; }
+.lab-state b { font-weight: var(--w-medium); color: var(--c-ink); }
+.lab-note { margin: var(--s-3) 0 0; font-size: var(--t-sm); color: var(--c-ink-2); max-width: 60ch; }
