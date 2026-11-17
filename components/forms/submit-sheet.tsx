@@ -1,8 +1,9 @@
 'use client';
+import clsx from 'clsx';
 import { useEffect, useRef, useState, type DragEvent, type FormEvent } from 'react';
 import { CHECKS, cityLabel, pictureError, utc, withScheme, type FieldName } from '@/lib/forms';
 import { emit, store, type Entry } from './store';
-import { ErrBox, Sheet, useSheet } from './sheet';
+import { FM_ACT, FM_DONE, FM_F, FM_FORM, FM_H, FM_L, FM_NOTE, FM_P, FM_T, ErrBox, Sheet, useSheet } from './sheet';
 import type { Who } from './sign-in-sheet';
 
 /* Submit: one entry per person. The same sheet edits it until building closes, then says so. */
@@ -67,26 +68,26 @@ function SubmitForm({ o, who, mine, cityName, nameRef, onSaved }: { o: SubmitOpt
   const attrs = (n: FieldName) => ({ className: 'fm-i', id: id + '-' + n, name: n, 'aria-describedby': id + '-e-' + n, 'aria-invalid': err[n] ? true : undefined, ref: n === 'name' ? nameRef : undefined });
   const onBlurField = (n: FieldName) => { const v = f[n]; if (typeof v === 'string' && (v.trim() || err[n])) check(n, v); };
   const field = (n: FieldName, label: string, input: React.ReactNode, hint?: React.ReactNode) => (
-    <div className="fm-f"><label className="fm-l" htmlFor={id + '-' + n}><span>{label}</span>{hint}</label>{input}<ErrBox id={id + '-e-' + n} msg={err[n] || ''} /></div>
+    <div className={FM_F}><label className={FM_L} htmlFor={id + '-' + n}><span>{label}</span>{hint}</label>{input}<ErrBox id={id + '-e-' + n} msg={err[n] || ''} /></div>
   );
   const text = (n: 'name' | 'pitch' | 'repo' | 'demo' | 'video') => ({ value: f[n], onChange: (e: React.ChangeEvent<HTMLInputElement>) => set(n, e.target.value), onBlur: () => onBlurField(n) });
 
   return (
     <>
-      <h2 ref={headRef} className="fm-h" id={id + '-h'} tabIndex={-1}>{edit ? 'Edit your project' : 'Submit your project'}</h2>
-      <p className="fm-p">{closed
+      <h2 ref={headRef} className={FM_H} id={id + '-h'} tabIndex={-1}>{edit ? 'Edit your project' : 'Submit your project'}</h2>
+      <p className={FM_P}>{closed
         ? 'Submissions for ' + cityName + ' closed at ' + untilT + '. Your entry was not saved.'
         : <>{otherCity ? 'You already have an entry in ' + cityName + '. One entry per person, so this edits it. ' : ''}Entering as <b>@{who.handle}</b>. One entry per person.{untilT ? ' You can edit it until ' + untilT + '.' : ''}</>}</p>
-      <form ref={formRef} className="fm-form" noValidate onSubmit={onSubmit}>
+      <form ref={formRef} className={FM_FORM} noValidate onSubmit={onSubmit}>
         {field('name', 'Project name', <input {...attrs('name')} {...text('name')} type="text" maxLength={40} autoComplete="off" spellCheck={false} enterKeyHint="next" />)}
         {field('pitch', 'One-line pitch', <input {...attrs('pitch')} {...text('pitch')} type="text" maxLength={100} autoComplete="off" spellCheck enterKeyHint="next" />,
-          <span className={'fm-ct' + (f.pitch.length >= 100 ? ' is-full' : '')} id={id + '-ct'} aria-hidden="true">{f.pitch.length}/100</span>)}
+          <span className={clsx('tabular-nums', f.pitch.length >= 100 ? 'text-ink' : 'text-ink-3')} id={id + '-ct'} aria-hidden="true">{f.pitch.length}/100</span>)}
         {field('repo', 'GitHub repo', <input {...attrs('repo')} {...text('repo')} type="url" inputMode="url" autoComplete="off" autoCapitalize="none" spellCheck={false} placeholder="https://github.com/you/project" enterKeyHint="next" />)}
         {field('demo', 'Demo link', <input {...attrs('demo')} {...text('demo')} type="url" inputMode="url" autoComplete="off" autoCapitalize="none" spellCheck={false} placeholder="https://" enterKeyHint="next" />, <small>Optional</small>)}
         {field('video', 'Video link', <input {...attrs('video')} {...text('video')} type="url" inputMode="url" autoComplete="off" autoCapitalize="none" spellCheck={false} placeholder="https://" enterKeyHint="next" />, <small>Optional</small>)}
-        <div className="fm-f">
-          <span className="fm-l" id={id + '-pl'}><span>Picture</span><small>Optional</small></span>
-          <div className="fm-picrow">
+        <div className={FM_F}>
+          <span className={FM_L} id={id + '-pl'}><span>Picture</span><small>Optional</small></span>
+          <div className="grid grid-cols-2 items-end gap-x-4 phone-window:grid-cols-[minmax(0,1fr)] phone-window:gap-y-2">
             <label className={'fm-pic' + (pic.preview ? ' has-img' : '') + (over ? ' is-over' : '')} data-pic
               onDragOver={(e: DragEvent) => { e.preventDefault(); setOver(true); }} onDragLeave={() => setOver(false)}
               onDrop={(e: DragEvent) => { e.preventDefault(); setOver(false); takeFile(e.dataTransfer.files && e.dataTransfer.files[0]); }}>
@@ -94,25 +95,25 @@ function SubmitForm({ o, who, mine, cityName, nameRef, onSaved }: { o: SubmitOpt
                 onChange={(e) => takeFile(e.target.files && e.target.files[0])} />
               {/* eslint-disable-next-line @next/next/no-img-element -- a local preview of the chosen file */}
               {pic.preview ? <img src={pic.preview} alt="Picture preview" /> : null}
-              <span className="fm-pic-t" data-pic-t hidden={!!pic.preview}><b>Add a picture</b><span>Drop it here or choose a file</span></span>
+              <span className="grid justify-items-center gap-y-1 p-4 text-center text-sm text-ink-2 [&_b]:font-medium [&_b]:text-ink" data-pic-t hidden={!!pic.preview}><b>Add a picture</b><span>Drop it here or choose a file</span></span>
             </label>
-            <div className="fm-pic-side">
-              <p className="fm-note" id={id + '-ph'}>Shown at 16:9 in the list and on your project page. JPEG, PNG or WebP, up to 5{' '}MB.</p>
-              <div className="fm-pic-a" data-pic-a hidden={!pic.preview}>
-                <button className="fm-t" type="button" onClick={() => fileRef.current?.click()}>Change picture</button>
-                <button className="fm-t" type="button" onClick={removePic}>Remove picture</button>
+            <div className="grid content-end gap-y-2">
+              <p className={FM_NOTE} id={id + '-ph'}>Shown at 16:9 in the list and on your project page. JPEG, PNG or WebP, up to 5{' '}MB.</p>
+              <div className="flex flex-wrap gap-x-4" data-pic-a hidden={!pic.preview}>
+                <button className={FM_T} type="button" onClick={() => fileRef.current?.click()}>Change picture</button>
+                <button className={FM_T} type="button" onClick={removePic}>Remove picture</button>
               </div>
             </div>
           </div>
           <ErrBox id={id + '-e-picture'} msg={err.picture || ''} />
         </div>
-        <div className="fm-f">
+        <div className={FM_F}>
           <label className="fm-chk"><input type="checkbox" name="rules" aria-describedby={id + '-e-rules'} aria-invalid={err.rules ? true : undefined} checked={f.rules}
             onChange={(e) => { setF((x) => ({ ...x, rules: e.target.checked })); if (err.rules) check('rules', e.target.checked); }} />
           <span>I built this during the hackathon and I have read the rules.</span></label>
           <ErrBox id={id + '-e-rules'} msg={err.rules || ''} />
         </div>
-        <div className="fm-act"><button className="fm-b g" type="submit" disabled={busy || closed} aria-busy={busy || undefined}>{busy ? (edit ? 'Saving changes…' : 'Submitting project…') : (edit ? 'Save changes' : 'Submit project')}</button></div>
+        <div className={FM_ACT}><button className="fm-b g" type="submit" disabled={busy || closed} aria-busy={busy || undefined}>{busy ? (edit ? 'Saving changes…' : 'Submitting project…') : (edit ? 'Save changes' : 'Submit project')}</button></div>
       </form>
     </>
   );
@@ -123,9 +124,9 @@ function DoneView({ edit, entry, cityName, until: untilT, again, share }: { edit
   useEffect(() => { h.current?.focus(); }, []);
   return (
     <>
-      <h2 ref={h} className="fm-h" id={id + '-h'} tabIndex={-1}>{edit ? 'Changes saved.' : entry.name + ' is in.'}</h2>
-      <p className="fm-p" role="status">{(edit ? 'Your entry is up to date' : 'Your entry is in the ' + (cityName || 'city') + ' list') + (untilT ? '. You can edit it until ' + untilT + '.' : '.')}</p>
-      <div className="fm-done"><div className="fm-act">
+      <h2 ref={h} className={FM_H} id={id + '-h'} tabIndex={-1}>{edit ? 'Changes saved.' : entry.name + ' is in.'}</h2>
+      <p className={FM_P} role="status">{(edit ? 'Your entry is up to date' : 'Your entry is in the ' + (cityName || 'city') + ' list') + (untilT ? '. You can edit it until ' + untilT + '.' : '.')}</p>
+      <div className={FM_DONE}><div className={FM_ACT}>
         <button className="fm-b g" type="button" data-share onClick={() => share(entry)}>Share entry</button>
         <button className="fm-b" type="button" data-again onClick={() => { close(); again(); }}>Edit entry</button>
         <button className="fm-b" type="button" data-close>Done</button>

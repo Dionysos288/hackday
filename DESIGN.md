@@ -54,7 +54,7 @@ The family is the row, not a colour. A row is always a name, a strip and a slot,
 
 ## Colour
 
-All colour is OKLCH and comes from `lib/palette.ts` (the base five) and `app/globals.css` (the roles derived from them). Never write a raw colour in new CSS.
+All colour is OKLCH and comes from `lib/palette.ts` (the base five) and `app/globals.css` (the roles derived from them). The Tailwind colours are these roles and nothing else (`bg-ground`, `text-ink`, `text-ink-2`, `bg-ink-3`, `bg-line`, `bg-tint-1` to `-3`, `bg-day`, `bg-accent`, `text-accent-ink`, `fill-brand`), and they follow the ground. Never write a raw colour in a class or in CSS.
 
 | Ground | Value | Ink on ground | Green for lines and labels |
 |---|---|---|---|
@@ -79,10 +79,11 @@ All colour is OKLCH and comes from `lib/palette.ts` (the base five) and `app/glo
 - Space is on a 4px base: 4, 8, 12, 16, 24, 32, 48, 72.
 - Layout is a 12-column grid. Home rows split 5, 5 and 2 columns (name, strip, slot). City rows split 4, 5 and 3.
 - Lines are `--line-hair`, `--line-thin` and `--line-thick`. No shadows, no blur, no gradients except the daylight band's edge.
+- The spacing utilities run on the same 4px base (`p-4` is 16px). The recurring marks are utilities of their own in `app/globals.css`: `type-label`, `rule-t`, `rule-b`, `edge-line`, `edge-ink`, `dash-frame`, `knockout`, `underline-link`, `stretched`.
 
 ## Motion
 
-Every duration and curve is a token in `app/globals.css`. Animate transform and opacity only. Every motion has a reduced-motion version: the finished state.
+Every duration and curve is a token in `app/globals.css`, and the utilities name them: `duration-hover`, `duration-panel`, `ease-move` (`ease-out` is the brand curve; the plain CSS keyword is `ease-[ease-out]`). Animate transform and opacity only. Every motion has a reduced-motion version: the finished state.
 
 | Moment | How often | Spec |
 |---|---|---|

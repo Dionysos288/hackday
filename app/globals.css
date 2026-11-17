@@ -1,8 +1,95 @@
-/* globals.css: the one set of design tokens for the Supabase Hackathon site. app/layout.tsx loads it first.
-   Everything else reads these names; new CSS must not introduce raw colours, curves, sizes or spacing.
+/* globals.css: the one set of design tokens for the Supabase Hackathon site, and the Tailwind setup that reads them.
+   app/layout.tsx loads it first. Everything else reads these names; new styles must not introduce raw colours, curves,
+   sizes or spacing.
    The base palette (--ground, --ink, --ink2, --minor, --major, --green, --tagink, --brand) is written on <html> before
-   first paint (components/ground), from one OKLCH object per ground in lib/palette.ts; the roles below derive from it, so changing
-   the ground re-tints the whole page. */
+   first paint (components/ground), from one OKLCH object per ground in lib/palette.ts; the roles below derive from it, so
+   changing the ground re-tints the whole page, utilities included. */
+@import "tailwindcss";
+
+/* ---- the theme: brand tokens only. The default theme (palette, sizes, curves, breakpoints) is cleared. ---- */
+@theme static {
+  --*: initial;
+  --spacing: 4px;   /* p-1 = 4px. The brand's steps are 1, 2, 3, 4, 6, 8, 12, 18 (4, 8, 12, 16, 24, 32, 48, 72px) */
+
+  /* Geist 400/500/600 and Geist Mono 500 are the only faces loaded (next/font, app/layout.tsx) */
+  --font-sans: var(--font-geist), ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, "SF Mono", Menlo, monospace;
+  --default-font-family: var(--font-sans);
+  --default-mono-font-family: var(--font-mono);
+
+  /* motion curves. ease-out is the brand's curve; the CSS keyword is written ease-[ease-out]. */
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);     /* enters, hover, press */
+  --ease-exit: cubic-bezier(0.4, 0, 1, 1);        /* exits only */
+  --ease-move: cubic-bezier(0.77, 0, 0.175, 1);   /* things already on screen moving: reorders */
+  --ease-draw: cubic-bezier(0.65, 0, 0.35, 1);    /* pen strokes, bars filling */
+  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);  /* drawers */
+}
+/* the utilities read the tokens below, so the ground switch and reduced motion reach them too */
+@theme inline {
+  --color-ground: var(--c-ground);
+  --color-paper: var(--c-paper);
+  --color-ink: var(--c-ink);
+  --color-ink-2: var(--c-ink-2);
+  --color-ink-3: var(--c-ink-3);
+  --color-line: var(--c-line);
+  --color-tint-1: var(--c-tint-1);
+  --color-tint-2: var(--c-tint-2);
+  --color-tint-3: var(--c-tint-3);
+  --color-day: var(--c-day);
+  --color-accent: var(--c-accent);
+  --color-accent-ink: var(--c-accent-ink);
+  --color-brand: var(--brand);
+
+  --text-label: var(--t-label);
+  --text-xs: var(--t-xs); --text-sm: var(--t-sm); --text-md: var(--t-md); --text-lg: var(--t-lg); --text-xl: var(--t-xl);
+  --text-h2: var(--t-h2); --text-h1: var(--t-h1);
+  --text-d48: var(--t-d48); --text-d72: var(--t-d72); --text-d96: var(--t-d96); --text-d128: var(--t-d128);
+  --font-weight-regular: var(--w-regular); --font-weight-medium: var(--w-medium); --font-weight-semibold: var(--w-semibold);
+  --tracking-label: var(--t-label-track); --tracking-tight: var(--track-tight); --tracking-snug: var(--track-snug);
+  --tracking-d48: var(--track-d48); --tracking-d72: var(--track-d72); --tracking-d96: var(--track-d96); --tracking-d128: var(--track-d128);
+  --radius-round: var(--r-round);
+  --aspect-video: 16 / 9;   /* every project picture */
+
+  --transition-duration-press: var(--dur-press); --transition-duration-hover: var(--dur-hover);
+  --transition-duration-panel: var(--dur-panel); --transition-duration-panel-exit: var(--dur-panel-exit);
+  --transition-duration-draw: var(--dur-draw); --transition-duration-scene: var(--dur-scene);
+  --transition-duration-flash: var(--dur-flash); --transition-duration-reveal: var(--dur-reveal);
+}
+
+/* hover effects only on devices that really hover with a fine pointer (touch never gets a stuck hover) */
+@custom-variant hover {
+  @media (hover: hover) and (pointer: fine) { &:hover { @slot; } }
+}
+/* layout per width: container queries on the page frame (.dl-frame, container "day"), as the pages have always used */
+@custom-variant phone {
+  @container day (max-width: 719px) { @slot; }
+}
+@custom-variant tablet {
+  @container day (min-width: 720px) and (max-width: 1199px) { @slot; }
+}
+/* dialogs sit outside the frame, so they follow the window */
+@custom-variant phone-window {
+  @media (max-width: 719px) { @slot; }
+}
+
+/* ---- the brand's recurring marks, as utilities ---- */
+@utility type-label {   /* mono caps label: write the source in sentence case */
+  font: var(--w-medium) var(--t-label)/1.2 var(--font-mono); letter-spacing: var(--t-label-track); text-transform: uppercase;
+}
+@utility rule-t { box-shadow: inset 0 var(--hair) 0 var(--c-line); }                /* a hairline along the top */
+@utility rule-b { box-shadow: inset 0 calc(-1 * var(--hair)) 0 var(--c-line); }     /* a hairline along the bottom */
+@utility edge-line { box-shadow: inset 0 0 0 var(--line-thin) var(--c-line); }      /* a control's frame */
+@utility edge-ink { box-shadow: inset 0 0 0 var(--line-thin) var(--c-ink); }
+@utility edge-ink-2 { box-shadow: inset 0 0 0 var(--line-thin) var(--c-ink-2); }
+@utility dash-frame { outline: var(--hair) dashed var(--c-ink-3); outline-offset: calc(-1 * var(--hair)); }   /* dashed means not yet */
+@utility dash-x { background: repeating-linear-gradient(90deg, var(--c-ink-3) 0 3px, transparent 3px 6px); }    /* a dashed hairline, across */
+@utility dash-y { background: repeating-linear-gradient(180deg, var(--c-ink-3) 0 3px, transparent 3px 6px); }   /* a dashed hairline, down */
+@utility knockout { paint-order: stroke fill; -webkit-text-stroke: 5px var(--c-ground); }   /* a line breaks where it meets lettering */
+@utility underline-link { text-decoration: underline; text-decoration-thickness: from-font; text-underline-offset: 3px; }
+@utility stretched { &::after { content: ""; position: absolute; inset: 0; z-index: 1; } }   /* a link that covers its whole (positioned) row */
+@utility focus-row { outline: 2px solid var(--c-ink); outline-offset: -2px; }       /* a row whose link has keyboard focus */
+
+/* ---- the tokens ---- */
 :root {
   /* ---- colour roles (derived, never hardcoded) ---- */
   --c-ground: var(--ground);
@@ -18,9 +105,7 @@
   --c-accent-ink: var(--tagink);
   --c-shade: oklch(0.15 0.08 262);                                      /* shadow colour */
 
-  /* ---- type: Geist 400/500/600 and Geist Mono 500 are the only faces loaded (next/font, app/layout.tsx) ---- */
-  --font-sans: var(--font-geist), ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
-  --font-mono: var(--font-geist-mono), ui-monospace, "SF Mono", Menlo, monospace;
+  /* ---- type (the faces are --font-sans and --font-mono, in the theme above) ---- */
   --t-label: 10px;   --t-label-track: 0.06em;   /* mono caps labels */
   --t-xs: 12px; --t-sm: 14px; --t-md: 16px; --t-lg: 18px; --t-xl: 22px; --t-h2: 28px; --t-h1: 32px;
   --w-regular: 400; --w-medium: 500; --w-semibold: 600;
@@ -39,16 +124,11 @@
   /* the daylight band on the timetable: one lifted tone of the ground */
   --c-day: color-mix(in oklch, var(--ground) 88%, white);
 
-  /* ---- motion: every duration and curve on the page comes from here ---- */
+  /* ---- motion: every duration on the page comes from here (the curves are in the theme above) ---- */
   --dur-press: 90ms; --dur-hover: 140ms;
   --dur-panel: 280ms; --dur-panel-exit: 200ms;   /* dialogs, drawers, list reorders */
   --dur-draw: 480ms; --dur-scene: 900ms; --dur-flash: 1600ms;
   --dur-reveal: 2400ms;                          /* the pick reveal: once, ever, staged inside this one duration */
-  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);     /* enters, hover, press */
-  --ease-exit: cubic-bezier(0.4, 0, 1, 1);        /* exits only */
-  --ease-move: cubic-bezier(0.77, 0, 0.175, 1);   /* things already on screen moving: reorders */
-  --ease-draw: cubic-bezier(0.65, 0, 0.35, 1);    /* pen strokes, bars filling */
-  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);  /* drawers */
 }
 
 /* paper and mint (data-paper="graphite"): the shadow goes neutral */
@@ -72,4 +152,16 @@ html.preload *, html.preload *::before, html.preload *::after { transition: none
 
 @media (prefers-reduced-motion: reduce) {
   :root { --dur-press: 0ms; --dur-hover: 0ms; --dur-panel: 0ms; --dur-panel-exit: 0ms; --dur-draw: 0ms; --dur-scene: 0ms; --dur-reveal: 0ms; }
+}
+
+/* ---- the page itself ---- */
+@layer base {
+  html { background: var(--c-ground); color-scheme: dark; scrollbar-gutter: stable; overflow-x: clip; }
+  html[data-paper="graphite"] { color-scheme: light; }
+  body { min-height: 100vh; background: var(--c-ground); color: var(--c-ink); font: var(--w-regular) var(--t-md)/1.5 var(--font-sans);
+    -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; font-synthesis: none; -webkit-text-size-adjust: 100%; }
+  :focus-visible { outline: 2px solid var(--c-ink); outline-offset: 2px; }
+  ::selection { background: color-mix(in oklch, var(--c-ink) 22%, transparent); }
+  /* the page behind a sheet does not scroll */
+  html.fm-lock { overflow: hidden; }
 }

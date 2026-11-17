@@ -1,0 +1,12 @@
+/* view-transitions.css: home to city and back. The city's name and its bar are the shared elements of a
+   cross-document view transition (an enhancement; plain navigation works without it). All of the transition's CSS is
+   here. The head script (components/ground/head-script.ts) names the clicked row's name and bar on the home; the city
+   page names its title and session bar below. Loaded by the home, the city page and their tuning pages. */
+@view-transition { navigation: auto; }
+.cl-city { view-transition-name: city-name; }
+.cl-bar .bar { view-transition-name: city-bar; }
+.pv-strip .cl-bar .bar { view-transition-name: none; }   /* the project sheet's copy of the bar is not the shared one */
+::view-transition-group(city-name), ::view-transition-group(city-bar) { animation-duration: var(--dur-panel); animation-timing-function: var(--ease-move); }
+::view-transition-old(root), ::view-transition-new(root) { animation-duration: var(--dur-panel); }
+html:active-view-transition-type(back)::view-transition-group(*), html:active-view-transition-type(back)::view-transition-old(*), html:active-view-transition-type(back)::view-transition-new(*) { animation-duration: calc(var(--dur-panel) * 0.8); }
+@media (prefers-reduced-motion: reduce) { @view-transition { navigation: none; } }

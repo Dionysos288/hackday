@@ -1,5 +1,6 @@
 /* A city's page, as the server draws it: the config from the saved looks and the URL, the clock, the frame, and the
    parts that follow the clock (client) beside the parts that do not (server). */
+import { FRAME } from '@/components/shared/page-parts';
 import dayCfg from '@/saved/day.config.json';
 import cityCfg from '@/saved/city.config.json';
 import { SCHED } from '@/lib/day-data';
@@ -14,6 +15,7 @@ import { EntriesTable, Ledger, RestOfDay } from './below-sheet';
 import { CityFooter, CityHow } from './city-below';
 import { ProjectSheet } from './project-sheet';
 import '@/components/home/day.css';
+import '@/components/shared/view-transitions.css';
 import './city.css';
 import '@/components/forms/forms.css';
 
@@ -40,7 +42,7 @@ export function CityPage({ id, q, nowMs }: { id: string; q: Query; nowMs: number
   return (
     <FormsProvider>
       <CityProvider cfg={cfg} clock={clock} links={links} openSlug={param(q, 'p')}>
-        <div className="dl-frame" id="city" data-mode="tower">
+        <div className={FRAME} id="city" data-mode="tower">
           <CityMain>
             <CityMasthead />
             <CityTitle />

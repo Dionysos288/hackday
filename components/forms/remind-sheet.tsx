@@ -2,7 +2,7 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { cityLabel, emailOK, utc } from '@/lib/forms';
 import { emit, store } from './store';
-import { ErrBox, Sheet, useSheet } from './sheet';
+import { FM_ACT, FM_DONE, FM_F, FM_FORM, FM_H, FM_L, FM_P, ErrBox, Sheet, useSheet } from './sheet';
 
 /* Remind me: one email, for one city's start */
 export type RemindOpts = { city: string; cityName?: string; when?: Date | string };
@@ -31,24 +31,24 @@ function RemindBody({ o, emRef, onSaved }: { o: RemindOpts; emRef: React.RefObje
   };
   if (doneAddr) return (
     <>
-      <h2 ref={h} className="fm-h" id={id + '-h'} tabIndex={-1}>You are on the list.</h2>
-      <p className="fm-p" role="status">We will email <b>{doneAddr}</b> when {cityName} starts{when ? ' at ' + when : ''}.</p>
-      <div className="fm-done"><div className="fm-act"><button className="fm-b" type="button" data-close>Done</button></div></div>
+      <h2 ref={h} className={FM_H} id={id + '-h'} tabIndex={-1}>You are on the list.</h2>
+      <p className={FM_P} role="status">We will email <b>{doneAddr}</b> when {cityName} starts{when ? ' at ' + when : ''}.</p>
+      <div className={FM_DONE}><div className={FM_ACT}><button className="fm-b" type="button" data-close>Done</button></div></div>
     </>
   );
   return (
     <>
-      <h2 className="fm-h" id={id + '-h'} tabIndex={-1}>{cityName}{when ? ' starts at ' + when + '.' : ' starts soon.'}</h2>
-      <p className="fm-p">We will email you when {cityName} starts.{init.already ? <> You are already on the list as <b>{init.already}</b>.</> : null}</p>
-      <form className="fm-form" noValidate onSubmit={onSubmit}>
-        <div className="fm-f">
-          <label className="fm-l" htmlFor={id + '-em'}>Email</label>
+      <h2 className={FM_H} id={id + '-h'} tabIndex={-1}>{cityName}{when ? ' starts at ' + when + '.' : ' starts soon.'}</h2>
+      <p className={FM_P}>We will email you when {cityName} starts.{init.already ? <> You are already on the list as <b>{init.already}</b>.</> : null}</p>
+      <form className={FM_FORM} noValidate onSubmit={onSubmit}>
+        <div className={FM_F}>
+          <label className={FM_L} htmlFor={id + '-em'}>Email</label>
           <input ref={emRef} className="fm-i" id={id + '-em'} name="email" type="email" inputMode="email" autoComplete="email" autoCapitalize="none" autoCorrect="off" spellCheck={false} enterKeyHint="send" placeholder="you@example.com" aria-describedby={id + '-ee'}
             value={value} readOnly={busy} aria-invalid={err ? true : undefined}
             onChange={(e) => { setValue(e.target.value); if (err) checkEmail(e.target.value); }} onBlur={() => { if (value.trim()) checkEmail(); }} />
           <ErrBox id={id + '-ee'} msg={err} />
         </div>
-        <button className="fm-b g wide" type="submit" disabled={busy} aria-busy={busy || undefined}>{busy ? 'Saving reminder…' : 'Remind me'}</button>
+        <button className="fm-b g w-full" type="submit" disabled={busy} aria-busy={busy || undefined}>{busy ? 'Saving reminder…' : 'Remind me'}</button>
       </form>
     </>
   );

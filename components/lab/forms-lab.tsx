@@ -1,4 +1,5 @@
 'use client';
+import clsx from 'clsx';
 import { useEffect, useState } from 'react';
 import { isGround } from '@/lib/palette';
 import { FormsProvider, useForms, type Forms } from '@/components/forms/forms-provider';
@@ -7,6 +8,9 @@ import { applyGround } from '@/components/ground/apply-ground';
 import '@/components/forms/forms.css';
 import './forms-lab.css';
 
+const SEC = 'py-6 [box-shadow:inset_0_calc(-1*var(--line-hair))_0_var(--c-line)]';
+const K = 'type-label mb-2 text-ink-2';
+const MONO = 'font-mono text-xs/[1.6] font-medium whitespace-pre-wrap wrap-anywhere text-ink-2';
 /* The forms tuning page: open each sheet, see the state the pages read, clear what is stored. */
 const inHours = (h: number) => new Date(Date.now() + h * 3600000);
 const SAMPLE = { name: 'Sentry Pup', pitch: 'A watchdog for your Edge Functions that barks in Slack before your users notice.', handle: 'mira_k', city: 'berlin', cityName: 'Berlin', slug: 'sentry-pup', votes: 45, rank: 1 };
@@ -38,28 +42,28 @@ function Lab({ ground: g0 }: { ground: string }) {
   const e = st.entry ? { name: st.entry.name, city: st.entry.city, slug: st.entry.slug, picture: st.entry.picture ? 'yes' : 'no' } : null;
   const B = (n: string, t: string, g?: boolean) => <button key={n} className={'fm-b' + (g ? ' g' : '')} type="button" onClick={() => run(n)}>{t}</button>;
   return (
-    <main className="lab">
-      <header className="lab-h">
-        <div><p className="lab-k">Supabase Hackathon</p><h1>Forms lab</h1></div>
-        <div className="lab-seg" role="group" aria-label="Ground">{GROUNDS.map(([k, t]) => <button key={k} className="fm-b" type="button" aria-pressed={ground === k} onClick={() => setGround(k)}>{t}</button>)}</div>
+    <main className="mx-auto box-content max-w-[960px] px-6 pt-8 pb-18">
+      <header className="flex flex-wrap items-end justify-between gap-4 pb-4 [box-shadow:inset_0_calc(-1*var(--line-hair))_0_var(--c-line)]">
+        <div><p className={K}>Supabase Hackathon</p><h1 className="text-h1 leading-[1.1] font-regular tracking-tight">Forms lab</h1></div>
+        <div className="lab-seg inline-flex" role="group" aria-label="Ground">{GROUNDS.map(([k, t]) => <button key={k} className="fm-b" type="button" aria-pressed={ground === k} onClick={() => setGround(k)}>{t}</button>)}</div>
       </header>
-      <section className="lab-sec" aria-labelledby="k-flows">
-        <p className="lab-k" id="k-flows">Flows</p>
-        <div className="lab-row">
+      <section className={SEC} aria-labelledby="k-flows">
+        <p className={K} id="k-flows">Flows</p>
+        <div className="flex flex-wrap gap-2">
           {B('signIn', 'Sign in')}{B('ensureVoter', 'Vote (email step)')}{B('submit', 'Submit project', true)}{B('submitClosed', 'Submit after the deadline')}
           {B('remind', 'Remind me')}{B('share', 'Share a project')}{B('shareMine', 'Share your entry')}
         </div>
-        <p className="lab-note">Any six digits work as the code. Submit opens sign-in first when no one is signed in. The network takes about 0.6{' '}s.</p>
+        <p className="mt-3 max-w-[60ch] text-sm text-ink-2">Any six digits work as the code. Submit opens sign-in first when no one is signed in. The network takes about 0.6{' '}s.</p>
       </section>
-      <section className="lab-sec" aria-labelledby="k-state">
-        <p className="lab-k" id="k-state">Forms state</p>
-        <p className="lab-state" id="state" aria-live="polite">signedIn <b>{String(st.signedIn)}</b> · handle <b>{st.handle || 'null'}</b> · email <b>{st.email || 'null'}</b> · voter <b>{String(st.voter)}</b>{'\n'}entry <b>{e ? JSON.stringify(e) : 'null'}</b></p>
-        <p className="lab-k" style={{ marginTop: 'var(--s-4)' }}>Last result</p>
-        <p className="lab-log" id="log">{log}</p>
+      <section className={SEC} aria-labelledby="k-state">
+        <p className={K} id="k-state">Forms state</p>
+        <p className={clsx(MONO, '[&_b]:font-medium [&_b]:text-ink')} id="state" aria-live="polite">signedIn <b>{String(st.signedIn)}</b> · handle <b>{st.handle || 'null'}</b> · email <b>{st.email || 'null'}</b> · voter <b>{String(st.voter)}</b>{'\n'}entry <b>{e ? JSON.stringify(e) : 'null'}</b></p>
+        <p className={clsx(K, 'mt-4')}>Last result</p>
+        <p className={MONO} id="log">{log}</p>
       </section>
-      <section className="lab-sec" aria-labelledby="k-data">
-        <p className="lab-k" id="k-data">Stored data</p>
-        <div className="lab-row">{B('signOut', 'Sign out')}{B('reset', 'Reset stored data')}</div>
+      <section className={SEC} aria-labelledby="k-data">
+        <p className={K} id="k-data">Stored data</p>
+        <div className="flex flex-wrap gap-2">{B('signOut', 'Sign out')}{B('reset', 'Reset stored data')}</div>
       </section>
     </main>
   );

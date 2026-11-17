@@ -27,7 +27,7 @@ export default async function City({ params, searchParams }: Props) {
   return (
     <>
       <CityPage id={city} q={q} nowMs={requestTime()} />
-      <noscript><p className="noscript">This page needs JavaScript to follow the clock and to vote.</p></noscript>
+      <noscript><p className="m-0 p-8 text-lg text-ink-2">This page needs JavaScript to follow the clock and to vote.</p></noscript>
     </>
   );
 }

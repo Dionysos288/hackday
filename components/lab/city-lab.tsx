@@ -1,4 +1,5 @@
 'use client';
+import { FRAME } from '@/components/shared/page-parts';
 import { useCallback, useEffect, useMemo, useRef, useState, type MouseEvent } from 'react';
 import { CITIES, TA, nowOf, tOf } from '@/lib/day-data';
 import { BOUNDS as CB, CHOICES as CC, DEF as CD, clampCfg, local, moments, tAt, win, world, type CityCfg, type Links } from '@/lib/city';
@@ -12,7 +13,9 @@ import { ProjectSheet } from '@/components/city/project-sheet';
 import { CitySheet } from './city-layouts';
 import { LabPanel, LayoutPicker, greenShare, meterText, replayArrival, togglePanel, useLabSave, type Group } from './lab-kit';
 import '@/components/home/day.css';
+import '@/components/shared/view-transitions.css';
 import '@/components/city/city.css';
+import './lab-legacy.css';
 import './day-lab.css';
 import './city-lab.css';
 
@@ -129,7 +132,7 @@ export function CityLab({ saved, q }: { saved: Partial<CityCfg>; q: Query }) {
 
   const ms = moments(cfg); let cur = -1; ms.forEach((m, i) => { if (Math.abs(cfg.t - m[2]) < 0.0008) cur = i; });
   const out = (k: string) => k === 't' ? local(W, W.now) : k === 'you' ? (cfg.you < 0 ? 'none' : '#' + (cfg.you + 1)) : k === 'rate' ? (cfg.rate ? cfg.rate + '×' : 'off') : k === 'reorder' ? cfg.reorder + ' s' : String(cfg[k]);
-  const fcls = 'dl-frame' + (cfg.grid ? ' grid-on' : '') + (cfg.reduced ? ' rm' : '') + (!cfg.peek ? ' no-peek' : '');
+  const fcls = FRAME + (cfg.grid ? ' grid-on' : '') + (cfg.reduced ? ' rm' : '') + (!cfg.peek ? ' no-peek' : '');
   return (
     <>
       <CityProvider cfg={pcfg} clock={CLOCK} links={links} live={false} frame={frame} extra={EXTRA} onKey={onKey}>

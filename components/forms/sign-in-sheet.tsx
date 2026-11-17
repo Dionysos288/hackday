@@ -2,7 +2,7 @@
 import { useEffect, useRef, useState, type ClipboardEvent, type FormEvent, type KeyboardEvent } from 'react';
 import { RESEND_S, emailOK } from '@/lib/forms';
 import { emit, store, type Session } from './store';
-import { ErrBox, Sheet, useSheet } from './sheet';
+import { FM_ACT, FM_F, FM_FORM, FM_H, FM_L, FM_P, FM_T, ErrBox, Sheet, useSheet } from './sheet';
 
 /* Sign-in: email, then six digits. Used on its own and as the email step before a first vote. */
 export type SignInOpts = { label?: string; title?: string; reason?: string; verb?: string };
@@ -96,21 +96,21 @@ function SignInBody({ o, start, emRef, firstDigit, onSignedIn }: { o: SignInOpts
 
   return (
     <>
-      <h2 className="fm-h" id={id + '-h'} tabIndex={-1}>{step === 'email' ? (o.title || 'Sign in with your email') : 'Enter the code'}</h2>
-      <p className="fm-p" id={id + '-p'}>{step === 'email' ? (o.reason ? o.reason + ' ' : '') + 'We email you a six-digit code. No password.' : <>We sent a six-digit code to <b>{email}</b>.</>}</p>
-      <form className="fm-form" data-step="email" hidden={step !== 'email'} noValidate onSubmit={onEmail}>
-        <div className="fm-f">
-          <label className="fm-l" htmlFor={id + '-em'}>Email</label>
+      <h2 className={FM_H} id={id + '-h'} tabIndex={-1}>{step === 'email' ? (o.title || 'Sign in with your email') : 'Enter the code'}</h2>
+      <p className={FM_P} id={id + '-p'}>{step === 'email' ? (o.reason ? o.reason + ' ' : '') + 'We email you a six-digit code. No password.' : <>We sent a six-digit code to <b>{email}</b>.</>}</p>
+      <form className={FM_FORM} data-step="email" hidden={step !== 'email'} noValidate onSubmit={onEmail}>
+        <div className={FM_F}>
+          <label className={FM_L} htmlFor={id + '-em'}>Email</label>
           <input ref={emRef} className="fm-i" id={id + '-em'} name="email" type="email" inputMode="email" autoComplete="email" autoCapitalize="none" autoCorrect="off" spellCheck={false} enterKeyHint="send" placeholder="you@example.com" aria-describedby={id + '-ee'}
             value={value} readOnly={sending} aria-invalid={emErr ? true : undefined}
             onChange={(e) => { setValue(e.target.value); if (emErr) checkEmail(e.target.value); }} onBlur={() => { if (value.trim()) checkEmail(); }} />
           <ErrBox id={id + '-ee'} msg={emErr} />
         </div>
-        <button className="fm-b g wide" type="submit" disabled={sending} aria-busy={sending || undefined}>{sending ? 'Sending code…' : 'Send code'}</button>
+        <button className="fm-b g w-full" type="submit" disabled={sending} aria-busy={sending || undefined}>{sending ? 'Sending code…' : 'Send code'}</button>
       </form>
-      <form className="fm-form" data-step="code" hidden={step !== 'code'} noValidate onSubmit={(e) => { e.preventDefault(); verify(digits); }}>
+      <form className={FM_FORM} data-step="code" hidden={step !== 'code'} noValidate onSubmit={(e) => { e.preventDefault(); verify(digits); }}>
         <fieldset className="fm-code" id={id + '-cd'} aria-describedby={id + '-ce'} aria-busy={checking || undefined}>
-          <legend className="fm-vh">Six-digit code</legend>
+          <legend className="sr-only">Six-digit code</legend>
           {digits.map((d, i) => (
             <input key={i} ref={(el) => { ins.current[i] = el; if (i === 0) firstDigit.current = el; }} type="text" inputMode="numeric" pattern="[0-9]*" autoComplete={i ? 'off' : 'one-time-code'} autoCapitalize="none" autoCorrect="off" spellCheck={false} enterKeyHint="done"
               aria-label={'Digit ' + (i + 1) + ' of 6'} data-1p-ignore data-lpignore="true" value={d} readOnly={checking} aria-invalid={bad[i] ? true : undefined}
@@ -118,12 +118,12 @@ function SignInBody({ o, start, emRef, firstDigit, onSignedIn }: { o: SignInOpts
           ))}
         </fieldset>
         <ErrBox id={id + '-ce'} msg={codeErr} />
-        <p className="fm-vh" role="status" id={id + '-st'}>{status}</p>
-        <button className="fm-b g wide" type="submit" disabled={checking} aria-busy={checking || undefined}>{checking ? 'Checking code…' : (o.verb || 'Sign in')}</button>
-        <div className="fm-act">
-          <button className="fm-t" type="button" data-resend disabled={cool > 0} onClick={resend}>{cool > 0 ? 'Send a new code in ' + cool + ' s' : 'Send a new code'}</button>
+        <p className="sr-only" role="status" id={id + '-st'}>{status}</p>
+        <button className="fm-b g w-full" type="submit" disabled={checking} aria-busy={checking || undefined}>{checking ? 'Checking code…' : (o.verb || 'Sign in')}</button>
+        <div className={FM_ACT}>
+          <button className={FM_T} type="button" data-resend disabled={cool > 0} onClick={resend}>{cool > 0 ? 'Send a new code in ' + cool + ' s' : 'Send a new code'}</button>
           <span aria-hidden="true">&nbsp;</span>
-          <button className="fm-t" type="button" data-back onClick={back}>Use a different email</button>
+          <button className={FM_T} type="button" data-back onClick={back}>Use a different email</button>
         </div>
       </form>
     </>

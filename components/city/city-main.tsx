@@ -7,5 +7,5 @@ import { useCity } from './city-context';
 export function CityMain({ children }: { children: ReactNode }) {
   const { W, cfg: c, mainRef } = useCity();
   const style = { '--row': c.row, '--nsz': c.nameSize, '--disp': c.disp, '--shot': c.pic, '--trw': c.trace, '--tbh': c.table, '--speed': c.speed, '--top': c.top } as CSSProperties;
-  return <main ref={mainRef} className="dl-page cl" id="top" style={style} data-state={W.state} data-last={W.last ? '1' : ''}>{children}</main>;
+  return <main ref={mainRef} className="dl-page cl relative min-h-screen overflow-x-clip" id="top" style={style} data-state={W.state} data-last={W.last ? '1' : ''}>{children}</main>;
 }

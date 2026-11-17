@@ -11,5 +11,5 @@ export function HomeMain({ style, children }: { style: CSSProperties; children: 
     el.classList.toggle('reveal', age != null);
     if (age != null) el.style.setProperty('--rage', '-' + age + 'ms');
   }, [age]);
-  return <main ref={ref} className="dl-page" id="top" style={style}>{children}</main>;
+  return <main ref={ref} className="dl-page relative min-h-screen overflow-x-clip" id="top" style={style}>{children}</main>;
 }

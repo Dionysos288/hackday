@@ -16,7 +16,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<Que
   return (
     <>
       <HomePage q={q} nowMs={requestTime()} />
-      <noscript><p className="noscript">The timetable needs JavaScript to follow the clock. Supabase Hackathon runs in ten cities on Dec 11, 2026.</p></noscript>
+      <noscript><p className="m-0 p-8 text-lg text-ink-2">The timetable needs JavaScript to follow the clock. Supabase Hackathon runs in ten cities on Dec 11, 2026.</p></noscript>
     </>
   );
 }

@@ -1,4 +1,5 @@
 'use client';
+import { FRAME } from '@/components/shared/page-parts';
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type MouseEvent } from 'react';
 import { CITIES, TA, sched } from '@/lib/day-data';
 import { hhmm } from '@/lib/format';
@@ -14,6 +15,8 @@ import { HomeFooter, HowItWorks, PastHackathons, Questions } from '@/components/
 import { DayLayouts } from './day-layouts';
 import { LabPanel, LayoutPicker, greenShare, meterText, replayArrival, togglePanel, useLabSave, type Group } from './lab-kit';
 import '@/components/home/day.css';
+import '@/components/shared/view-transitions.css';
+import './lab-legacy.css';
 import './day-lab.css';
 
 /* The tuning page for the home: the real home, driven by the config's t (0 to 1 across the day; 0.94 and up is the
@@ -117,7 +120,7 @@ export function DayLab({ saved, q }: { saved: Partial<HomeCfg>; q: Query }) {
 
   const ms = moments(cfg); let cur = 0; ms.forEach((m, i) => { if (cfg.t >= m[2] - 0.0006) cur = i; });
   const out = (k: string) => k === 't' ? (W.archived ? 'after' : hhmm(W.now)) : k === 'you' ? (cfg.you < 0 ? 'none' : CITIES[cfg.you].name) : String(cfg[k]);
-  const frame = 'dl-frame' + (cfg.grid ? ' grid-on' : '') + (cfg.reduced ? ' rm' : '') + (!cfg.peek ? ' no-peek' : '');
+  const frame = FRAME + (cfg.grid ? ' grid-on' : '') + (cfg.reduced ? ' rm' : '') + (!cfg.peek ? ' no-peek' : '');
   return (
     <>
       <div className={frame} id="day" data-mode={cfg.mode} data-vp={String(cfg.vp)} data-join={String(cfg.join)} data-bar={String(cfg.bar)} onClick={onClick}>

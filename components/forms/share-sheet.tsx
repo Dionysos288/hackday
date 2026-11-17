@@ -4,7 +4,7 @@ import { cardAlt, cardSVG, cityLabel, projectURL, shareText, slugOf, type CardCo
 import { forCity, toSvgString } from '@/lib/seal';
 import { useSealCfg } from '@/components/seal/seal-config';
 import { formsState } from './store';
-import { IconOut, Sheet, token, useSheet } from './sheet';
+import { FM_H, FM_P, IconOut, Sheet, token, useSheet } from './sheet';
 
 /* Share: the project's link, a post on X, and the share card as a file */
 
@@ -58,16 +58,16 @@ function ShareBody({ p, linkRef }: { p: ShareProject; linkRef: React.RefObject<H
   };
   return (
     <>
-      <h2 className="fm-h" id={id + '-h'} tabIndex={-1}>Share {p.name || 'this project'}</h2>
-      {p.pitch ? <p className="fm-p">{p.pitch}</p> : null}
+      <h2 className={FM_H} id={id + '-h'} tabIndex={-1}>Share {p.name || 'this project'}</h2>
+      {p.pitch ? <p className={FM_P}>{p.pitch}</p> : null}
       {/* eslint-disable-next-line @next/next/no-img-element -- a card drawn in the browser, as a blob URL */}
-      <img className="fm-card" src={cardURL} alt={cardAlt({ ...p, cityName: p.cityName || cityLabel(p.city) })} width={1200} height={630} />
-      <div className="fm-share">
+      <img className="mt-6 block aspect-[1200/630] h-auto w-full [box-shadow:0_0_0_var(--line-thin)_var(--c-line)]" src={cardURL} alt={cardAlt({ ...p, cityName: p.cityName || cityLabel(p.city) })} width={1200} height={630} />
+      <div className="mt-4 grid grid-cols-3 gap-2 phone-window:grid-cols-[minmax(0,1fr)] [&>.fm-b]:px-3">
         <a ref={linkRef} className="fm-b g" href={x} target="_blank" rel="noopener">Share on X <IconOut /></a>
         <button className="fm-b" type="button" data-copy aria-live="polite" onClick={copy}>{copied == null ? 'Copy link' : copied ? 'Link copied' : 'Copy failed. Select the link below.'}</button>
         <button className="fm-b" type="button" data-svg onClick={download}>Download share card</button>
       </div>
-      <p className="fm-url">{url.replace(/^https:\/\//, '')}</p>
+      <p className="mt-3 font-mono text-xs/[1.4] font-medium text-ink-2 wrap-anywhere">{url.replace(/^https:\/\//, '')}</p>
     </>
   );
 }
