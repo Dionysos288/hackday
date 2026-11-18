@@ -17,7 +17,7 @@ export const PLACE: Record<string, [number, number]> = {
 };
 
 export type OurFact = WheelFact & { offset: number; opens: number; buildEnds: number; closes: number };
-export type OurWheel = { cities: OurFact[]; date: string; nearest: number; buildMin: number; voteAfter: number; startHour: number; pickAt: string; how: [string, string][]; format: [string, string][] };
+export type OurWheel = { cities: OurFact[]; date: string; dateShort: string; nearest: number; buildMin: number; voteAfter: number; startHour: number; pickAt: string; how: [string, string][]; format: [string, string][] };
 
 export function ourWheel(): OurWheel {
   const cfg = { ...SCHED, schedule: day.schedule, startHour: day.startHour, buildMin: day.buildMin, voteAfter: day.voteAfter, pickAfter: day.pickAfter };
@@ -37,7 +37,7 @@ export function ourWheel(): OurWheel {
   const top = EVENT.finalists, n = cities.length, pickAt = hhmm(S.pickAt) + ' UTC';
   const cityPrize = PRIZES.city.what ?? 'the city prize';
   return {
-    cities, date: `${EVENT.day} December ${EVENT.year}`, nearest: 0, buildMin: cfg.buildMin, voteAfter: cfg.voteAfter, startHour: cfg.startHour, pickAt,
+    cities, date: `${EVENT.day} December ${EVENT.year}`, dateShort: `${ordinal(EVENT.day)} Dec ${EVENT.year}`, nearest: 0, buildMin: cfg.buildMin, voteAfter: cfg.voteAfter, startHour: cfg.startHour, pickAt,
     /* the rail's four cells, and the sheet's format */
     format: [
       ['Build', `${cfg.buildMin} minutes from ${hhmm(cfg.startHour * 60)} local`],
@@ -55,6 +55,12 @@ export function ourWheel(): OurWheel {
       ['How is the winner picked?', `${EVENT.pickers} pick one of the ${top * n} finalists at ${pickAt}. The pick wins ${PRIZES.global.what ?? "the global prize"}.`],
     ],
   };
+}
+
+/* 1st, 2nd, 3rd, 4th, 11th, 21st */
+function ordinal(n: number) {
+  const t = n % 100, o = n % 10;
+  return n + (t >= 11 && t <= 13 ? 'th' : o === 1 ? 'st' : o === 2 ? 'nd' : o === 3 ? 'rd' : 'th');
 }
 
 /* the city whose UTC offset is closest to the visitor's */

@@ -1,0 +1,29 @@
+/* The Luma cover, in the frame's own units: a 1024 px square, scaled by its box. Every number is the frame's. */
+.lt-box { position: relative; overflow: hidden; flex: none; }
+.lt {
+  position: absolute; top: 0; left: 0; width: 1024px; height: 1024px; transform-origin: 0 0; overflow: hidden;
+  background: #0f1010; color: #fff; -webkit-font-smoothing: antialiased;
+  --lt-mono: Menlo, ui-monospace, "SF Mono", monospace; --lt-face: var(--font-manrope), "Helvetica Neue", Arial, sans-serif;
+}
+.lt-mark { position: absolute; left: 64.6px; top: 62.9px; display: flex; align-items: center; gap: 20.6px; color: #2bb276; font: 500 86px/1 var(--lt-face); letter-spacing: -1.72px; white-space: nowrap; }
+.lt-logo { flex: none; width: 93.4px; height: 93.4px; }
+/* the frame's text box is 248 px tall at this size, so the descenders have room */
+.lt-city { position: absolute; left: 57.8px; right: 57.8px; top: 229.6px; margin: 0; font: 700 181.26px/1.368 var(--lt-face); white-space: nowrap; }
+
+.lt-state {
+  position: absolute; left: 61.2px; top: 478px; display: flex; align-items: center; gap: 16.7px; padding: 21.5px 28.7px;
+  background: #d9f4b2; color: #050a03; font: 400 31.07px/1 var(--lt-mono); white-space: nowrap;
+}
+.lt-state svg { flex: none; width: 28.7px; height: 28.7px; }
+.lt-state[data-status='nearing'] { background: #f8d3a0; color: #6b2a00; }
+.lt-state[data-status='full'] { background: #e6e6e3; color: #111; }
+
+/* two cells that share a border line */
+.lt-cells { position: absolute; left: 64.6px; top: 649.8px; display: flex; }
+.lt-cells > span { padding: 25.6px 34.1px; border: 2.85px solid #a2a2a2; font: 400 37px/1 var(--lt-mono); white-space: nowrap; }
+.lt-cells > span + span { margin-left: -2.85px; }
+
+.lt-rule { position: absolute; left: 64.6px; top: 819.9px; width: 894.7px; height: 1.7px; background: #4a4f4d; }
+.lt-host { position: absolute; left: 64.6px; top: 876px; display: flex; align-items: center; gap: 14px; font: 500 58.55px/1 var(--lt-face); letter-spacing: -1.17px; color: #9b9b9b; white-space: nowrap; }
+.lt-supabase { display: inline-flex; align-items: center; gap: 9.8px; color: #fff; font-weight: 600; letter-spacing: -1.16px; }
+.lt-supabase svg { width: 47px; height: 52.5px; }

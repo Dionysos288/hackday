@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from 'next';
-import { Geist, Geist_Mono } from 'next/font/google';
+import { Geist, Geist_Mono, Manrope } from 'next/font/google';
 import type { ReactNode } from 'react';
 import dayCfg from '@/saved/day.config.json';
 import cityCfg from '@/saved/city.config.json';
@@ -8,9 +8,11 @@ import { clampMotion, motionCss } from '@/lib/motion';
 import { headScript } from '@/components/ground/head-script';
 import './globals.css';
 
-/* Geist 400/500/600 and Geist Mono 500 are the only faces. globals.css reads them through these two variables. */
+/* Geist 400/500/600 and Geist Mono 500 are the page faces; globals.css reads them through these two variables.
+   Manrope 500/600/700 is for the Builder Day name and the Luma thumbnails. */
 const geist = Geist({ subsets: ['latin', 'latin-ext'], weight: ['400', '500', '600'], variable: '--font-geist' });
 const geistMono = Geist_Mono({ subsets: ['latin', 'latin-ext'], weight: ['500'], variable: '--font-geist-mono' });
+const manrope = Manrope({ subsets: ['latin'], weight: ['500', '600', '700'], variable: '--font-manrope' });
 
 /* the ground and the arrival are decided before first paint, from the saved looks and the URL */
 const HEAD = headScript({
@@ -30,7 +32,7 @@ export const viewport: Viewport = { width: 'device-width', initialScale: 1, view
    hydrates, so <html> is allowed to differ from the server's. */
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="en" data-paper="night" className={geist.variable + ' ' + geistMono.variable} suppressHydrationWarning>
+    <html lang="en" data-paper="night" className={geist.variable + ' ' + geistMono.variable + ' ' + manrope.variable} suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: HEAD }} />
         <style dangerouslySetInnerHTML={{ __html: MOTION }} />

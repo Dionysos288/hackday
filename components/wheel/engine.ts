@@ -1,4 +1,5 @@
-import { SANS, SHADER_KEYS, type WheelCfg } from './config';
+import { MONO, SANS, SHADER_KEYS, type WheelCfg } from './config';
+import { asciiFrame, drawAscii, loadAscii, type AsciiFrames } from './ascii-globe';
 import { createCrt, type Crt } from './crt';
 import { click, settle, setVolume, unlock, type WheelStatus } from './click';
 
@@ -10,7 +11,11 @@ import { click, settle, setVolume, unlock, type WheelStatus } from './click';
 
    Three changes from the study: the 2D picture is drawn and uploaded only while it moves (at rest the frame is one
    shader pass, for the breathing light, which is a uniform); the loop stops while the tab is hidden or the wheel is
-   off screen; and without WebGL the globe is a flat disc with the land map, not nothing. */
+   off screen; and without WebGL the globe is a flat disc with the land map, not nothing.
+
+   With cfg.globe 'ascii' the big globe is the turning world as text (ascii-globe.ts), drawn into the 2D picture. It
+   follows the same turn as the glass, but steps to a new frame only cfg.globeFps times a second, so it turns like
+   stop motion; at rest the city's mark blinks at the same low rate. */
 
 export type WheelCity = { name: string; lat: number; lon: number; status: WheelStatus };
 type Els = { pin: HTMLElement; canvas: HTMLCanvasElement; cells?: HTMLElement | null; lens?: HTMLElement | null; cta?: HTMLElement | null };
@@ -54,6 +59,7 @@ export function createWheel(els: Els, first: { cfg: WheelCfg; cities: WheelCity[
   let drawnAt = NaN, dirty = true, lastGl = '', lastCells = '', lastOpacity = '';
   let land: HTMLImageElement | null = null, tinted: HTMLCanvasElement | null = null;
   let raf = 0, running = false, onScreen = true;
+  let ascii: AsciiFrames | null = null, asciiK = -1, asciiTick = -1, asciiBlink = false, asciiKey = '';
   const stats = { frames: 0, pictures: 0, glDraws: 0 };
   /* the globe starts facing its city, as the study's does after its first turn */
   turn.yaw = cfg.face - rad(cityAt(target).lon);
@@ -64,8 +70,12 @@ export function createWheel(els: Els, first: { cfg: WheelCfg; cities: WheelCity[
     ems = cities.map((c) => ctx.measureText(c.name).width / 100);
   };
 
+  const longest = () => ems.reduce((a, b) => Math.max(a, b), 0);
+  /* how far a name reaches out past its inner end, in ems: its own width, or the longest's when they start on one line */
+  const outEm = (i: number) => (cfg.align === 'start' ? longest() : ems[i] || 0);
+
   const measureLens = () => {
-    const el = els.lens; if (!el) { lens.radius = 0; return; }
+    const el = els.lens; if (!el) { lens.radius = 0; pin.style.setProperty('--small-radius', '0px'); return; }
     const frameBox = canvas.getBoundingClientRect(), box = el.getBoundingClientRect();
     lens.x = (box.left - frameBox.left + box.width / 2) * view.ratio;
     lens.y = (box.top - frameBox.top + box.height / 2) * view.ratio;
@@ -84,9 +94,12 @@ export function createWheel(els: Els, first: { cfg: WheelCfg; cities: WheelCity[
   const resize = () => {
     const width = pin.clientWidth, height = pin.clientHeight, ratio = Math.min(window.devicePixelRatio || 1, 2);
     canvas.width = picture.width = Math.round(width * ratio); canvas.height = picture.height = Math.round(height * ratio);
-    Object.assign(view, { width: width * ratio, height: height * ratio, ratio, x: width * ratio, y: cfg.hubY * height * ratio,
-      radius: Math.min(cfg.hubOfHeight * height, cfg.hubOfWidth * width) * ratio });
-    pin.style.setProperty('--globe-radius', `${view.radius / ratio}px`);
+    const radius = Math.min(cfg.hubOfHeight * height, cfg.hubOfWidth * width) * ratio;
+    /* with no globe the hub moves off the right edge, so the names sit further right on the same curve */
+    const x = width * ratio + (cfg.globe === 'none' ? cfg.bareShift * radius : 0);
+    Object.assign(view, { width: width * ratio, height: height * ratio, ratio, x, y: cfg.hubY * height * ratio, radius });
+    /* the screen lines leave a hole for the glass ball only; the text globe is on the screen, so it gets the lines */
+    pin.style.setProperty('--globe-radius', `${cfg.globe === 'glass' ? view.radius / ratio : 0}px`);
     pin.style.setProperty('--globe-y', `${view.y / ratio}px`);
     measureLens(); dirty = true; lastGl = ''; lastCells = '';
   };
@@ -95,7 +108,9 @@ export function createWheel(els: Els, first: { cfg: WheelCfg; cities: WheelCity[
   const ink = (a: number) => `rgba(${cfg.ink}, ${cfg.ink}, ${cfg.ink - 2}, ${a})`;
   const drawNames = (behind: number) => {
     const size = cfg.labelSize * view.radius, reach = cfg.labelFrom * view.radius, step = rad(cfg.step);
-    ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+    /* aligned at the start, every name begins where the longest one does */
+    const lead = cfg.align === 'start' ? longest() * size : 0;
+    ctx.textAlign = cfg.align === 'start' ? 'left' : 'right'; ctx.textBaseline = 'middle';
     ctx.font = `500 ${size}px ${font()}`; ctx.letterSpacing = `${cfg.track * size}px`;
     const drawName = (slot: number, at: number, alpha: number) => {
       const angle = (at - slot) * step, near = 1 - clamp01(Math.abs(slot - at));
@@ -103,7 +118,7 @@ export function createWheel(els: Els, first: { cfg: WheelCfg; cities: WheelCity[
       if (fade <= 0) return;
       ctx.save(); ctx.translate(view.x, view.y); ctx.rotate(angle);
       ctx.fillStyle = ink((cfg.dim + (1 - cfg.dim) * smooth(near)) * fade * alpha);
-      ctx.fillText(cityAt(slot).name, -reach - cfg.labelPush * view.radius * smooth(near), 0);
+      ctx.fillText(cityAt(slot).name, -reach - cfg.labelPush * view.radius * smooth(near) - lead, 0);
       ctx.restore();
     };
     const from = Math.floor(position) - 14;
@@ -112,7 +127,7 @@ export function createWheel(els: Els, first: { cfg: WheelCfg; cities: WheelCity[
       for (let g = Math.round(cfg.ghosts); g >= 1 && Math.abs(behind) > cfg.ghostFrom; g--) drawName(slot, position - behind * cfg.ghostGap * g, cfg.ghostAlpha / g);
       drawName(slot, position, 1);
     }
-    if (!crt) return;
+    if (!crt || cfg.globe !== 'glass') return;
     /* the glass shows the start of each name at its rim: a small copy of the names drawn as soft shadow, off canvas */
     const small = cfg.mirrorSize * view.radius;
     ctx.font = `500 ${small}px ${font()}`; ctx.letterSpacing = `${cfg.track * small}px`; ctx.textAlign = 'left';
@@ -165,6 +180,22 @@ export function createWheel(els: Els, first: { cfg: WheelCfg; cities: WheelCity[
     ctx.strokeStyle = ink(0.45); ctx.lineWidth = view.ratio; ctx.stroke();
   };
 
+  /* the text globe: the frame and the blink move on only at the low frame rate */
+  const asciiOn = () => cfg.globe === 'ascii';
+  const stepAscii = (time: number, settled: number) => {
+    if (!ascii) return;
+    const tick = Math.floor(time * cfg.globeFps);
+    if (tick === asciiTick && asciiK >= 0) return;
+    asciiTick = tick;
+    asciiK = asciiFrame(-turn.yaw * 180 / Math.PI);
+    asciiBlink = settled > 0.5 && (reduced || Math.floor(time * 2) % 2 === 0);
+  };
+  const drawGlobeText = () => {
+    if (!ascii || asciiK < 0) return;
+    const c = cityAt(target);
+    drawAscii(ctx, ascii, asciiK, view.x - cfg.globeShift * view.radius, view.y, view.radius, canvasFont(MONO.geist), { lat: c.lat, lon: c.lon, bracket: asciiBlink });
+  };
+
   /* ---- the loop ---- */
   const frame = (now: number) => {
     raf = requestAnimationFrame(frame);
@@ -191,16 +222,28 @@ export function createWheel(els: Els, first: { cfg: WheelCfg; cities: WheelCity[
     const settled = 1 - smoothstep(cfg.settleFrom, cfg.settleTo, Math.abs(behind));
     const cells = els.cells;
     if (cells) {
-      const nameStart = view.x - cfg.labelFrom * view.radius - cfg.labelPush * view.radius - (ems[i] || 0) * size;
+      const nameStart = view.x - cfg.labelFrom * view.radius - cfg.labelPush * view.radius - outEm(i) * size;
       const end = (nameStart - size * 0.6) / view.ratio;
-      const stacked = end - cellsWidth.row < 20, docked = end - cellsWidth.column < 20;
-      const key = `${stacked}|${docked}|${end}|${view.y}`;
-      if (key !== lastCells) {
-        lastCells = key;
-        cells.classList.toggle('is-stacked', stacked && !docked); cells.classList.toggle('is-docked', docked);
-        cells.style.translate = docked ? '' : `${end}px ${view.y / view.ratio}px`;
+      if (cfg.layout === 'column') {
+        /* the column sits on the page's left margin, away from the arc of names, with the cells on the active name's line.
+           When the cells in a row would reach the name they stack; with no room even for that (a phone), it docks at the top */
+        const gutter = Math.min(88, Math.max(20, 0.046 * view.width / view.ratio));
+        const stacked = gutter + cellsWidth.row > end && gutter + cellsWidth.column <= end, docked = gutter + cellsWidth.column > end, x = gutter;
+        const key = `col|${docked}|${stacked}|${x}`;
+        if (key !== lastCells) {
+          lastCells = key; cells.classList.remove('is-docked'); cells.classList.toggle('is-stacked', stacked); cells.style.translate = '';
+          pin.style.setProperty('--col-x', `${docked ? gutter : x}px`); pin.toggleAttribute('data-docked', docked);
+        }
+      } else {
+        const stacked = end - cellsWidth.row < 20, docked = end - cellsWidth.column < 20;
+        const key = `${stacked}|${docked}|${end}|${view.y}|${cfg.align}`;
+        if (key !== lastCells) {
+          lastCells = key; pin.removeAttribute('data-docked');
+          cells.classList.toggle('is-stacked', stacked && !docked); cells.classList.toggle('is-docked', docked);
+          cells.style.translate = docked ? '' : `${end}px ${view.y / view.ratio}px`;
+        }
       }
-      const op = settled.toFixed(3);
+      const op = cfg.cells === 'flip' ? '1' : settled.toFixed(3);
       if (op !== lastOpacity) { lastOpacity = op; cells.style.opacity = op; }
     }
     if (settled > 0.98 && settledOn !== i) { settledOn = i; if (cfg.sound) settle(city.status); }
@@ -208,10 +251,16 @@ export function createWheel(els: Els, first: { cfg: WheelCfg; cities: WheelCity[
     const pulse = reduced ? 1 : cfg.pulseLow + (1 - cfg.pulseLow) * Math.sin(time * cfg.pulseRate);
     const glow = settled * pulse;
     const small = { x: lens.x, y: lens.y, radius: lens.radius * (1 + (cfg.openScale - 1) * lens.open) };
+    let textMoved = false;
+    if (asciiOn()) {
+      stepAscii(time, settled);
+      const k = `${asciiK}|${asciiBlink}|${i}`;
+      if (k !== asciiKey) { asciiKey = k; textMoved = true; }
+    }
 
     if (crt) {
-      const moved = dirty || position !== drawnAt;
-      if (moved) { ctx.clearRect(0, 0, view.width, view.height); drawNames(behind); drawnAt = position; dirty = false; stats.pictures++; }
+      const moved = dirty || textMoved || position !== drawnAt;
+      if (moved) { ctx.clearRect(0, 0, view.width, view.height); drawNames(behind); if (asciiOn()) drawGlobeText(); drawnAt = position; dirty = false; stats.pictures++; }
       /* skip the pass when nothing at all changed (at rest under reduced motion, where the light does not breathe) */
       const key = `${moved}|${turn.yaw}|${small.radius}|${glow}`;
       if (moved || key !== lastGl) {
@@ -220,11 +269,12 @@ export function createWheel(els: Els, first: { cfg: WheelCfg; cities: WheelCity[
       }
     } else {
       /* the flat picture is drawn only when something in it moved; its city light does not breathe */
-      const key = `${position}|${turn.yaw}|${small.radius}|${settled}|${dirty}|${!!tinted}`;
+      const key = `${position}|${asciiOn() ? asciiKey : turn.yaw}|${small.radius}|${settled}|${dirty}|${!!tinted}`;
       if (key !== lastGl) {
         lastGl = key; dirty = false; drawnAt = position; stats.pictures++;
         ctx.clearRect(0, 0, view.width, view.height); drawNames(behind);
-        disc(view.x, view.y, view.radius, true, settled); disc(small.x, small.y, small.radius, false, 0);
+        if (asciiOn()) drawGlobeText(); else if (cfg.globe === 'glass') disc(view.x, view.y, view.radius, true, settled);
+        disc(small.x, small.y, small.radius, false, 0);
       }
     }
   };
@@ -240,7 +290,8 @@ export function createWheel(els: Els, first: { cfg: WheelCfg; cities: WheelCity[
     const near = 1 - clamp01(Math.abs(slot - position));
     const from = (cfg.labelFrom + cfg.labelPush * smooth(near)) * view.radius;
     const onLine = Math.abs(position - angle / step - slot) * step * far < size * 0.7;
-    const onName = far > from - size * 0.3 && far < from + (ems[idx(slot)] || 0) * size + size * 0.3;
+    const inner = from + (outEm(idx(slot)) - (ems[idx(slot)] || 0)) * size;
+    const onName = far > inner - size * 0.3 && far < inner + (ems[idx(slot)] || 0) * size + size * 0.3;
     return onLine && onName && Math.abs(angle) < cfg.fadeTo ? slot : null;
   };
   const onWheel = (ev: WheelEvent) => {
@@ -291,6 +342,9 @@ export function createWheel(els: Els, first: { cfg: WheelCfg; cities: WheelCity[
   img.onload = () => { land = img; crt?.setLand(img); dirty = true; lastGl = ''; };
   img.onerror = () => console.warn('The land map did not load.');
   img.src = LAND_URL;
+  let alive = true;
+  const wantAscii = () => { if (asciiOn() && !ascii) loadAscii().then((f) => { if (alive && f) { ascii = f; asciiK = -1; dirty = true; lastGl = ''; } }); };
+  wantAscii();
 
   setVolume(cfg.volume);
   measureEms(); resize(); measureCells(); start();
@@ -302,7 +356,7 @@ export function createWheel(els: Els, first: { cfg: WheelCfg; cities: WheelCity[
       const old = cfg; cfg = c;
       if (SHADER_KEYS.some((k) => old[k] !== c[k])) crt?.rebuild(c);
       if (old.font !== c.font || old.track !== c.track) { measureEms(); document.fonts?.ready.then(() => { measureEms(); dirty = true; }); }
-      setVolume(c.volume);
+      setVolume(c.volume); wantAscii(); asciiKey = '';
       resize();
     },
     setCities(c) { cities = c; measureEms(); shown = -1; dirty = true; },
@@ -315,7 +369,7 @@ export function createWheel(els: Els, first: { cfg: WheelCfg; cities: WheelCity[
     gl: () => !!crt,
     stats: () => ({ ...stats }),
     destroy() {
-      stop(); ro.disconnect(); io.disconnect();
+      alive = false; stop(); ro.disconnect(); io.disconnect();
       pin.removeEventListener('wheel', onWheel); pin.removeEventListener('pointerdown', onDown); pin.removeEventListener('pointermove', onMove);
       pin.removeEventListener('pointerup', onUp); pin.removeEventListener('pointercancel', onCancel);
       window.removeEventListener('keydown', onKey); document.removeEventListener('visibilitychange', onVis); reduce.removeEventListener('change', onReduce);

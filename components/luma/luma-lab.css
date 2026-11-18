@@ -1,0 +1,10 @@
+/* /lab/luma: every city's cover in one section, and one cover alone for a still */
+.ll { min-height: 100dvh; padding: 48px 16px 64px; background: #0a0b0a; color: #f4f4f2; font-family: var(--font-geist), sans-serif; }
+.ll-section { max-width: 1600px; margin: 0 auto; }
+.ll-section h1 { margin: 0 0 8px; font: 600 28px/1.2 var(--font-manrope), sans-serif; letter-spacing: -0.02em; }
+.ll-lede { margin: 0 0 32px; color: #8a8a86; font-size: 15px; }
+.ll-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 32px 24px; margin: 0; padding: 0; list-style: none; }
+.ll-card { display: flex; flex-direction: column; gap: 10px; color: inherit; font-size: 14px; text-decoration: none; }
+.ll-card:hover span, .ll-card:focus-visible span { text-decoration: underline; text-underline-offset: 4px; }
+.ll-card:focus-visible { outline: 2px solid #f4f4f2; outline-offset: 6px; }
+.ll-solo { margin: 0; background: #0f1010; width: 1024px; height: 1024px; }
