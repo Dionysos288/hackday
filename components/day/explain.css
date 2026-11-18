@@ -67,7 +67,7 @@
 .ex-big[data-tba] { font-size: clamp(44px, 5.4vw, 88px); }
 .ex-what { margin: 0; font: 500 32px/1.05 var(--ex-sans); letter-spacing: -0.03em; }
 .ex[data-compact] .ex-what { font-size: 22px; }
-.ex-codes { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); max-width: 320px; margin: 4px 0 0; padding: 0; list-style: none; font: 500 12px/1 var(--ex-face); }
+.ex-codes { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); max-width: 420px; margin: 4px 0 0; padding: 0; list-style: none; font: 500 12px/1 var(--ex-face); }
 .ex-codes li { margin: 0 -1px -1px 0; padding: 7px 0; border: 1px solid var(--ex-border); text-align: center; }
 
 /* in the sheet (and on a phone): a monitor beside its words, one under another */

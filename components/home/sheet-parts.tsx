@@ -1,7 +1,7 @@
 'use client';
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode, type RefObject } from 'react';
 import clsx from 'clsx';
-import { EVENT } from '@/lib/day-data';
+import { EVENT, CITY_WORD_CAP, FINALIST_COUNT } from '@/lib/day-data';
 import { dur, fmtN, hhmm, ord, plural, r2, tz } from '@/lib/format';
 import { action, cityHref, localSpan, showNow, type HomeCity, type HomeWorld, type View } from '@/lib/home';
 import { sentence, wire, wireTime } from '@/lib/wire';
@@ -109,7 +109,7 @@ const ANCHORS: [string, string][] = [['#cities', 'Cities'], ['#final', 'The fina
 export function useAction(): { t: string; href: string } {
   const { cfg, W, carry } = useDay();
   if (W.picked) return { t: 'See the pick', href: '#final' };
-  if (W.allDone || W.archived) return { t: 'See the 30 finalists', href: '#final' };
+  if (W.allDone || W.archived) return { t: `See the ${FINALIST_COUNT} finalists`, href: '#final' };
   return action(W, cfg, (x) => cityHref(x, cfg, W, carry));
 }
 export function ActionLink({ cls, line }: { cls?: string; line?: boolean }) {
@@ -183,7 +183,7 @@ export function Facts({ cls, vCls }: { cls?: string; vCls?: string }) {
   );
 }
 export function DateLine({ cls }: { cls?: string }) {
-  return <p className={clsx('tabular-nums', cls)}>{EVENT.date}. Ten cities, each at its own local time.</p>;
+  return <p className={clsx('tabular-nums', cls)}>{EVENT.date}. {CITY_WORD_CAP} cities, each at its own local time.</p>;
 }
 
 /* ---------------- a city's top 3 ---------------- */

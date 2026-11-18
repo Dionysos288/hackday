@@ -5,6 +5,7 @@ import { view } from '@/lib/home';
 import { useDay } from '@/components/home/day-context';
 import { Ruler } from '@/components/home/timetable';
 import { ActionLink, CityName, DateLine, Facts, HoverPreview, JoinLine, SheetMasthead, LeadPic, Live, LocalTime, MiniDay, PhoneNow, StripAxis, StripNow, TopKey, TopLines, Trunk, nowIndex, useHoverPreview, useLabHome, zoomView } from './parts';
+import { CITY_WORD } from '@/lib/day-data';
 
 /* Front page: the first viewport is a front page, not a table. Left (7 columns): the name very large on two lines,
    the date, the facts and the one action. Right (5): the live sentence large, the wire, and a small day. The full
@@ -28,7 +29,7 @@ export function FrontPage() {
           <MiniDay V={V} cls="mt-auto pt-8 phone:pt-6" />
         </div>
       </section>
-      <section id="cities" className="relative px-(--m) pt-6 pb-6" aria-label="The ten cities, east to west">
+      <section id="cities" className="relative px-(--m) pt-6 pb-6" aria-label={`The ${CITY_WORD} cities, east to west`}>
         <div ref={box} className="relative" {...handlers}>
           <div className="h-7 phone:hidden" />
           <StripAxis V={V} W={W} cls="hs-stripcol top-0 bottom-0" />

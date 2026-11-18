@@ -1,7 +1,7 @@
 'use client';
 import Link from 'next/link';
 import { useEffect, useRef, useState, useSyncExternalStore, type CSSProperties, type ReactNode } from 'react';
-import { CITIES, EPOCH, EVENT } from '@/lib/day-data';
+import { CITIES, EPOCH, EVENT, CITY_WORD } from '@/lib/day-data';
 import type { HomeWorld } from '@/lib/home';
 import { hhmm } from '@/lib/format';
 import { LUMA_LIVE, lumaHref } from '@/lib/luma';
@@ -145,7 +145,7 @@ export function DayFooter({ W, day, href, sound, city, cfg: given, sections, min
   const vars = { ...style, '--ft-size': cfg.size + 'px', '--ft-rise': cfg.rise, '--ft-gap': cfg.gap + 'px', '--ft-name': cfg.nameSize + 'px', '--ft-cell': cfg.cellH + 'px' } as CSSProperties;
 
   const cities = (
-    <nav className="ft-cities" aria-label="The ten cities">
+    <nav className="ft-cities" aria-label={`The ${CITY_WORD} cities`}>
       <ol>
         {W.cs.map((x, i) => {
           const p = pos(i), w = cityWord(x, W, day), me = i === lit;
@@ -216,12 +216,12 @@ function Tail({ city, href }: { city: string; href: Href }) {
 /* turning the globe by hand (off by default): arrow keys or a drag step through the cities, with the wheel's click */
 function Spin({ aim, setAim }: { aim: number; setAim: (i: number | null) => void }) {
   const drag = useRef<{ x: number; at: number } | null>(null);
-  const go = (d: number) => { setAim((aim + d + 10) % 10); step(true); };
+  const go = (d: number) => { setAim((aim + d + CITIES.length) % CITIES.length); step(true); };
   return (
-    <span className="ft-spin" role="slider" tabIndex={0} aria-label="Turn the globe" aria-valuemin={1} aria-valuemax={10} aria-valuenow={aim + 1} aria-valuetext={CITIES[aim].name}
+    <span className="ft-spin" role="slider" tabIndex={0} aria-label="Turn the globe" aria-valuemin={1} aria-valuemax={CITIES.length} aria-valuenow={aim + 1} aria-valuetext={CITIES[aim].name}
       onKeyDown={(e) => { if (e.key === 'ArrowRight' || e.key === 'ArrowDown') { e.preventDefault(); go(1); } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') { e.preventDefault(); go(-1); } }}
       onPointerDown={(e) => { wake(); drag.current = { x: e.clientX, at: aim }; e.currentTarget.setPointerCapture(e.pointerId); }}
-      onPointerMove={(e) => { const d = drag.current; if (!d) return; const n = (d.at + Math.round((e.clientX - d.x) / 40) + 100) % 10; if (n !== aim) { setAim(n); step(true); } }}
+      onPointerMove={(e) => { const d = drag.current; if (!d) return; const n = (d.at + Math.round((e.clientX - d.x) / 40) + CITIES.length * 10) % CITIES.length; if (n !== aim) { setAim(n); step(true); } }}
       onPointerUp={() => { drag.current = null; }} />
   );
 }

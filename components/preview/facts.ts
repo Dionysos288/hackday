@@ -1,4 +1,5 @@
 import day from '@/saved/day.config.json';
+import { PLACE } from '@/lib/places';
 import { RULES, SERVER, sayIt } from '@/lib/hackday-server';
 import { CITIES, EPOCH, EVENT, SCHED, mulberry32, sched } from '@/lib/day-data';
 import { hhmm } from '@/lib/format';
@@ -8,13 +9,10 @@ import type { WheelFact } from '@/components/wheel/wheel';
 
 /* Our facts for the wheel, from the model: the ten cities in their order, each city's session from the saved
    schedule (building opens, voting closes), and the date. Where on the globe each city is comes from the table below,
-   since the model has no coordinates. PLACEHOLDERS: the people counts and the states are seeded, not real; the
+   in lib/places.ts, since the model has no coordinates. PLACEHOLDERS: the people counts and the states are seeded, not real; the
    model has no sign-ups yet. */
 
-export const PLACE: Record<string, [number, number]> = {
-  sydney: [-33.87, 151.21], tokyo: [35.68, 139.69], singapore: [1.35, 103.82], bengaluru: [12.97, 77.59], berlin: [52.52, 13.4],
-  lagos: [6.52, 3.38], london: [51.51, -0.13], 'sao-paulo': [-23.55, -46.63], 'new-york': [40.71, -74.01], 'san-francisco': [37.77, -122.42],
-};
+export { PLACE };
 
 export type OurFact = WheelFact & { offset: number; opens: number; buildEnds: number; closes: number };
 export type OurWheel = { cities: OurFact[]; date: string; dateShort: string; nearest: number; buildMin: number; voteAfter: number; startHour: number; pickAt: string; how: [string, string][]; format: [string, string][] };
