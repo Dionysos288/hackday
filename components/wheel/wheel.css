@@ -52,6 +52,9 @@
    wheel can put it on the active name's line (--globe-y) and where the cells end before the name (--col-x). */
 .wh-col { position: absolute; z-index: 1; left: var(--col-x, var(--wh-gutter)); top: var(--globe-y, 50%); transform: translateY(-50%); }
 .wh-col .wh-cells { position: static; transform: none; }
+/* stacked on the name's line, the cells are one width, the widest one's */
+.wh-col .wh-cells.is-stacked { display: inline-flex; flex-direction: column; align-items: stretch; }
+.wh-col .wh-cells.is-stacked .wh-face { width: auto !important; }
 /* the mark lines up with the column's left edge */
 .wh-pin[data-layout='column'] .wh-wordmark { left: var(--col-x, var(--wh-gutter)); }
 .wh-lead { position: absolute; left: 0; bottom: calc(100% + 48px); display: flex; flex-direction: column; gap: 64px; width: max-content; }

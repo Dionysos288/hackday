@@ -98,7 +98,8 @@ export function createWheel(els: Els, first: { cfg: WheelCfg; cities: WheelCity[
     /* with no globe the hub moves off the right edge, so the names sit further right on the same curve */
     const x = width * ratio + (cfg.globe === 'none' ? cfg.bareShift * radius : 0);
     Object.assign(view, { width: width * ratio, height: height * ratio, ratio, x, y: cfg.hubY * height * ratio, radius });
-    pin.style.setProperty('--globe-radius', `${view.radius / ratio}px`);
+    /* the screen lines leave a hole for the glass ball only; the text globe is on the screen, so it gets the lines */
+    pin.style.setProperty('--globe-radius', `${cfg.globe === 'glass' ? view.radius / ratio : 0}px`);
     pin.style.setProperty('--globe-y', `${view.y / ratio}px`);
     measureLens(); dirty = true; lastGl = ''; lastCells = '';
   };
@@ -224,12 +225,13 @@ export function createWheel(els: Els, first: { cfg: WheelCfg; cities: WheelCity[
       const nameStart = view.x - cfg.labelFrom * view.radius - cfg.labelPush * view.radius - outEm(i) * size;
       const end = (nameStart - size * 0.6) / view.ratio;
       if (cfg.layout === 'column') {
-        /* the column starts where the cells must start to end before the name, inside the gutter if it must; with no room
-           at all (a phone), it docks at the top */
-        const gutter = Math.min(88, Math.max(20, 0.046 * view.width / view.ratio)), x = end - cellsWidth.row, docked = x < 16;
-        const key = `col|${docked}|${x}`;
+        /* the column sits on the page's left margin, away from the arc of names, with the cells on the active name's line.
+           When the cells in a row would reach the name they stack; with no room even for that (a phone), it docks at the top */
+        const gutter = Math.min(88, Math.max(20, 0.046 * view.width / view.ratio));
+        const stacked = gutter + cellsWidth.row > end && gutter + cellsWidth.column <= end, docked = gutter + cellsWidth.column > end, x = gutter;
+        const key = `col|${docked}|${stacked}|${x}`;
         if (key !== lastCells) {
-          lastCells = key; cells.classList.remove('is-stacked', 'is-docked'); cells.style.translate = '';
+          lastCells = key; cells.classList.remove('is-docked'); cells.classList.toggle('is-stacked', stacked); cells.style.translate = '';
           pin.style.setProperty('--col-x', `${docked ? gutter : x}px`); pin.toggleAttribute('data-docked', docked);
         }
       } else {

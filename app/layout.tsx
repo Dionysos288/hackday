@@ -9,10 +9,10 @@ import { headScript } from '@/components/ground/head-script';
 import './globals.css';
 
 /* Geist 400/500/600 and Geist Mono 500 are the page faces; globals.css reads them through these two variables.
-   Manrope 600 is for the Builder Day name only. */
+   Manrope 500/600/700 is for the Builder Day name and the Luma thumbnails. */
 const geist = Geist({ subsets: ['latin', 'latin-ext'], weight: ['400', '500', '600'], variable: '--font-geist' });
 const geistMono = Geist_Mono({ subsets: ['latin', 'latin-ext'], weight: ['500'], variable: '--font-geist-mono' });
-const manrope = Manrope({ subsets: ['latin'], weight: ['600'], variable: '--font-manrope' });
+const manrope = Manrope({ subsets: ['latin'], weight: ['500', '600', '700'], variable: '--font-manrope' });
 
 /* the ground and the arrival are decided before first paint, from the saved looks and the URL */
 const HEAD = headScript({
