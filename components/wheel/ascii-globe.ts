@@ -1,6 +1,6 @@
 /* The globe as text: a world turning in 100 frames of characters, from the motion study in the LW17 x Hackathon 26
-   file ("157 / spinning world"). public/wheel/ascii-globe.txt holds the frames, 25 lines of 100 characters each, one
-   after another: '.' is the dim grid, ':' '|' and 'o' (a bright '.') are land. The study's green AWS marks are land
+   file ("157 / spinning world"). public/wheel/ascii-globe.txt holds the frames, one frame per line: its 25 rows of 100
+   characters run on, row after row: '.' is the dim grid, ':' '|' and 'o' (a bright '.') are land. The study's green AWS marks are land
    here, since the city mark is ours.
 
    Frame k faces longitude FIRST + STEP * k, east of Greenwich positive. A place at (lat, lon) sits at column
@@ -17,7 +17,11 @@ let loading: Promise<AsciiFrames | null> | null = null;
 export function loadAscii(): Promise<AsciiFrames | null> {
   loading ??= fetch(ASCII.url).then((r) => (r.ok ? r.text() : Promise.reject(new Error(String(r.status))))).then((t) => {
     const lines = t.split('\n'), frames: AsciiFrames = [];
-    for (let k = 0; k < ASCII.frames; k++) frames.push(lines.slice(k * ASCII.rows, (k + 1) * ASCII.rows));
+    for (let k = 0; k < ASCII.frames; k++) {
+      const f = lines[k] ?? '', rows: string[] = [];
+      for (let r = 0; r < ASCII.rows; r++) rows.push(f.slice(r * ASCII.cols, (r + 1) * ASCII.cols));
+      frames.push(rows);
+    }
     return frames;
   }).catch(() => { console.warn('The text globe did not load.'); loading = null; return null; });
   return loading;
