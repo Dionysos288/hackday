@@ -43,6 +43,41 @@
 .wh-mark-lines { fill: none; stroke: currentColor; }
 .wh-mark-word { fill: currentColor; shape-rendering: crispEdges; }
 
+/* Builder Day: the pixel globe and the name, in the logo's green */
+.wh-wordmark[data-mark='builder'] { display: flex; align-items: center; gap: 12px; height: 44px; color: #56bd88; }
+.wh-wordmark .wh-builder-globe { flex: none; width: 28px; height: 28px; filter: none; }
+.wh-wordmark[data-mark='builder'] .wh-name { font: 600 22px/1 var(--font-manrope), var(--wh-sans); letter-spacing: -0.02em; }
+
+/* the column layout: the page's words over the cells, the link under them. The column is as tall as the cells, so the
+   wheel can put it on the active name's line (--globe-y) and where the cells end before the name (--col-x). */
+.wh-col { position: absolute; z-index: 1; left: var(--col-x, var(--wh-gutter)); top: var(--globe-y, 50%); transform: translateY(-50%); }
+.wh-col .wh-cells { position: static; transform: none; }
+/* the mark lines up with the column's left edge */
+.wh-pin[data-layout='column'] .wh-wordmark { left: var(--col-x, var(--wh-gutter)); }
+.wh-lead { position: absolute; left: 0; bottom: calc(100% + 48px); display: flex; flex-direction: column; gap: 64px; width: max-content; }
+.wh-lead p { margin: 0; font: 400 20px/1.6 var(--wh-sans); letter-spacing: -0.01em; color: var(--wh-ink); }
+.wh-lead .wh-lead-muted { color: var(--wh-muted); }
+.wh-supabase { display: inline-flex; align-items: center; gap: 6px; margin-left: 4px; vertical-align: -3px; color: var(--wh-ink); font-weight: 600; letter-spacing: -0.03em; }
+.wh-supabase svg { width: 19px; height: 20px; }
+.wh-col-foot { position: absolute; left: 0; top: calc(100% + 40px); display: flex; flex-direction: column; align-items: flex-start; gap: 16px; }
+.wh-pill {
+  display: inline-flex; align-items: center; height: 40px; padding: 0 20px; border-radius: 999px;
+  background: #fff; color: #5b2a06; font: 500 14px/1 var(--wh-mono); white-space: nowrap; text-decoration: none;
+}
+.wh-pill:hover { background: #e6e6e3; }
+.wh-pill { overflow: hidden; }
+.wh-pill-text { flex: none; white-space: nowrap; }
+.wh-pill-text.is-fresh { animation: wh-pill-fade 220ms ease-out both; }
+@keyframes wh-pill-fade { from { opacity: 0; } to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .wh-pill-text.is-fresh { animation: none; } }
+.wh-pill:focus-visible { outline: 2px solid var(--wh-ink); outline-offset: 4px; }
+/* too narrow for the cells before the name: the column sits at the top, in the flow */
+.wh-pin[data-docked] .wh-col { top: 96px; transform: none; right: var(--wh-gutter); display: flex; flex-direction: column; gap: 20px; }
+.wh-pin[data-docked] .wh-lead, .wh-pin[data-docked] .wh-col-foot { position: static; width: auto; }
+.wh-pin[data-docked] .wh-lead { gap: 12px; }
+.wh-pin[data-docked] .wh-lead p { font-size: 16px; line-height: 1.45; }
+.wh-pin[data-docked] .wh-col .wh-cells { flex-wrap: wrap; }
+
 /* the facts of the active city as a row of table cells, over the lines and with no colour step, so small text stays sharp */
 .wh-cells {
   position: absolute; top: 0; left: 0; z-index: 1; display: flex; margin: 0;
@@ -50,18 +85,41 @@
   transform: translate(-100%, -50%);
   font: 500 13px/1 var(--wh-mono); white-space: nowrap; color: var(--wh-ink);
 }
-.wh-cells > div:not(.sr-only) {
-  display: flex; align-items: center; gap: 7px; margin: 0 -1px -1px 0; padding: 9px 12px;
-  /* two cells share a border line, so the colour must not be see-through */
-  border: 1px solid var(--wh-rule); background: var(--wh-paper);
-}
+.wh-cells > div:not(.sr-only) { margin: 0 -1px -1px 0; }
 .wh-cells dd { margin: 0; }
 .wh-cells svg { flex: none; width: 12px; height: 12px; }
-/* dark text on a light cell, at 7 to 1 or more */
-.wh-cells[data-status='nearing'] .wh-status { border-color: #f8d3a0; background-color: #f8d3a0; color: #6b2a00; }
-.wh-cells[data-status='open'] .wh-status { border-color: #dcfce7; background-color: #dcfce7; color: #14532d; }
+/* a face is one whole cell; two cells share a border line, so the colour must not be see-through */
+.wh-face {
+  --wh-cell-h: 33px;
+  box-sizing: border-box; display: flex; align-items: center; gap: 7px; height: var(--wh-cell-h); padding: 0 12px;
+  border: 1px solid var(--wh-rule); background: var(--wh-paper); backface-visibility: hidden;
+}
+/* dark text on a light cell, at 7 to 1 or more; the status keeps one width whatever it says */
+.wh-face[data-status] { width: calc(16ch + 12px + 7px + 26px); }
+.wh-face[data-status='nearing'] { border-color: #f8d3a0; background-color: #f8d3a0; color: #6b2a00; }
+.wh-face[data-status='open'] { border-color: #dcfce7; background-color: #dcfce7; color: #14532d; }
 .wh-cells.is-stacked { flex-direction: column; }
 .wh-cells.is-docked { top: var(--wh-dock, 88px); left: var(--wh-gutter); right: var(--wh-gutter); flex-wrap: wrap; transform: none; }
+
+/* the spin: the cell is the front of a four-sided drum. While it turns, the old face is the front and the new face
+   the bottom (forward) or the top (back); the drum turns a quarter about its centre, and each face darkens as it
+   turns away from the light. */
+.wh-prism { display: block; perspective: 420px; }
+.wh-drum { --h: 33px; --wh-turn: 300ms; display: block; position: relative; transform-style: preserve-3d; }
+.wh-drum.is-quick { --wh-turn: 150ms; }
+.wh-drum.is-turning .wh-face { position: absolute; inset: 0 auto auto 0; }
+.wh-drum.is-turning .wh-face.is-new { position: relative; }
+.wh-drum.is-turning .is-old { transform: translateZ(calc(var(--h) / 2)); animation: wh-face-away var(--wh-turn) cubic-bezier(.3, .1, .2, 1) both; }
+.wh-prism[data-dir='up'] .is-turning .is-new { transform: rotateX(-90deg) translateZ(calc(var(--h) / 2)); }
+.wh-prism[data-dir='down'] .is-turning .is-new { transform: rotateX(90deg) translateZ(calc(var(--h) / 2)); }
+.wh-drum.is-turning .is-new { animation: wh-face-toward var(--wh-turn) cubic-bezier(.3, .1, .2, 1) both; }
+.wh-prism[data-dir='up'] .wh-drum.is-turning { animation: wh-drum-up var(--wh-turn) cubic-bezier(.3, .1, .2, 1) both; }
+.wh-prism[data-dir='down'] .wh-drum.is-turning { animation: wh-drum-down var(--wh-turn) cubic-bezier(.3, .1, .2, 1) both; }
+@keyframes wh-drum-up { from { transform: translateZ(calc(var(--h) / -2)) rotateX(0deg); } to { transform: translateZ(calc(var(--h) / -2)) rotateX(90deg); } }
+@keyframes wh-drum-down { from { transform: translateZ(calc(var(--h) / -2)) rotateX(0deg); } to { transform: translateZ(calc(var(--h) / -2)) rotateX(-90deg); } }
+@keyframes wh-face-away { from { filter: brightness(1); } to { filter: brightness(0.35); } }
+@keyframes wh-face-toward { from { filter: brightness(0.35); } to { filter: brightness(1); } }
+@media (prefers-reduced-motion: reduce) { .wh-drum.is-turning, .wh-drum.is-turning .wh-face { animation: none; } .wh-drum.is-turning .is-old { display: none; } .wh-drum.is-turning .is-new { transform: none; } }
 
 /* the call to action is a link with a small copy of the glass globe; the screen pass draws that globe where .wh-lens is */
 .wh-cta {

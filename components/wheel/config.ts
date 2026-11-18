@@ -3,7 +3,18 @@
    values, so the defaults draw the study. The land map is baked (tools/bake-land.mjs) and is not a knob. */
 
 export type WheelFont = 'study' | 'geist';
-export type WheelMark = 'hack' | 'both' | 'name';
+export type WheelMark = 'hack' | 'both' | 'name' | 'builder';
+/* spoke: the cells sit just before the active name and the link is in the bottom corner; column: the page's words, the
+   cells and the link are one column on the left, with the cells on the active name's line */
+export type WheelLayout = 'spoke' | 'column';
+/* glass: the glass ball with the land map in it; ascii: the turning world as text frames (ascii-globe.ts); none: the
+   names turn about an empty hub */
+export type WheelGlobe = 'glass' | 'ascii' | 'none';
+/* end: each name ends at the same distance from the hub; start: every name starts on one line, so the cells before
+   the active name never move */
+export type WheelAlign = 'end' | 'start';
+/* fade: the cells show only while the wheel rests; flip: they stay, and turn over like rolodex cards as it turns */
+export type WheelCells = 'fade' | 'flip';
 export type WheelCfg = {
   /* the wheel */
   step: number; hubY: number; hubOfHeight: number; hubOfWidth: number;
@@ -13,7 +24,7 @@ export type WheelCfg = {
   ease: number; yawEase: number; openEase: number;
   ghosts: number; ghostAlpha: number; ghostGap: number; ghostFrom: number;
   settleFrom: number; settleTo: number; pulseLow: number; pulseRate: number; statusDelay: number;
-  font: WheelFont; mark: WheelMark;
+  font: WheelFont; mark: WheelMark; globe: WheelGlobe; globeFps: number; globeShift: number; bareShift: number; globeEdge: number; align: WheelAlign; cells: WheelCells; layout: WheelLayout;
   /* the tube screen pass */
   edgeFrom: number; edgeTo: number; edgeReach: number; edgeTaps: number;
   fringe: number; grain: number; glassSplit: number; core: number; vignette: number; paper: number;
@@ -31,7 +42,7 @@ export const WHEEL_DEF: WheelCfg = {
   ease: 9, yawEase: 5, openEase: 10,
   ghosts: 3, ghostAlpha: 0.22, ghostGap: 0.07, ghostFrom: 0.25,
   settleFrom: 0.02, settleTo: 0.35, pulseLow: 0.72, pulseRate: 1.25, statusDelay: 600,
-  font: 'study', mark: 'hack',
+  font: 'study', mark: 'hack', globe: 'glass', globeFps: 8, globeShift: 0, bareShift: 0.8, globeEdge: 0.35, align: 'end', cells: 'fade', layout: 'spoke',
   edgeFrom: 0.47, edgeTo: 1.25, edgeReach: 0.52, edgeTaps: 8,
   fringe: 1.2, grain: 0.045, glassSplit: 0.1, core: 0.86, vignette: 0.45, paper: 12,
   mirrorStart: 0.95, mirrorSize: 0.07, mirrorTip: 0.22, mirrorDepth: 0.68, mirrorSqueeze: 0.5,
@@ -47,6 +58,7 @@ export const WHEEL_BOUNDS: Record<string, [number, number, number]> = {
   wheelPx: [30, 200, 5], dragPx: [24, 120, 2], openScale: [1, 1.3, 0.01],
   ease: [3, 20, 0.5], yawEase: [1, 12, 0.5], openEase: [3, 20, 0.5],
   ghosts: [0, 5, 1], ghostAlpha: [0, 0.5, 0.01], ghostGap: [0.02, 0.15, 0.005], ghostFrom: [0.05, 1, 0.05],
+  globeFps: [2, 24, 1], globeShift: [0, 0.6, 0.01], bareShift: [0, 1.4, 0.01], globeEdge: [0, 1, 0.01],
   settleFrom: [0, 0.2, 0.01], settleTo: [0.1, 0.8, 0.01], pulseLow: [0.3, 1, 0.01], pulseRate: [0.3, 3, 0.05], statusDelay: [200, 1500, 50],
   edgeFrom: [0.2, 0.9, 0.01], edgeTo: [0.9, 1.6, 0.01], edgeReach: [0, 1, 0.02], edgeTaps: [2, 16, 1],
   fringe: [0, 3, 0.1], grain: [0, 0.12, 0.005], glassSplit: [0, 0.25, 0.01], core: [0.6, 0.98, 0.01], vignette: [0, 0.9, 0.01], paper: [0, 40, 1],
@@ -54,10 +66,10 @@ export const WHEEL_BOUNDS: Record<string, [number, number, number]> = {
   mirrorBlur: [0, 0.02, 0.001], mirrorGlow: [0, 0.06, 0.002], mirrorSplit: [0, 0.04, 0.001], mirrorStrength: [0, 1, 0.02],
   lineAlpha: [0, 0.6, 0.01], linePeriod: [2, 6, 1], volume: [0, 2, 0.05],
 };
-export const WHEEL_CHOICES: Record<string, string[]> = { font: ['study', 'geist'], mark: ['hack', 'both', 'name'] };
+export const WHEEL_CHOICES: Record<string, string[]> = { font: ['study', 'geist'], mark: ['hack', 'both', 'name', 'builder'], globe: ['glass', 'ascii', 'none'], align: ['end', 'start'], cells: ['fade', 'flip'], layout: ['spoke', 'column'] };
 
 /* the values the shader is built from: when one of these changes, the program is compiled again */
-export const SHADER_KEYS = ['edgeFrom', 'edgeTo', 'edgeReach', 'edgeTaps', 'fringe', 'grain', 'glassSplit', 'core', 'vignette', 'paper',
+export const SHADER_KEYS = ['globe', 'globeEdge', 'fadeFrom', 'fadeTo', 'edgeFrom', 'edgeTo', 'edgeReach', 'edgeTaps', 'fringe', 'grain', 'glassSplit', 'core', 'vignette', 'paper',
   'mirrorStart', 'mirrorSize', 'mirrorTip', 'mirrorDepth', 'mirrorSqueeze', 'mirrorSplit', 'mirrorStrength'] as const;
 
 export function clampWheel(c: Partial<WheelCfg> | Record<string, unknown>): WheelCfg {

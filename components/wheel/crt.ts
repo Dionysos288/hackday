@@ -104,6 +104,9 @@ export function glassGlsl(c: WheelCfg) {
 }
 
 function fragment(c: WheelCfg) {
+  /* the text globe is part of the picture, so it gets the same smear and fade at the ends as the names; the glass
+     globe is drawn over the picture and needs neither */
+  const ascii = c.globe === 'ascii';
   const taps = Math.round(c.edgeTaps), paper = [c.paper, c.paper + 1, c.paper + 1].map((p) => f(p / 255, 3)).join(', ');
   return `
   precision highp float;
@@ -127,10 +130,14 @@ function fragment(c: WheelCfg) {
     vec2 mirror = vec2(-1., 1.);
     vec2 spoke = (px - uHub) * mirror;
     float angle = atan(spoke.y, spoke.x);
+    float far = length(spoke) / uRadius;
+    /* on the text globe the smear is the "Text globe edge" knob as strong, and the fade starts later, so its top and bottom still read */
+    float onGlobe = ${ascii ? '1. - smoothstep(1.1, 1.2, far)' : '0.'};
+    float fade = 1. - onGlobe * smoothstep(${f(c.fadeFrom + 0.3)}, ${f(c.fadeTo + 0.3)}, abs(angle)) * ${f(c.globeEdge)};
     float strength = pow(smoothstep(${f(c.edgeFrom)}, ${f(c.edgeTo)}, abs(angle)), 2.)
-      * smoothstep(1.2, 1.5, length(spoke) / uRadius)
-      * (1. - smoothstep(3.4, 4., length(spoke) / uRadius));
-    if (strength <= 0. || abs(angle) > 2.5) return fringed(px);
+      * ${ascii ? `mix(smoothstep(1.2, 1.5, far), ${f(c.globeEdge)}, onGlobe)` : 'smoothstep(1.2, 1.5, far)'}
+      * (1. - smoothstep(3.4, 4., far));
+    if (strength <= 0. || abs(angle) > 2.5) return fringed(px) * fade;
     vec4 sum = vec4(0.);
     for (int i = 0; i < ${taps}; i++) {
       float back = strength * ${f(c.edgeReach)} * (.35 + .65 * (float(i) + .5) / ${taps}.) * sign(angle);
@@ -142,7 +149,7 @@ function fragment(c: WheelCfg) {
       vec4 blue = picture(uHub + mirror * vec2(inward.x * co.b + inward.y * si.b, inward.y * co.b - inward.x * si.b));
       sum += vec4(red.r, green.g, blue.b, (red.a + green.a + blue.a) / 3.);
     }
-    return sum / ${taps}.;
+    return sum / ${taps}. * fade;
   }
 
 ${glassGlsl(c)}
@@ -151,7 +158,7 @@ ${glassGlsl(c)}
     gYaw = uYaw; gCity = uCity; gGlow = uGlow;
     vec4 ink = wheel(px);
     vec3 color = vec3(${paper}) * (1. - ink.a) + ink.rgb;
-    vec4 glass = globe(px, uHub, uRadius, true);
+    vec4 glass = ${c.globe !== 'glass' ? 'vec4(0.)' : 'globe(px, uHub, uRadius, true)'};
     color = color * (1. - glass.a) + glass.rgb;
     vec4 small = globe(px, uSmall.xy, uSmall.z, false);
     color = color * (1. - small.a) + small.rgb;

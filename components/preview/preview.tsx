@@ -8,6 +8,7 @@ import { LabPanel, togglePanel, useLabSave } from '@/components/admin/kit';
 import { HowItWorks, PrizeBlock } from '@/components/day/explain';
 import { GetReady } from '@/components/day/get-ready';
 import { lumaHref } from '@/lib/luma';
+import { SupabaseMark } from '@/components/shared/supabase-mark';
 import { countdown, nearestCity, type OurFact, type OurWheel } from './facts';
 import './preview.css';
 import '@/components/day/explain.css';
@@ -46,7 +47,12 @@ export function SheetWheel({ cfg, noGl, mark, engineRef, ours, forced }: SheetPr
   const reg = cities.map((c) => ({ ...c, href: lumaHref(c.id), action: c.status === 'full' ? 'Join the waiting list in ' + c.name : 'Register for ' + c.name }));
   const f = { buildMin: ours.buildMin, voteAfter: ours.voteAfter, startHour: ours.startHour, date: ours.date };
   return (
-    <Wheel cities={reg} cfg={cfg} noGl={noGl} mark={mark} engineRef={engineRef} start={start} date={ours.date} caption={CAPTION}>
+    <Wheel cities={reg} cfg={cfg} noGl={noGl} mark={mark} engineRef={engineRef} start={start} date={ours.date} caption={CAPTION} lead={(
+      <>
+        <div><p>{ours.buildMin}min Build Challenge</p><p className="wh-lead-muted">Officially hosted by <span className="wh-supabase"><SupabaseMark /><span>supabase</span></span></p></div>
+        <div><p>{ours.dateShort}</p><p>RSVP now open</p></div>
+      </>
+    )}>
       <button type="button" className="wd-how" onClick={() => sheet.current?.showModal()}>How it works</button>
       {/* in the wheel, so it has the wheel's faces; the wheel ignores input from inside it */}
       <dialog ref={sheet} className="wd-sheet wd-sheet2" aria-labelledby="wd-sheet-h" data-wheel-skip onClick={(e) => { if (e.target === e.currentTarget) e.currentTarget.close(); }}>
