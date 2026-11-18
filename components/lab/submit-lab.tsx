@@ -12,9 +12,9 @@ const SAMPLE = { repo: 'github.com/ada/quiet-beacon', city: 'Berlin', time: '10:
 
 export function SubmitLab({ only }: { only?: string }) {
   const states = [
-    { k: 'closed', cap: 'The server is not open yet (today, on every page)', el: <GetReady id="s-closed" city="Berlin" cityId="berlin" live={false} /> },
-    { k: 'open', cap: 'Open, before the day (stand-in address)', el: <GetReady id="s-open" city="Berlin" cityId="berlin" live url={PLACEHOLDER_URL} /> },
-    { k: 'building', cap: 'Building: submit now (stand-in address)', el: <GetReady id="s-building" state="building" city="Berlin" cityId="berlin" live url={PLACEHOLDER_URL} onBrowser={() => {}} /> },
+    { k: 'closed', cap: 'The server is not open yet (today, on every page)', el: <GetReady id="s-closed" city="London" cityId="london" live={false} /> },
+    { k: 'open', cap: 'Open, before the day (stand-in address)', el: <GetReady id="s-open" city="London" cityId="london" live url={PLACEHOLDER_URL} /> },
+    { k: 'building', cap: 'Building: submit now (stand-in address)', el: <GetReady id="s-building" state="building" city="London" cityId="london" live url={PLACEHOLDER_URL} onBrowser={() => {}} /> },
     { k: 'sheet', cap: 'In the preview’s sheet, 400 wide (server not open)', el: <div className="xl-sheet sl-narrow"><GetReady id="s-sheet" compact level={3} live={false} /></div> },
   ];
   const door = (

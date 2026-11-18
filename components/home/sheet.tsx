@@ -6,6 +6,7 @@ import { useDay } from './day-context';
 import { Ruler } from './timetable';
 import { useLook } from './look';
 import { CityName, DateLine, Facts, HoverPreview, JoinLine, SheetMasthead, LeadPic, Live, LocalTime, PhoneNow, StripAxis, StripNow, TopKey, TopLines, Trunk, nowIndex, useHoverPreview, zoomView } from './sheet-parts';
+import { CITY_WORD } from '@/lib/day-data';
 
 /* Sheet: the home is one dense sheet that fits the first viewport. A title band on the table's own columns (the name
    over the names, the live sentence and the wire over the strip, the facts over the slot), then the ten rows with a
@@ -29,7 +30,7 @@ export function Sheet() {
         </div>
         <Facts cls="hs-c3 grid-cols-2 gap-x-(--g) gap-y-3 phone:grid-cols-2" vCls="text-sm" />
       </section>
-      <section id="cities" className="relative px-(--m) pb-6" aria-label="The ten cities, east to west">
+      <section id="cities" className="relative px-(--m) pb-6" aria-label={`The ${CITY_WORD} cities, east to west`}>
         <div ref={box} className="relative" {...handlers}>
           <div className="h-7 phone:hidden" />
           <StripAxis V={V} W={W} cls="hs-stripcol top-0 bottom-0" />

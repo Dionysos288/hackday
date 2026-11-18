@@ -1,5 +1,5 @@
 'use client';
-import { CITIES, EVENT } from '@/lib/day-data';
+import { CITIES, EVENT, CITY_WORD } from '@/lib/day-data';
 import { PRIZES } from '@/lib/prizes';
 import { hhmm } from '@/lib/format';
 import { CODE } from '@/lib/places';
@@ -72,7 +72,7 @@ export function PrizeBlock({ compact = false, id = 'prize', winner, scope, f, da
   const who = winner ? 'Won by ' + winner : 'One winner, picked from the ' + fin + ' finalists by ' + EVENT.pickers;
   const cities = F.cities ?? [], pickCity = F.pick !== undefined ? cities[Math.floor(F.pick / F.top)] : null;
   const cash = mode === 'flaps' ? { ...cfg, cash: 'flap' as const } : mode === 'nixie' ? { ...cfg, cash: 'nixie' as const } : cfg;
-  const codes = <ul className="ex-codes" aria-label="One in each of the ten cities">{CITIES.map((x) => <li key={x.id}>{CODE[x.id]}</li>)}</ul>;
+  const codes = <ul className="ex-codes" aria-label={`One in each of the ${CITY_WORD} cities`}>{CITIES.map((x) => <li key={x.id}>{CODE[x.id]}</li>)}</ul>;
   if (mode === 'docket') return (
     <section id={id} className="ex ex-prize ex-docket" data-compact={compact ? '' : undefined} aria-labelledby={id + '-h'}>
       <div className="ex-top"><H level={level} id={id + '-h'}>Prizes</H></div>

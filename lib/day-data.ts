@@ -1,7 +1,8 @@
 /* day-data.ts: the one model both pages read, so a city's row on the home and that city's own page always agree:
    the cities, the schedule, the clock, and each city's seeded project list.
 
-   The date is decided: 10 December 2026. Placeholders, not confirmed: which ten cities and the 09:00 local start.
+   The date is decided: 10 December 2026. The cities are the Luma events'. Placeholder, not confirmed: the 09:00 local start
+   (most Luma events say 18:00).
    Offsets are December UTC offsets in minutes. Sunrise and sunset are approximate local times for mid-December, used only to draw the daylight band; they
    are not checked against an almanac.
 
@@ -15,21 +16,30 @@ export type City = { i: number; id: string; name: string; offset: number; rise: 
 
 function hm(s: string): number { const p = s.split(':'); return +p[0] * 60 + +p[1]; }
 const C: [string, string, number, string, string][] = [
-  ['sydney', 'Sydney', 660, '05:40', '19:58'],
-  ['tokyo', 'Tokyo', 540, '06:40', '16:28'],
+  ['seoul', 'Seoul', 540, '07:40', '17:15'],
   ['singapore', 'Singapore', 480, '06:59', '19:00'],
-  ['bengaluru', 'Bengaluru', 330, '06:30', '17:55'],
-  ['berlin', 'Berlin', 60, '08:10', '15:53'],
-  ['lagos', 'Lagos', 60, '06:50', '18:35'],
+  ['peshawar', 'Peshawar', 300, '07:00', '17:05'],
+  ['nouakchott', 'Nouakchott', 0, '07:40', '18:45'],
   ['london', 'London', 0, '07:59', '15:51'],
-  ['sao-paulo', 'São Paulo', -180, '05:15', '18:45'],
-  ['new-york', 'New York', -300, '07:09', '16:28'],
+  ['rosario', 'Rosario', -180, '05:35', '20:10'],
+  ['santiago', 'Santiago', -180, '06:25', '20:55'],
+  ['manta', 'Manta', -300, '06:05', '18:20'],
+  ['new-york', 'New York City', -300, '07:09', '16:28'],
+  ['toronto', 'Toronto', -300, '07:45', '16:42'],
+  ['san-salvador', 'San Salvador', -360, '05:55', '17:25'],
+  ['austin', 'Austin', -360, '07:20', '17:32'],
+  ['mexico-city', 'Mexico City', -360, '07:05', '18:00'],
   ['san-francisco', 'San Francisco', -480, '07:14', '16:51'],
 ];
 /* east to west, always (rule 1) */
 export const CITIES: City[] = C.map((r, i) => ({ i, id: r[0], name: r[1], offset: r[2], rise: hm(r[3]), set: hm(r[4]) }));
 export const CITY_IDS: string[] = CITIES.map((c) => c.id);
 export function cityById(id: string): City | undefined { return CITIES.find((c) => c.id === id); }
+/* how many cities, and how many go to the final, as words for the copy ("Fourteen cities", "the 42 finalists") */
+const WORDS = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten', 'eleven', 'twelve', 'thirteen', 'fourteen', 'fifteen', 'sixteen', 'seventeen', 'eighteen', 'nineteen', 'twenty'];
+export const CITY_COUNT = CITIES.length;
+export const CITY_WORD = WORDS[CITY_COUNT] ?? String(CITY_COUNT);
+export const CITY_WORD_CAP = CITY_WORD[0].toUpperCase() + CITY_WORD.slice(1);
 
 export const EVENT = {
   date: 'Dec 10, 2026',
@@ -42,6 +52,8 @@ export const EVENT = {
   judges: 2,
   judgeVotes: 50,
 } as const;
+/* how many go to the final: the top few in every city */
+export const FINALIST_COUNT = EVENT.finalists * CITIES.length;
 /* minute 0 of the model: Dec 10, 00:00 UTC */
 export const EPOCH = Date.UTC(EVENT.year, EVENT.month - 1, EVENT.day);
 
@@ -255,12 +267,12 @@ export function cityState(x: CitySched, sd: SeedCity, now: number): CityState {
 }
 
 /* ---------------- the worst case, for the tuning pages ---------------- */
-/* The content a layout must survive: the longest name the submit form allows (40 characters) on first place in Tokyo
-   and on second place in Berlin, 182 entries in Lagos, and a city with no entries at all (Singapore, or the next city
+/* The content a layout must survive: the longest name the submit form allows (40 characters) on first place in Seoul
+   and on second place in London, 182 entries in Rosario, and a city with no entries at all (Singapore, or the next city
    along if Singapore holds the pick). San Francisco, the longest city name, is always there. Same seed, same draws:
    only those fields change. */
 export const LONG_NAME = 'Realtime Inventory Sync for Corner Shops';
-export const WORST = { long: [['tokyo', 0], ['berlin', 1]] as [string, number][], many: 'lagos', manyN: 182, none: ['singapore', 'bengaluru', 'sydney'] };
+export const WORST = { long: [['seoul', 0], ['london', 1]] as [string, number][], many: 'rosario', manyN: 182, none: ['singapore', 'peshawar', 'manta'] };
 const WCACHE: Record<number, SeedDay> = {};
 export function seedWorst(seed: number): SeedDay {
   if (WCACHE[seed]) return WCACHE[seed];

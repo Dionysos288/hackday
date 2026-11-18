@@ -1,6 +1,6 @@
 'use client';
 import clsx from 'clsx';
-import { EVENT } from '@/lib/day-data';
+import { EVENT, CITY_WORD_CAP } from '@/lib/day-data';
 import { action, cityHref, status } from '@/lib/home';
 import { MastheadMark } from '@/components/shared/page-parts';
 import { useDay } from './day-context';
@@ -20,7 +20,7 @@ export function HomeMasthead({ cls = 'mh-band' }: { cls?: string }) {
     <header className={clsx(MH, band ? MH_BAND : cls)}>
       <MastheadMark href="#top" label="Supabase Hackday, top of the page" />
       <p className={clsx('mh-date grid leading-none font-medium whitespace-nowrap phone:text-h1', band ? 'text-[length:min(calc(var(--fact)*1px),var(--t-h1))] tracking-tight tablet:hidden' : 'text-[length:calc(var(--fact)*1px)] tracking-d48')}>
-        <span>{EVENT.date}</span><span className="mh-sub type-label mt-2 text-ink-2">Ten cities, one day</span>
+        <span>{EVENT.date}</span><span className="mh-sub type-label mt-2 text-ink-2">{CITY_WORD_CAP} cities, one day</span>
       </p>
       <p className="mh-status max-w-[40ch] text-xl leading-[1.25] tracking-snug text-pretty text-ink phone:min-h-[2.5em] phone:text-md">{status(W)}</p>
       <a className={clsx(MH_ACT, g ? MH_ACT_G : MH_ACT_LINE)} href={act.href} data-g={g ? '1' : undefined}>{act.t}</a>

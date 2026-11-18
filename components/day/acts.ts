@@ -40,7 +40,7 @@ function topAt(c: CityFact, m: number, n = 3): { i: number; v: number }[] {
   return c.seven.map((r, i) => ({ i, v: votesOf(r, c, m) })).sort((p, q) => q.v - p.v || c.seven[p.i].af - c.seven[q.i].af).slice(0, n);
 }
 const citiesOf = (x: X) => x.f.cities ?? [];
-const focusOf = (x: X) => { const cs = citiesOf(x); const i = cs.findIndex((c) => c.id === 'berlin'); return cs[i < 0 ? 0 : i]; };
+const focusOf = (x: X) => { const cs = citiesOf(x); const i = cs.findIndex((c) => c.id === 'london'); return cs[i < 0 ? 0 : i]; };
 
 /* ---------- depth: far lines dimmer, and broken where a near line crosses them (rule 5) ---------- */
 function crossT(a: Pt, b: Pt, c: Pt, d: Pt): number {

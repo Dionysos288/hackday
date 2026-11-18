@@ -75,7 +75,7 @@ export function DayCity({ saved, parts, q, page, base, foot }: {
     { name: 'Pictures', knobs: [{ k: 'pics', kind: 'select', label: 'Pictures' }, { k: 'thumbW', kind: 'range', label: 'Picture width (rows, strip)' }, { k: 'picRows', kind: 'range', label: 'Rows with a picture' }, { k: 'cols', kind: 'range', label: 'Monitors across (multiviewer)' }, { k: 'tally', kind: 'toggle', label: 'Tally lamps' }, { k: 'dim', kind: 'range', label: 'Picture brightness at rest' }] },
   ];
   const [cfg, setCfg] = useState<State>(() => {
-    const c: State = { dir: 'board', pylon: 1, spark: 0, rows: 30, how: 1, ...PIC_DEF, ...saved, ...clampPics(saved), city: page?.city ?? 'berlin', t: 0, live: 1, speed: 1, worst: real ? 0 : 1 };
+    const c: State = { dir: 'board', pylon: 1, spark: 0, rows: 30, how: 1, ...PIC_DEF, ...saved, ...clampPics(saved), city: page?.city ?? 'london', t: 0, live: 1, speed: 1, worst: real ? 0 : 1 };
     if (!CHOICES.dir.includes(c.dir)) c.dir = 'board';
     if (q.pics && CHOICES.pics.includes(q.pics)) c.pics = q.pics as PicMode;
     if (q.dir && CHOICES.dir.includes(q.dir)) c.dir = q.dir as CityDir;
@@ -167,7 +167,7 @@ export function DayCity({ saved, parts, q, page, base, foot }: {
     : res ? { text: `Small text: ${res.n} pieces, lowest ${res.min.toFixed(1)}:1, ${res.under} under 7:1 with the lines on${res.under ? ': ' + res.worst.filter((w) => w.ratio < 7).slice(0, 4).map((w) => '“' + w.text.slice(0, 24) + '” ' + w.ratio.toFixed(1)).join(', ') : ''}.`, bad: res.under > 0 } : { text: 'Measuring…', bad: false };
   const pylon = cfg.pylon && cfg.dir !== 'wall' ? <Pylon W={W} W10={W10} hot={hot} setHot={setHot} swatch={view === 'time'} /> : null;
   const rankProps = { W, look, vote, open: show, spark: !!cfg.spark, rows: cfg.rows, more, setMore, pick: pk?.id, pics: clampPics(cfg), view, setView, hot, setHot };
-  const labButtons: [string, () => void, boolean?][] = [['Tokyo: long name', () => setCfg((c) => ({ ...c, city: 'tokyo', worst: 1 }))], ['Lagos: 182', () => setCfg((c) => ({ ...c, city: 'lagos', worst: 1 }))], ['Singapore: none', () => setCfg((c) => ({ ...c, city: 'singapore', worst: 1 }))], ['Save', doSave, true]];
+  const labButtons: [string, () => void, boolean?][] = [['San Salvador: long name', () => setCfg((c) => ({ ...c, city: 'san-salvador', worst: 1 }))], ['Rosario: 182', () => setCfg((c) => ({ ...c, city: 'rosario', worst: 1 }))], ['Singapore: none', () => setCfg((c) => ({ ...c, city: 'singapore', worst: 1 }))], ['Save', doSave, true]];
 
   return (
     <>

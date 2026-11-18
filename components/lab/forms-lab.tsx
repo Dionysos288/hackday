@@ -13,7 +13,7 @@ const K = 'type-label mb-2 text-ink-2';
 const MONO = 'font-mono text-xs/[1.6] font-medium whitespace-pre-wrap wrap-anywhere text-ink-2';
 /* The forms tuning page: open each sheet, see the state the pages read, clear what is stored. */
 const inHours = (h: number) => new Date(Date.now() + h * 3600000);
-const SAMPLE = { name: 'Sentry Pup', pitch: 'A watchdog for your Edge Functions that barks in Slack before your users notice.', handle: 'mira_k', city: 'berlin', cityName: 'Berlin', slug: 'sentry-pup', votes: 45, rank: 1 };
+const SAMPLE = { name: 'Sentry Pup', pitch: 'A watchdog for your Edge Functions that barks in Slack before your users notice.', handle: 'mira_k', city: 'london', cityName: 'London', slug: 'sentry-pup', votes: 45, rank: 1 };
 const GROUNDS = [['night', 'Night'], ['paper', 'Paper'], ['mint', 'Mint']];
 
 export function FormsLab({ ground }: { ground: string | null }) {
@@ -27,9 +27,9 @@ function Lab({ ground: g0 }: { ground: string }) {
   const RUN: Record<string, () => Promise<unknown>> = {
     signIn: () => F.signIn(),
     ensureVoter: () => F.ensureVoter(),
-    submit: () => F.submit({ city: 'berlin', cityName: 'Berlin', deadline: inHours(3) }),
-    submitClosed: () => F.submit({ city: 'berlin', cityName: 'Berlin', deadline: inHours(-1 / 60) }),
-    remind: () => { const d = new Date(); d.setUTCHours(0, 0, 0, 0); return F.remind({ city: 'tokyo', cityName: 'Tokyo', when: d }); },
+    submit: () => F.submit({ city: 'london', cityName: 'London', deadline: inHours(3) }),
+    submitClosed: () => F.submit({ city: 'london', cityName: 'London', deadline: inHours(-1 / 60) }),
+    remind: () => { const d = new Date(); d.setUTCHours(0, 0, 0, 0); return F.remind({ city: 'seoul', cityName: 'Seoul', when: d }); },
     share: () => F.share(SAMPLE),
     shareMine: () => { const e = st.entry; return F.share(e ? { name: e.name, pitch: e.pitch, handle: e.handle, city: e.city, cityName: e.cityName, slug: e.slug } : SAMPLE); },
     signOut: () => F.signOut(),
