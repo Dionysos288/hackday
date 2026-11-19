@@ -7,7 +7,7 @@ import { projectOnDay } from '@/components/day/day';
    moment. The colours are the share card's (components/forms/forms.css, --fm-card-*), as hex for the image renderer. */
 export const size = { width: 1200, height: 630 };
 export const contentType = 'image/png';
-export const alt = 'The project’s name, pitch, place and votes at Supabase Hackday';
+export const alt = 'The project’s name, pitch, place and votes at ' + EVENT.name;
 const C = { ground: '#131413', ink: '#edefee', ink2: '#b9bbba', green: '#3ecf8e' };
 
 export default async function Image({ params }: { params: Promise<{ city: string; slug: string }> }) {

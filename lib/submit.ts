@@ -1,4 +1,4 @@
-/* submit.ts: the one way an entry gets in, for both doors (the editor through the Hackday server, and the form on a
+/* submit.ts: the one way an entry gets in, for both doors (the editor through the Builder Day server, and the form on a
    city's page). verify() runs the checks in lib/hackday-server.ts (CHECKS) and says, for each one that blocks, how to
    fix it; submit() verifies, then saves.
 

@@ -1,7 +1,8 @@
 /* day-data.ts: the one model both pages read, so a city's row on the home and that city's own page always agree:
    the cities, the schedule, the clock, and each city's seeded project list.
 
-   The date is decided: 10 December 2026. Placeholders, not confirmed: which ten cities and the 09:00 local start.
+   The date is decided: 10 December 2026. The cities are the Luma events'. Placeholder, not confirmed: the 09:00 local start
+   (most Luma events say 18:00).
    Offsets are December UTC offsets in minutes. Sunrise and sunset are approximate local times for mid-December, used only to draw the daylight band; they
    are not checked against an almanac.
 
@@ -15,26 +16,39 @@ export type City = { i: number; id: string; name: string; offset: number; rise: 
 
 function hm(s: string): number { const p = s.split(':'); return +p[0] * 60 + +p[1]; }
 const C: [string, string, number, string, string][] = [
-  ['sydney', 'Sydney', 660, '05:40', '19:58'],
-  ['tokyo', 'Tokyo', 540, '06:40', '16:28'],
+  ['seoul', 'Seoul', 540, '07:40', '17:15'],
   ['singapore', 'Singapore', 480, '06:59', '19:00'],
-  ['bengaluru', 'Bengaluru', 330, '06:30', '17:55'],
-  ['berlin', 'Berlin', 60, '08:10', '15:53'],
-  ['lagos', 'Lagos', 60, '06:50', '18:35'],
+  ['peshawar', 'Peshawar', 300, '07:00', '17:05'],
+  ['nouakchott', 'Nouakchott', 0, '07:40', '18:45'],
   ['london', 'London', 0, '07:59', '15:51'],
-  ['sao-paulo', 'São Paulo', -180, '05:15', '18:45'],
-  ['new-york', 'New York', -300, '07:09', '16:28'],
+  ['rosario', 'Rosario', -180, '05:35', '20:10'],
+  ['santiago', 'Santiago', -180, '06:25', '20:55'],
+  ['manta', 'Manta', -300, '06:05', '18:20'],
+  ['new-york', 'New York City', -300, '07:09', '16:28'],
+  ['toronto', 'Toronto', -300, '07:45', '16:42'],
+  ['san-salvador', 'San Salvador', -360, '05:55', '17:25'],
+  ['austin', 'Austin', -360, '07:20', '17:32'],
+  ['mexico-city', 'Mexico City', -360, '07:05', '18:00'],
   ['san-francisco', 'San Francisco', -480, '07:14', '16:51'],
 ];
 /* east to west, always (rule 1) */
 export const CITIES: City[] = C.map((r, i) => ({ i, id: r[0], name: r[1], offset: r[2], rise: hm(r[3]), set: hm(r[4]) }));
 export const CITY_IDS: string[] = CITIES.map((c) => c.id);
 export function cityById(id: string): City | undefined { return CITIES.find((c) => c.id === id); }
+/* how many cities, as words for the copy ("Fourteen cities") */
+const WORDS = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten', 'eleven', 'twelve', 'thirteen', 'fourteen', 'fifteen', 'sixteen', 'seventeen', 'eighteen', 'nineteen', 'twenty'];
+export const CITY_COUNT = CITIES.length;
+export const CITY_WORD = WORDS[CITY_COUNT] ?? String(CITY_COUNT);
+export const CITY_WORD_CAP = CITY_WORD[0].toUpperCase() + CITY_WORD.slice(1);
 
 export const EVENT = {
+  /* the event's row in the database (events.id): one event per site; a later event is a new row */
+  id: 'builder-day-2026',
   date: 'Dec 10, 2026',
   year: 2026, month: 12, day: 10,
-  name: 'Supabase Hackday',
+  /* the name where it stands alone (tab title, share text, an email's subject), and where Supabase is already beside it */
+  name: 'Supabase Builder Day',
+  short: 'Builder Day',
   pickers: 'Ant and Copple',
   /* the top this many in each city go to the final */
   finalists: 3,
@@ -42,6 +56,8 @@ export const EVENT = {
   judges: 2,
   judgeVotes: 50,
 } as const;
+/* how many go to the final: the top few in every city */
+export const FINALIST_COUNT = EVENT.finalists * CITIES.length;
 /* minute 0 of the model: Dec 10, 00:00 UTC */
 export const EPOCH = Date.UTC(EVENT.year, EVENT.month - 1, EVENT.day);
 
@@ -98,7 +114,14 @@ export type TopEntry = { p: Project; votes: number; e: number };
 export type JudgeVote = { n: number; c: number };
 /* one entry in a city: k is its place in the home's order, a its arrival order, af its arrival as a fraction of the
    build, jv its judge votes (ordered by n) */
-export type Entry = TopEntry & { k: number; a: number; af: number; jv: JudgeVote[] };
+export type Entry = TopEntry & { k: number; a: number; af: number; jv: JudgeVote[]; steps?: Steps; arrived?: number };
+/* Live data only (lib/source.ts fills these from the database; the seeded world never has them). steps: the entry's
+   real votes, at[i] the minute of a press and n[i] its count after it, oldest first. arrived: the minute it was
+   submitted. When they are there, the functions below read them and nothing else: no curve is drawn between or past
+   real presses. When they are not, every function reads the seeded curves exactly as before. */
+export type Steps = { at: number[]; n: number[] };
+/* the count after the last real press at or before minute m */
+export function stepsAt(s: Steps, m: number): number { let v = 0; for (let i = 0; i < s.at.length && s.at[i] <= m; i++) v = s.n[i]; return v; }
 export type SeedCity = { i: number; entries: number; list: TopEntry[]; _all: Entry[] | null; seed: number };
 /* pick: the city index Ant and Copple pick from (the home has always read it). final: the same city and the place of
    the picked finalist (1 to 3), so the pick is one of the thirty. */
@@ -207,11 +230,19 @@ export function fOfVote(r: TopEntry, n: number): number { return n <= 0 ? 0 : Ma
 export function countAt(N: number, f: number): number { return Math.max(1, Math.round(N * Math.pow(f, 0.85))); }
 /* x is one city's schedule (start, buildEnd, end). An entry's arrival minute, how many entries are in at minute m,
    and an entry's votes at minute m. */
-export function arriveAt(r: Entry, x: CitySched): number { return x.start + r.af * (x.buildEnd - x.start); }
-export function inAt(sd: SeedCity, x: CitySched, m: number): number { return m < x.start || !sd.entries ? 0 : m >= x.buildEnd ? sd.entries : countAt(sd.entries, (m - x.start) / (x.buildEnd - x.start)); }
-export function votesAtMin(r: Entry, x: CitySched, m: number): number { const a = arriveAt(r, x); return m >= x.end ? r.votes : m <= a ? 0 : votesAt(r, (m - a) / (x.end - a)); }
-/* the minute an entry reached its n-th vote */
-export function minOfVote(r: Entry, x: CitySched, n: number): number { const a = arriveAt(r, x); return a + fOfVote(r, n) * (x.end - a); }
+export function arriveAt(r: Entry, x: CitySched): number { return r.arrived != null ? r.arrived : x.start + r.af * (x.buildEnd - x.start); }
+export function inAt(sd: SeedCity, x: CitySched, m: number): number {
+  const L = sd._all;
+  if (L && L.length && L[0].arrived != null) { let k = 0; L.forEach((r) => { if (r.arrived! <= m) k++; }); return k; }
+  return m < x.start || !sd.entries ? 0 : m >= x.buildEnd ? sd.entries : countAt(sd.entries, (m - x.start) / (x.buildEnd - x.start));
+}
+export function votesAtMin(r: Entry, x: CitySched, m: number): number { if (r.steps) return stepsAt(r.steps, m); const a = arriveAt(r, x); return m >= x.end ? r.votes : m <= a ? 0 : votesAt(r, (m - a) / (x.end - a)); }
+/* the minute an entry reached its n-th vote (live: the minute of the press that took it there; not reached yet: its
+   last press) */
+export function minOfVote(r: Entry, x: CitySched, n: number): number {
+  if (r.steps) { const s = r.steps; if (n <= 0 || !s.at.length) return arriveAt(r, x); const i = s.n.findIndex((v) => v >= n); return i >= 0 ? s.at[i] : s.at[s.at.length - 1]; }
+  const a = arriveAt(r, x); return a + fOfVote(r, n) * (x.end - a);
+}
 /* how many of an entry's votes are judges' once it has v votes; at minute m */
 export function judgeOf(r: Entry, v: number): number { let j = 0; for (const x of r.jv) { if (x.n <= v) j += x.c; else if (x.n - x.c < v) j += v - (x.n - x.c); } return j; }
 export function judgeAtMin(r: Entry, x: CitySched, m: number): number { return judgeOf(r, votesAtMin(r, x, m)); }
@@ -255,12 +286,12 @@ export function cityState(x: CitySched, sd: SeedCity, now: number): CityState {
 }
 
 /* ---------------- the worst case, for the tuning pages ---------------- */
-/* The content a layout must survive: the longest name the submit form allows (40 characters) on first place in Tokyo
-   and on second place in Berlin, 182 entries in Lagos, and a city with no entries at all (Singapore, or the next city
+/* The content a layout must survive: the longest name the submit form allows (40 characters) on first place in Seoul
+   and on second place in London, 182 entries in Rosario, and a city with no entries at all (Singapore, or the next city
    along if Singapore holds the pick). San Francisco, the longest city name, is always there. Same seed, same draws:
    only those fields change. */
 export const LONG_NAME = 'Realtime Inventory Sync for Corner Shops';
-export const WORST = { long: [['tokyo', 0], ['berlin', 1]] as [string, number][], many: 'lagos', manyN: 182, none: ['singapore', 'bengaluru', 'sydney'] };
+export const WORST = { long: [['seoul', 0], ['london', 1]] as [string, number][], many: 'rosario', manyN: 182, none: ['singapore', 'peshawar', 'manta'] };
 const WCACHE: Record<number, SeedDay> = {};
 export function seedWorst(seed: number): SeedDay {
   if (WCACHE[seed]) return WCACHE[seed];

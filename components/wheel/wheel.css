@@ -1,7 +1,7 @@
 /* wheel.css: the city wheel. One screen that does not scroll: the mouse wheel, a drag, the arrow keys and a click on a
    name turn the wheel. The values are the study's; the ones that are taste are knobs (the paper, the lines, the face). */
 
-:root:has(.wh-pin) { overflow: hidden; scrollbar-gutter: auto; overscroll-behavior: none; }
+:root:has(.wh-pin:not(.wh-flow)) { overflow: hidden; scrollbar-gutter: auto; overscroll-behavior: none; }
 .wh-pin {
   --wh-ink: #f4f4f2; --wh-muted: #8a8a86; --wh-rule: #6b6c6b;
   --wh-gutter: clamp(20px, 4.6vw, 88px);
@@ -36,7 +36,11 @@
   /* a tube screen does not put its red and its blue on the same place */
   filter: drop-shadow(0.75px 0 rgb(255 70 70 / 0.5)) drop-shadow(-0.75px 0 rgb(70 130 255 / 0.5)) drop-shadow(0 0 7px rgb(61 61 255 / 0.9));
 }
-.wh-wordmark[data-mark='both'], .wh-wordmark[data-mark='name'] { display: flex; align-items: center; gap: 14px; }
+.wh-wordmark[data-mark='both'], .wh-wordmark[data-mark='name'], .wh-wordmark[data-mark='builder'] { display: flex; align-items: center; gap: 14px; }
+/* the Builder Day pixel globe: its own green, square pixels, and the tube's red and blue apart, without the glow */
+.wh-wordmark svg.wh-builder { width: 30px; height: 30px; flex: none; shape-rendering: crispEdges;
+  filter: drop-shadow(0.75px 0 rgb(255 70 70 / 0.5)) drop-shadow(-0.75px 0 rgb(70 130 255 / 0.5)); }
+.wh-wordmark[data-mark='builder'] { gap: 12px; }
 /* the name beside the mark, in the face and size of the page's other top-line words */
 .wh-name { font: 500 17px/1 var(--wh-sans); letter-spacing: -0.01em; white-space: nowrap; }
 .wh-wordmark[data-mark='both'] > svg:first-child { filter: none; width: 20px; height: 21px; }
@@ -69,13 +73,52 @@
   color: var(--wh-ink); font-size: 20px; font-weight: 500; line-height: 1.4; letter-spacing: -0.01em; text-decoration: none;
   text-shadow: 1.2px 0 rgb(255 70 70 / 0.5), -1.2px 0 rgb(70 130 255 / 0.5);
 }
+button.wh-cta { appearance: none; margin: 0; padding: 0; border: 0; background: none; font-family: inherit; text-align: left; cursor: pointer; }
 .wh-cta:focus-visible { outline: 2px solid var(--wh-ink); outline-offset: 8px; }
 .wh-lens { flex: none; width: 64px; height: 64px; }
+/* the text globe's family: the small globe is dots on its own canvas (dot-globes.ts); it grows on hover as the glass did */
+.dot-globe { display: block; width: 100%; height: 100%; }
+.wh-lens[data-dot] { transition: scale 150ms ease-out; }
+@media (hover: hover) and (pointer: fine) { .wh-cta:hover .wh-lens[data-dot] { scale: 1.14; } }
+.wh-cta:focus-visible .wh-lens[data-dot] { scale: 1.14; }
+@media (prefers-reduced-motion: reduce) { .wh-lens[data-dot] { transition: none; } }
 .wh-cta-text { display: flex; flex-direction: column; color: var(--wh-muted); }
 .wh-cta-action { color: var(--wh-ink); text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 5px; }
 /* a phone: the name and the sheet's link share the top line, so the mark and the name step down a size */
 @media (max-width: 480px) {
   .wh-wordmark[data-mark='name'] { gap: 10px; }
   .wh-wordmark[data-mark='name'] svg { width: 72px; height: 34px; }
+  .wh-wordmark svg.wh-builder { width: 26px; height: 26px; }
+  .wh-wordmark[data-mark='builder'] { gap: 10px; }
   .wh-name { font-size: 15px; }
+}
+
+/* ---------- in a page's flow (the Wheel's flow prop; nothing above changes without it) ----------
+   The wheel is the first part of a page that scrolls: its own height is the window less the peek, a vertical swipe
+   scrolls the page, and the globe takes a drag of its own. With fixed glass the canvas and the screen lines are fixed
+   to the window, and the engine moves the names, the cells and the link with the scroll in its own frame. */
+:root:has(.wh-flow) { overscroll-behavior-x: none; }
+.wh-flow { position: relative; inset: auto; height: calc(100svh - var(--wh-peek, 0px)); overflow: visible; touch-action: pan-y; background: transparent; }
+.wh-flow .wh-foot { bottom: 30px; }
+.wh-flow .wh-cells { z-index: 3; }
+.wh-flow .wh-cells:not([data-placed]) { visibility: hidden; }
+.wh-grip { position: absolute; top: 0; left: 0; width: 0; height: 0; border-radius: 50%; touch-action: none; cursor: grab; }
+.wh-grip:focus-visible { outline: 2px solid var(--wh-ink); outline-offset: 6px; }
+.wh-grip[data-docked] { pointer-events: none; }
+.wh-fixed .wh-canvas { position: fixed; inset: 0 0 auto 0; width: 100%; height: 100lvh; z-index: 0; }
+.wh-fixed .wh-foot { position: fixed; top: calc(100svh - var(--wh-peek, 0px) - 30px); bottom: auto; transform: translateY(-100%); z-index: 1; }
+.wh-fixed .wh-cells, .wh-fixed .wh-grip { position: fixed; }
+.wh-fixed .wh-grip { z-index: 3; }
+/* the text globe rides the page (engine.ts, rides): the same places, but in the wheel, so the scroll moves them
+   with the words beside them in the same frame. Only the screen lines stay on the window. */
+.wh-fixed.wh-rides :is(.wh-canvas, .wh-foot, .wh-cells, .wh-grip) { position: absolute; }
+/* the lines: one fixed layer for the whole page, over the picture and the link, under the page's small text, with a
+   hole for each globe */
+.wh-fixed::after {
+  position: fixed; inset: 0; z-index: 2;
+  mask-image:
+    radial-gradient(circle var(--globe-radius, 0px) at var(--globe-x, 100%) var(--globe-y, 50%), transparent calc(100% - 1px), #000 100%),
+    radial-gradient(circle var(--small-radius, 0px) at var(--small-x, 0px) var(--small-y, 0px), transparent calc(100% - 1px), #000 100%),
+    radial-gradient(circle var(--dock-radius, 0px) at var(--dock-x, 0px) var(--dock-y, 0px), transparent calc(100% - 1px), #000 100%);
+  mask-composite: intersect;
 }

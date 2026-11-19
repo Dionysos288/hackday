@@ -1,4 +1,5 @@
 import day from '@/saved/day.config.json';
+import { CODE, PLACE } from '@/lib/places';
 import { RULES, SERVER, sayIt } from '@/lib/hackday-server';
 import { CITIES, EPOCH, EVENT, SCHED, mulberry32, sched } from '@/lib/day-data';
 import { hhmm } from '@/lib/format';
@@ -6,15 +7,12 @@ import { PRIZES } from '@/lib/prizes';
 import type { WheelStatus } from '@/components/wheel/click';
 import type { WheelFact } from '@/components/wheel/wheel';
 
-/* Our facts for the wheel, from the model: the ten cities in their order, each city's session from the saved
+/* Our facts for the wheel, from the model: the cities in their order, each city's session from the saved
    schedule (building opens, voting closes), and the date. Where on the globe each city is comes from the table below,
-   since the model has no coordinates. PLACEHOLDERS: the people counts and the states are seeded, not real; the
+   in lib/places.ts, since the model has no coordinates. PLACEHOLDERS: the people counts and the states are seeded, not real; the
    model has no sign-ups yet. */
 
-export const PLACE: Record<string, [number, number]> = {
-  sydney: [-33.87, 151.21], tokyo: [35.68, 139.69], singapore: [1.35, 103.82], bengaluru: [12.97, 77.59], berlin: [52.52, 13.4],
-  lagos: [6.52, 3.38], london: [51.51, -0.13], 'sao-paulo': [-23.55, -46.63], 'new-york': [40.71, -74.01], 'san-francisco': [37.77, -122.42],
-};
+export { PLACE };
 
 export type OurFact = WheelFact & { offset: number; opens: number; buildEnds: number; closes: number };
 export type OurWheel = { cities: OurFact[]; date: string; nearest: number; buildMin: number; voteAfter: number; startHour: number; pickAt: string; how: [string, string][]; format: [string, string][] };
@@ -28,7 +26,7 @@ export function ourWheel(): OurWheel {
     const room = [150, 200, 250, 300][Math.floor(R() * 4)], people = Math.min(room, Math.round((0.55 + R() * 0.5) * room / 10) * 10);
     const status: WheelStatus = people >= room ? 'full' : people >= room * 0.85 ? 'nearing' : 'open';
     return {
-      id: c.id, name: c.name, lat, lon, status, offset: o,
+      id: c.id, name: c.name, code: CODE[c.id] ?? c.name.slice(0, 3).toUpperCase(), lat, lon, status, offset: o,
       session: `${hhmm(x.start + o)}–${hhmm(x.end + o)} ${zoneText(o / 60)}`, count: `${people} people`,
       href: `/city/${c.id}`, action: status === 'full' ? `Join the waiting list in ${c.name}` : `Join in ${c.name}`,
       opens: EPOCH + x.start * 60000, buildEnds: EPOCH + x.buildEnd * 60000, closes: EPOCH + x.end * 60000,
@@ -47,7 +45,7 @@ export function ourWheel(): OurWheel {
     ],
     how: [
       ['How do I enter?', `Come to your city on ${EVENT.day} December. Building opens at ${hhmm(cfg.startHour * 60)} local time and runs ${cfg.buildMin} minutes. Submit your project from your editor or on your city’s page, then share it: anyone with the link can vote.`],
-      ['How do I submit?', `From your editor: add the Hackday server, then say “${sayIt()}” It fills in the name, the pitch and the repository and sends them. Or on your city’s page, in the browser. Both run the same checks.${SERVER.live ? '' : ' The server is not open yet; the line to add it will be in Get ready.'}`],
+      ['How do I submit?', `From your editor: add the Builder Day server, then say “${sayIt()}” It fills in the name, the pitch and the repository and sends them. Or on your city’s page, in the browser. Both run the same checks.${SERVER.live ? '' : ' The server is not open yet; the line to add it will be in Get ready.'}`],
       ['What is checked?', `${RULES.join(' ')} A repository made before the day is refused.`],
       ['Who can vote?', `Anyone with the link, after confirming an email once. Voting opens when building starts and closes ${cfg.voteAfter} minutes after it ends.`],
       ['Who goes to the final?', `The top ${top} by votes in each city, so ${top * n} finalists. First place in each city wins ${cityPrize}.`],
@@ -58,8 +56,22 @@ export function ourWheel(): OurWheel {
 }
 
 /* the city whose UTC offset is closest to the visitor's */
-export function nearestCity(cities: { offset: number }[], visitorOffset: number) {
+/* where the visitor is (degrees), when known: from the host's IP lookup, or ?at=lat,lon */
+export type Here = { lat: number; lon: number };
+const km = (a: Here, b: Here) => {
+  const r = Math.PI / 180, dLat = (b.lat - a.lat) * r, dLon = (b.lon - a.lon) * r;
+  const h = Math.sin(dLat / 2) ** 2 + Math.cos(a.lat * r) * Math.cos(b.lat * r) * Math.sin(dLon / 2) ** 2;
+  return 12742 * Math.asin(Math.min(1, Math.sqrt(h)));
+};
+
+/* the nearest city: by distance from where the visitor is; with no position, by time zone */
+export function nearestCity(cities: { offset: number; lat?: number; lon?: number }[], visitorOffset: number, here?: Here | null) {
   let best = 0;
+  if (here) {
+    let d = Infinity;
+    cities.forEach((c, i) => { if (c.lat === undefined || c.lon === undefined) return; const x = km(here, { lat: c.lat, lon: c.lon }); if (x < d) { d = x; best = i; } });
+    return best;
+  }
   cities.forEach((c, i) => { if (Math.abs(c.offset - visitorOffset) < Math.abs(cities[best].offset - visitorOffset)) best = i; });
   return best;
 }

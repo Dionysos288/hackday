@@ -1,6 +1,6 @@
-# Supabase Hackday
+# Supabase Builder Day
 
-The site for Supabase Hackday: ten city hackathons on one day. Each city builds for 90 minutes and votes while it builds, with 30 more minutes of voting after building closes. The top 3 projects by votes in each city go to the final, so there are 30 finalists. Each city's first place wins the city prize, and Ant and Copple pick one global winner from the 30.
+The site for Supabase Builder Day: ten city hackathons on one day. Each city builds for 90 minutes and votes while it builds, with 30 more minutes of voting after building closes. The top 3 projects by votes in each city go to the final, so there are 30 finalists. Each city's first place wins the city prize, and Ant and Copple pick one global winner from the 30.
 
 - **Who votes:** anyone with the link, after confirming an email once.
 - **Judges:** each judge has 50 votes and may put several on one project. Their votes count in the same tally and are marked on the row ("12 from judges").

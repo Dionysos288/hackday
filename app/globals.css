@@ -1,4 +1,4 @@
-/* globals.css: the one set of design tokens for the Supabase Hackday site, and the Tailwind setup that reads them.
+/* globals.css: the one set of design tokens for the Supabase Builder Day site, and the Tailwind setup that reads them.
    app/layout.tsx loads it first. Everything else reads these names; new styles must not introduce raw colours, curves,
    sizes or spacing.
    The base palette (--ground, --ink, --ink2, --minor, --major, --green, --tagink, --brand) is written on <html> before

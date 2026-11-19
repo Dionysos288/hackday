@@ -6,12 +6,16 @@ import { realMinute } from '@/lib/clock';
 import { hhmm } from '@/lib/format';
 import { clampParts, partsVars, type PartsCfg } from '@/components/board/config';
 import { HeaderRow } from '@/components/board/header-row';
+import { AccountCell } from '@/components/account/account';
 import { Announce } from '@/components/board/announce';
-import { ScreenKey, SoundKey, step } from '@/components/board/prefs';
+import { SoundKey, step } from '@/components/board/prefs';
 import { useTick } from '@/components/board/clock';
 import { cityAt, cityWord, homeAt, wireItems, CODE } from '@/components/board/day-model';
 import { useForms } from '@/components/forms/forms-provider';
 import { store, useVotes } from '@/components/forms/store';
+import { YouLine } from '@/components/forms/you-line';
+import { liveCityWorld, liveHome, useSnapshots } from '@/lib/source';
+import type { CitySnap, DaySnap } from '@/lib/event/snapshot';
 import { LabPanel, LayoutPicker, togglePanel, useLabSave, type Group } from '@/components/admin/kit';
 import { measure, type Contrast } from '@/components/admin/contrast';
 import screenCfg from '@/saved/screen.config.json';
@@ -59,8 +63,11 @@ const at = (min: number) => new Date(EPOCH + min * 60000);
 
 /* page: the real page, with the server's time and the city; slug: the project open in the address; base: the lab's
    baseline at a t on its own scale */
-export function DayCity({ saved, parts, q, page, base, foot }: {
+export function DayCity({ saved, parts, q, page, base, foot, live }: {
   saved: Partial<DayCityCfg>; parts: Partial<PartsCfg>; q: Record<string, string | undefined>;
+  /* the real page with a backend: the first snapshots, read by the server, so the page arrives with real numbers;
+     the page then reads them again every few seconds (lib/source.ts). Absent: the seeded day, as in the labs. */
+  live?: { day: DaySnap | null; city: CitySnap | null };
   page?: { nowMs: number; city: string; slug?: string }; base?: (city: string, t: number, worst: number) => ReactNode;
   /* the footer's look: saved/footer.config.json, or the footer lab's knobs */
   foot?: Partial<FootCfg>;
@@ -75,7 +82,7 @@ export function DayCity({ saved, parts, q, page, base, foot }: {
     { name: 'Pictures', knobs: [{ k: 'pics', kind: 'select', label: 'Pictures' }, { k: 'thumbW', kind: 'range', label: 'Picture width (rows, strip)' }, { k: 'picRows', kind: 'range', label: 'Rows with a picture' }, { k: 'cols', kind: 'range', label: 'Monitors across (multiviewer)' }, { k: 'tally', kind: 'toggle', label: 'Tally lamps' }, { k: 'dim', kind: 'range', label: 'Picture brightness at rest' }] },
   ];
   const [cfg, setCfg] = useState<State>(() => {
-    const c: State = { dir: 'board', pylon: 1, spark: 0, rows: 30, how: 1, ...PIC_DEF, ...saved, ...clampPics(saved), city: page?.city ?? 'berlin', t: 0, live: 1, speed: 1, worst: real ? 0 : 1 };
+    const c: State = { dir: 'board', pylon: 1, spark: 0, rows: 30, how: 1, ...PIC_DEF, ...saved, ...clampPics(saved), city: page?.city ?? 'london', t: 0, live: 1, speed: 1, worst: real ? 0 : 1 };
     if (!CHOICES.dir.includes(c.dir)) c.dir = 'board';
     if (q.pics && CHOICES.pics.includes(q.pics)) c.pics = q.pics as PicMode;
     if (q.dir && CHOICES.dir.includes(q.dir)) c.dir = q.dir as CityDir;
@@ -101,13 +108,20 @@ export function DayCity({ saved, parts, q, page, base, foot }: {
   const forms = useForms(), voteKey = cfg.city + ':' + day.seed, stored = useVotes(voteKey), [local, setLocal] = useState<Votes>({});
   const voted = real ? stored : local;
   const [more, setMore] = useState(false), [reminded, setReminded] = useState(false);
-  const W = cityAt(day, cfg.city, bm, voted), W10 = cityAt(day, cfg.city, bm - 10, voted), H = homeAt(day, bm), hx = H.cs[i], word = cityWord(hx, H, day);
+  /* live: the snapshots; your own press shows at once and until the next snapshot counts it (adj) */
+  const snaps = useSnapshots(!!live, cfg.city), dSnap = snaps.day || live?.day || null, cSnap = snaps.city || live?.city || null;
+  const [presses, setPresses] = useState<Record<string, [number, number]>>({});
+  const adj: Record<string, number> = {};
+  if (cSnap) Object.entries(presses).forEach(([id, [d, t]]) => { if (t > cSnap.at) adj[id] = d; });
+  const homeOf = (m: number) => { const H0 = homeAt(day, m); return live && dSnap ? liveHome(H0, dSnap, m) : H0; };
+  const worldOf = (m: number, v: Votes, H0: ReturnType<typeof homeAt>) => { const W0 = cityAt(day, cfg.city, m, v); return live && cSnap && dSnap ? liveCityWorld(W0, cSnap, H0, m, v, undefined, adj) : W0; };
+  const H = homeOf(bm), W = worldOf(bm, voted, H), W10 = worldOf(bm - 10, voted, homeOf(bm - 10)), hx = H.cs[i], word = cityWord(hx, H, day);
   const vote = (id: number) => {
     if (!W.voting) return;
     if (!real) { setLocal((v) => { const n = { ...v } as Record<string, 1>; if (n[id]) delete n[id]; else n[id] = 1; return n; }); step(P.sound === 'steps'); return; }
     const mine = store.votes(voteKey);
-    if (mine[id]) { const n = { ...mine }; delete n[id]; store.setVotes(voteKey, n); step(P.sound === 'steps'); return; }
-    (forms ? forms.ensureVoter() : Promise.resolve(true)).then((ok) => { if (ok) { store.setVotes(voteKey, { ...store.votes(voteKey), [id]: 1 }); step(P.sound === 'steps'); } });
+    if (mine[id]) { const n = { ...mine }; delete n[id]; setPresses((o) => ({ ...o, [id]: [-1, Date.now()] })); store.setVotes(voteKey, n); step(P.sound === 'steps'); return; }
+    (forms ? forms.ensureVoter() : Promise.resolve(true)).then((ok) => { if (ok) { setPresses((o) => ({ ...o, [id]: [1, Date.now()] })); store.setVotes(voteKey, { ...store.votes(voteKey), [id]: 1 }); step(P.sound === 'steps'); } });
   };
   const remind = () => {
     if (!real || !forms) { setReminded((r) => !r); return; }
@@ -116,7 +130,7 @@ export function DayCity({ saved, parts, q, page, base, foot }: {
   const submit = real && forms ? () => { forms.submit({ city: W.city.id, cityName: W.city.name, deadline: at(W.x.buildEnd), off: W.off }); } : undefined;
 
   /* the open project: on the real page its address is /city/<id>/p/<slug>; opening pushes it, Back and Close close it */
-  const [open, setOpen] = useState<Row | null>(() => (page?.slug ? rowBySlug(cityAt(dayOf(cfg.worst), cfg.city, cfg.t, {}), page.slug) : null));
+  const [open, setOpen] = useState<Row | null>(() => (page?.slug ? rowBySlug(worldOf(cfg.t, {}, homeOf(cfg.t)), page.slug) : null));
   const openRef = useRef(open), pushed = useRef(false), Wref = useRef(W);
   useEffect(() => { openRef.current = open; Wref.current = W; });
   const show = useCallback((r: Row) => {
@@ -167,7 +181,7 @@ export function DayCity({ saved, parts, q, page, base, foot }: {
     : res ? { text: `Small text: ${res.n} pieces, lowest ${res.min.toFixed(1)}:1, ${res.under} under 7:1 with the lines on${res.under ? ': ' + res.worst.filter((w) => w.ratio < 7).slice(0, 4).map((w) => '“' + w.text.slice(0, 24) + '” ' + w.ratio.toFixed(1)).join(', ') : ''}.`, bad: res.under > 0 } : { text: 'Measuring…', bad: false };
   const pylon = cfg.pylon && cfg.dir !== 'wall' ? <Pylon W={W} W10={W10} hot={hot} setHot={setHot} swatch={view === 'time'} /> : null;
   const rankProps = { W, look, vote, open: show, spark: !!cfg.spark, rows: cfg.rows, more, setMore, pick: pk?.id, pics: clampPics(cfg), view, setView, hot, setHot };
-  const labButtons: [string, () => void, boolean?][] = [['Tokyo: long name', () => setCfg((c) => ({ ...c, city: 'tokyo', worst: 1 }))], ['Lagos: 182', () => setCfg((c) => ({ ...c, city: 'lagos', worst: 1 }))], ['Singapore: none', () => setCfg((c) => ({ ...c, city: 'singapore', worst: 1 }))], ['Save', doSave, true]];
+  const labButtons: [string, () => void, boolean?][] = [['San Salvador: long name', () => setCfg((c) => ({ ...c, city: 'san-salvador', worst: 1 }))], ['Rosario: 182', () => setCfg((c) => ({ ...c, city: 'rosario', worst: 1 }))], ['Singapore: none', () => setCfg((c) => ({ ...c, city: 'singapore', worst: 1 }))], ['Save', doSave, true]];
 
   return (
     <>
@@ -175,7 +189,8 @@ export function DayCity({ saved, parts, q, page, base, foot }: {
         <>
           <DayScreen />
           <main className="bd dl dc" style={partsVars(P) as CSSProperties} data-face={P.face} data-dir={cfg.dir} data-view={view}>
-            <HeaderRow title={W.city.name} state={word} clock={clock} first={cfg.t} offset={W.off} zone={'Local · ' + CODE[cfg.city]} homeHref={real ? '/' + carry(bm) : '/lab/day-home?m=' + bm.toFixed(2)} right={<span className="hr-keys">{P.sound === 'steps' ? <SoundKey /> : null}<ScreenKey /></span>} />
+            <HeaderRow title={W.city.name} state={word} clock={clock} first={cfg.t} offset={W.off} zone={'Local · ' + CODE[cfg.city]} homeHref={real ? '/' + carry(bm) : '/lab/day-home?m=' + bm.toFixed(2)} right={<><AccountCell here={W.city.id} /><span className="hr-keys">{P.sound === 'steps' ? <SoundKey /> : null}</span></>} />
+            {real ? <YouLine city={W.city.id} cityName={W.city.name} date="10 December" start={hhmm(W.x.start + W.off)} state={W.state} /> : null}
             <Announce items={wireItems(H, 12, i, W.off)} mode={P.announce} dwell={P.dwell} crawl={P.crawl} flap={flap} startPaused={!cfg.live} label={'Announcements in ' + W.city.name} empty={'Nothing yet. ' + W.city.name + ' opens at ' + hhmm(W.x.start + W.off) + ' local.'} />
             <CityHero W={W} hx={hx} mon={cfg.dir !== 'wall'} clock={clock} first={cfg.t} look={look} onRemind={remind} reminded={reminded} onSubmit={submit} pick={pk} elsewhere={H.picked && !pk ? { name: H.final.p.name, city: H.final.city.name } : null} />
             {cfg.dir === 'wall' ? (
@@ -187,7 +202,7 @@ export function DayCity({ saved, parts, q, page, base, foot }: {
             {/* before its doors open, a city page says how to get ready; once building, the submit sheet holds both ways in */}
             {cfg.how || W.state === 'next' ? <div className="dl-ex">
               {W.state === 'next' ? <GetReady id="dc-ready" city={W.city.name} cityId={W.city.id} /> : null}
-              {cfg.how ? <><HowItWorks f={day} id="dc-how" day={dayFinalOf(H)} /><PrizeBlock id="dc-prize" day={dayFinalOf(H)} winner={H.picked ? H.final.p.name + ', ' + H.final.city.name : null} /></> : null}
+              {cfg.how ? <><HowItWorks f={day} id="dc-how" day={{ ...dayFinalOf(H), city: W.city.id }} /><PrizeBlock id="dc-prize" day={dayFinalOf(H)} winner={H.picked ? H.final.p.name + ', ' + H.final.city.name : null} /></> : null}
             </div> : null}
             <ProjectSheet o={open} W={W} look={look} vote={vote} close={close} />
           </main>

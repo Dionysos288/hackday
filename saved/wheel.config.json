@@ -28,7 +28,7 @@
   "pulseRate": 1.25,
   "statusDelay": 600,
   "font": "study",
-  "mark": "name",
+  "mark": "builder",
   "edgeFrom": 0.47,
   "edgeTo": 1.25,
   "edgeReach": 0.52,
@@ -51,5 +51,15 @@
   "lineAlpha": 0.34,
   "linePeriod": 3,
   "sound": 1,
-  "volume": 1
+  "volume": 1,
+  "globe": "ascii",
+  "prize": "lens",
+  "prizeOverlap": "edge",
+  "prizeCell": "gap",
+  "prizeBand": "off",
+  "prizeTurn": "loop",
+  "prizeSize": 2,
+  "prizeY": 0,
+  "prizeCover": 0.5,
+  "prizeBandRows": 2
 }

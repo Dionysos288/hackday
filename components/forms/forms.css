@@ -113,3 +113,18 @@
   .fm, .fm.is-wide, .fm[data-state="open"] { transform: none; }
   .fm:not([data-state="open"]) { opacity: 0; }
 }
+
+/* the code on the screen: four characters, spaced so each can be checked against the wall */
+.fm-room { max-width: 12rem; letter-spacing: 0.32em; font-variant-numeric: tabular-nums; text-transform: uppercase; }
+.fm-room::placeholder { letter-spacing: normal; text-transform: none; }
+
+/* the line under a city page's header: one row on the board's grid, quiet type, the sign-out as a text key */
+.ev-you { display: flex; flex-wrap: wrap; align-items: center; column-gap: 16px; row-gap: 0; margin: 0; padding: 4px var(--bd-m, 16px); border-bottom: 1px solid var(--bd-rule, #2b2c2c);
+  color: var(--bd-muted, #a3a39f); font: 400 14px/1.4 var(--bd-face, inherit); }
+.ev-you b { color: var(--bd-ink, #f4f4f2); font-weight: 500; }
+.ev-you-t { min-width: 0; padding: 10px 0; text-wrap: pretty; }
+.ev-you-a { color: var(--bd-ink, #f4f4f2); text-decoration: underline; text-underline-offset: 3px; text-decoration-thickness: 1px; }
+.ev-you-out { display: inline-flex; align-items: center; min-height: 44px; margin-left: auto; padding: 0; border: 0; background: none; color: var(--bd-ink, #f4f4f2); font: inherit;
+  text-decoration: underline; text-underline-offset: 3px; text-decoration-thickness: 1px; cursor: pointer; touch-action: manipulation; }
+.ev-you-out:focus-visible, .ev-you-a:focus-visible { outline: 2px solid var(--bd-ink, #f4f4f2); outline-offset: 2px; }
+@media (hover: hover) and (pointer: fine) { .ev-you-out:hover, .ev-you-a:hover { text-decoration-thickness: 2px; } }

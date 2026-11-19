@@ -25,6 +25,8 @@ function fitKeyboard(dlg: HTMLDialogElement): () => void {
 type SheetValue = { id: string; close: () => void; busy: RefObject<boolean>; focus: (el?: HTMLElement | null) => void; open: RefObject<boolean> };
 const SheetContext = createContext<SheetValue | null>(null);
 export function useSheet(): SheetValue { const v = useContext(SheetContext); if (!v) throw new Error('useSheet outside a Sheet'); return v; }
+/* the sheet's id, for the heading that names it; null outside a sheet (a lab drawing the body on the page) */
+export function useSheetId(): string | null { return useContext(SheetContext)?.id ?? null; }
 
 /* the sheets' recurring class strings. The field, the code boxes, the checkbox, the picture drop and the button (fm-i,
    fm-code, fm-chk, fm-pic, fm-b) keep their rules in forms.css: each has too many states to read well inline. */
@@ -44,7 +46,12 @@ export const IconX = ({ className }: { className?: string }) => <svg className={
 export const IconErr = () => <svg className={clsx('mt-0.5 size-3.5 flex-none', SVG_LINE)} viewBox="0 0 14 14" aria-hidden="true"><circle cx="7" cy="7" r="6" /><path d="M7 3.8v3.8M7 9.9v.2" /></svg>;
 export const IconOut = () => <svg viewBox="0 0 14 14" aria-hidden="true"><path d="M5 3h6v6M11 3 3 11" /></svg>;
 /* a field's error line: hidden while there is nothing to say */
-export function ErrBox({ id, msg }: { id: string; msg: string }) { return <p className="flex items-start gap-2 text-sm leading-[1.4] text-ink text-pretty" id={id} hidden={!msg}><IconErr /><span>{msg}</span></p>; }
+export function ErrBox({ id, msg, live }: { id: string; msg: string; live?: boolean }) {
+  const box = <p className="flex items-start gap-2 text-sm leading-[1.4] text-ink text-pretty" id={id} hidden={!msg}><IconErr /><span>{msg}</span></p>;
+  /* live: for a field that usually already has focus when the error comes (a code typed and sent with Enter), so
+     focusing it again would say nothing; the wrapper stays in the page and reads the message out when it appears */
+  return live ? <div aria-live="assertive" aria-atomic="true">{box}</div> : box;
+}
 
 /* focusRef: what takes focus when the sheet opens; onDone runs once, after the sheet has closed */
 export function Sheet({ label, wide, focusRef, onDone, children }: { label: string; wide?: boolean; focusRef?: RefObject<HTMLElement | null>; onDone: () => void; children: ReactNode }) {

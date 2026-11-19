@@ -18,7 +18,7 @@ Time runs across. Things hang on it in rows. One green line marks now. On the ho
 
 | | |
 |---|---|
-| Name | Supabase Hackday. "Hackathon" stays only as the common noun ("ten city hackathons"). |
+| Name | Supabase Builder Day where it stands alone (tab title, share text, an email's subject); Builder Day where Supabase is already beside it. The mark says BUILD. "Hackathon" stays only as the common noun ("ten city hackathons"). Every visible name reads `EVENT.name` or `EVENT.short` in `lib/day-data.ts`. |
 | Format | Ten cities on one day, each at its own local time. Build for 90 minutes. Voting opens when building opens and closes 30 minutes after building ends. |
 | The final | The top 3 projects by votes in each city go to the final: 30 finalists. Ties at 3rd go to the earlier entry (placeholder: the tie rule is not confirmed). |
 | Winners | Each city's first place wins the city prize. Ant and Copple pick one global winner from the 30, who wins the global prize. |
@@ -124,7 +124,7 @@ The values live in `saved/motion.config.json` and are tuned at `/lab/motion`; th
 
 - Short declaratives with a period. Say what happened and what it means.
 - Buttons name the outcome. Errors say how to fix it.
-- The event is "Supabase Hackday". "Hackathon" is only the common noun. An entry is a project as soon as it is in, since voting is open from the start.
+- The event is "Supabase Builder Day" ("Builder Day" beside the Supabase mark). "Hackathon" is only the common noun. An entry is a project as soon as it is in, since voting is open from the start.
 - Tense follows the phase. After voting closes, nothing says "to go" or "win".
 - Times are 24-hour. The home strip is UTC; a city page is local, with UTC said once per block.
 - Real characters: ’ “ ” … – ×. US spelling.

@@ -32,13 +32,19 @@
 .gr-cmd { display: flex; align-items: stretch; min-width: 0; max-width: 760px; margin: 0; border: 1px solid var(--ex-border); background: #121313; }
 .gr-cmd pre { flex: 1 1 auto; min-width: 0; margin: 0; padding: 12px 14px; font: 500 13px/1.5 var(--ex-face); color: var(--ex-ink); white-space: pre-wrap; overflow-wrap: anywhere; }
 /* a file's lines keep their indents and scroll sideways on a phone, rather than breaking inside words */
+.gr-tok { white-space: nowrap; }
 .gr-cmd[data-kind='file'] pre { white-space: pre; overflow-wrap: normal; overflow-x: auto; }
 .gr-cmd q { flex: 1 1 auto; min-width: 0; padding: 12px 14px; font: 400 15px/1.45 var(--ex-sans); color: var(--ex-ink); quotes: '“' '”'; }
 .gr-cmd[data-off] { display: block; padding: 12px 14px; border-style: dashed; background: none; color: var(--ex-muted); font: 400 14px/1.45 var(--ex-sans); }
 .gr-copy { flex: none; position: relative; min-width: 118px; min-height: 44px; padding: 0 14px; border: 0; border-left: 1px solid var(--ex-border); background: none; color: var(--ex-ink); font: 500 12px/1 var(--ex-face); letter-spacing: 0.02em; cursor: pointer;
   transition: background-color var(--dur-hover, 150ms) var(--ease-out, ease-out), transform var(--dur-press, 90ms) var(--ease-out, ease-out); }
 .gr-copy:active { background: #1b1c1c; transform: scale(var(--press, 0.97)); }
-@media (max-width: 640px) { .gr-copy { min-width: 0; } }
+/* on a phone the key and the line give up a few pixels, so Supabase's address stays whole on its line at 390 */
+@media (max-width: 640px) { .gr-copy { min-width: 0; padding: 0 8px; } .gr-cmd pre { padding: 12px 10px 12px 12px; } }
+/* the key's words over a hidden "Copied": the key keeps its width when it answers, so the line beside it never re-wraps */
+.gr-copy-w { display: inline-grid; }
+.gr-copy-w > span { grid-area: 1 / 1; }
+.gr-copy-g { visibility: hidden; }
 @media (hover: hover) and (pointer: fine) { .gr-copy:hover { background: #1b1c1c; } }
 .gr-live { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 .gr-note { margin: 0; max-width: 60ch; font: 400 14px/1.5 var(--ex-sans); color: var(--ex-muted); text-wrap: pretty; }
@@ -50,6 +56,11 @@
 .gr-door { display: grid; gap: 10px; }
 .gr-door > .ex-k { margin: 0; }
 @media (max-width: 640px) { .gr-step { grid-template-columns: 28px minmax(0, 1fr); } .gr-ed span { padding: 0 10px; } }
+/* on a phone the editors fill even columns, so every row ends where the line below it ends */
+@media (max-width: 640px) {
+  .gr-eds { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); }
+  .gr-ed span { flex: 1 1 auto; justify-content: center; padding: 0 6px; }
+}
 .gr[data-compact] .gr-step { grid-template-columns: 28px minmax(0, 1fr); }
 @media (prefers-reduced-motion: reduce) { .gr-a, .gr-ed span { transition: none; } }
 /* the submit sheet: the rules, then the two ways in */
@@ -57,3 +68,12 @@
 .gr-two > p { margin: 0; }
 /* the second part's label, the same mono label as "From your editor" */
 .gr-in { margin: 0; padding: 20px 0 0; border-top: 1px solid #2b2c2c; font: 500 12px/1.2 var(--bd-face, var(--font-mono, ui-monospace, monospace)); letter-spacing: 0.02em; color: #a3a39f; }
+/* the submit sheet: the person's own install line, folded until asked for */
+.gr-add { margin-top: 12px; }
+.gr-add > summary { display: inline-flex; align-items: center; min-height: 44px; font: 400 14px/1.5 var(--ex-sans); color: var(--ex-ink); text-decoration: underline; text-underline-offset: 3px; text-decoration-thickness: 1px; cursor: pointer; }
+.gr-add > summary:focus-visible { outline: 2px solid var(--ex-ink); outline-offset: 2px; }
+.gr-add[open] > summary { margin-bottom: 8px; }
+/* "Sign in to get your line": a press of its own, so it gets the full touch height */
+.gr-note > .gr-link:only-child { display: inline-flex; align-items: center; min-height: 44px; }
+/* whether the person's editor has called: muted until it has */
+.gr-seen[data-on] { color: var(--ex-ink); }

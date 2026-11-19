@@ -1,0 +1,56 @@
+/* The stage's shapes, as the two tables hold them (event-plan.md, "Tables"): a city's deck is rows of `scenes`, and
+   what is on the wall now is one `stage` row per city. Both drivers (the local one for the lab, the Realtime one for
+   the real pages) move the same shapes, so the wall and the remote never know which one they are on. Pure. */
+
+export type SceneKind =
+  | 'doors' | 'welcome' | 'speaker' | 'question' | 'needs' | 'tour' | 'say' | 'line' | 'deadline' | 'rules' | 'prizes' | 'submit' | 'questions'
+  | 'building' | 'voting' | 'top3' | 'tombola' | 'final'
+  /* a host's own slides: words (a heading and up to three lines) and a link (opens in a new tab while the wall holds a card) */
+  | 'words' | 'link';
+
+/* the event's scenes: these can be hidden, never deleted */
+export const EVENT_KINDS: SceneKind[] = ['doors', 'welcome', 'question', 'needs', 'tour', 'say', 'line', 'deadline', 'rules', 'prizes', 'submit', 'questions', 'building', 'voting', 'top3', 'tombola', 'final'];
+/* the scenes drawn from the city's live numbers */
+export const LIVE_KINDS: SceneKind[] = ['doors', 'building', 'voting', 'top3', 'tombola', 'final'];
+
+export type SceneData = {
+  /* welcome: the hosts' names */ hosts?: string[];
+  /* speaker */ name?: string; role?: string; line?: string; picture?: string;
+  /* words */ heading?: string; lines?: string[];
+  /* link */ url?: string; label?: string;
+  /* a city may name the tool on the wall ("your editor" when unset) */ editor?: string;
+};
+
+/* a row of `scenes` */
+export type SceneRow = { id: string; city: string; position: number; kind: SceneKind; title: string; data: SceneData; notes: string; hidden: boolean };
+
+/* the `timer` json on the stage row. ends_at and paused_left are the plan's (the talk timer of the top 3); the rest
+   are this build's, kept in the same json until the row has columns of its own:
+   - qr: the QR shown over any scene;
+   - deadline: the deadline the wall said when it flipped (scene 9), in ms; Start building ends there;
+   - spin: the tombola's draw, started at `at` with `seed`, so every screen lands on the same entry. */
+export type StageTimer = { ends_at?: number | null; paused_left?: number | null; qr?: boolean; deadline?: number | null; spin?: { at: number; seed: number } | null };
+
+/* the `stage` row */
+export type StageRow = { city: string; scene: string; step: number; timer: StageTimer; chart_on: boolean; blank: boolean; updated_at: number; updated_by: string | null };
+
+/* the live times on the city row, as ms (the host sets them by starting the clock); planned_start is what the pages
+   show before. room_code is what the wall shows beside the QR. */
+export type CityLive = {
+  id: string; planned_start: number; build_min: number; vote_after: number;
+  build_start: number | null; build_end: number | null; vote_end: number | null;
+  room_code: string | null; submissions_paused: boolean; voting_paused: boolean;
+  /* the door's two counts for Doors ("142 on the list, 61 here"); null where the backend has none */
+  listed: number | null; here: number | null;
+};
+
+/* what a screen or a remote is told: the deck, the row, the city, and how the link is doing */
+export type Link = 'local' | 'live' | 'connecting' | 'reconnecting' | 'off';
+export type StageSnap = { deck: SceneRow[]; row: StageRow; city: CityLive; link: Link; screens: number; can: { drive: boolean; super: boolean } };
+
+/* what a press asks for */
+export type StageAction =
+  | { t: 'next' } | { t: 'back' } | { t: 'jump'; i: number }
+  | { t: 'blank' } | { t: 'qr' } | { t: 'chart' }
+  | { t: 'start' } | { t: 'add'; min: number } | { t: 'close' }
+  | { t: 'talk' } | { t: 'spin' };
