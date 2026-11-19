@@ -9,6 +9,7 @@
 import { CITIES, CITY_IDS, EVENT, TA, all, arriveAt, cityState, judgeOf, minOfVote, mulberry32, sched, seedFor, shuffle, slug, tOf, votesAtMin, type CitySched, type CityState, type Entry, type Sched, type SeedCity, type SeedDay } from './day-data';
 import type { Project } from './data';
 import { NB, clamp, dur as durAny, fmtN, hhmm, ord, pluralN as plural, r2, tz } from './format';
+import { FINALIST_COUNT } from '@/lib/day-data';
 
 export { NB, fmtN, hhmm, ord, plural, r2, tz };
 /* a city page's countdown groups its numbers */
@@ -28,7 +29,7 @@ export type CityCfg = {
   [k: string]: unknown;
 };
 export const DEF: CityCfg = {
-  seed: 17, city: 'berlin', mode: 'tower', t: -1,
+  seed: 17, city: 'london', mode: 'tower', t: -1,
   schedule: 'sun', startHour: 9, buildMin: 90, voteAfter: 30, pickAfter: 60,
   ground: 'night', top: 10, row: 56, nameSize: 32, disp: 128, pic: 36,
   strip: 'both', trace: 1.5, cut: 'full', ledger: 'ledger', peek: 1, table: 44, seal: 1,
@@ -143,7 +144,7 @@ export function lastTen(W: CityWorld): number {
   return W.arrived.reduce((a, o) => a + (o.v - o.mine) - votesAtMin(o.r, W.x, W.now - 10), 0);
 }
 export function rowById(W: CityWorld, id: number): Row | undefined { return W.rows.find((r) => r.p.id === id); }
-export function slugOf(p: Project): string { return slug(p.name); }
+export function slugOf(p: Project): string { return p.slug || slug(p.name); }
 
 /* ---------------- copy ---------------- */
 export function local(W: CityWorld, m: number): string { return hhmm(m + W.off); }
@@ -164,7 +165,7 @@ export function action(W: CityWorld, L: Links): Action {
   if (s === 'next') return { t: 'Remind me', act: 'remind' };
   if (s === 'build') return { t: 'Submit your project', act: 'submit' };
   if (s === 'vote') return W.lead ? { t: 'Vote', href: '#sheet' } : { t: 'See the other cities', href: homeHref(W, '', L) };
-  return W.picked ? { t: 'See the pick', href: homeHref(W, '#final', L) } : { t: 'See the 30 finalists', href: homeHref(W, '#final', L) };
+  return W.picked ? { t: 'See the pick', href: homeHref(W, '#final', L) } : { t: `See the ${FINALIST_COUNT} finalists`, href: homeHref(W, '#final', L) };
 }
 export function gapText(W: CityWorld, o: Row): string {
   if (!W.votesOn || !W.lead) return '';

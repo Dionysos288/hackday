@@ -22,8 +22,9 @@ import { LabPanel, togglePanel, useLabSave, type Group } from './lab-kit';
 import { DayScreen, LiveSegment, dayOf, useLabClock } from '@/components/day/shared';
 import '@/components/board/board.css';
 import './day/day-lab.css';
+import { EVENT } from '@/lib/day-data';
 
-/* The parts lab (D1 of the day plan): every new part of the day pages alone, fed by the model at a moment of the day,
+/* The parts lab: every new part of the day pages alone, fed by the model at a moment of the day,
    with every value on a knob. Save writes saved/parts.config.json, which the day labs read.
    The lab clock runs live from the moment (speed: seconds a second), so flips and flashes happen as they would on the
    day. Keys: \ panel, S save. */
@@ -77,7 +78,7 @@ export function PartsLab({ saved, q }: { saved: Partial<PartsCfg>; q: Record<str
     <>
       <DayScreen />
       <main className="bd pl" style={partsVars(cfg) as CSSProperties} data-face={cfg.face}>
-        <HeaderRow title="Supabase Hackday" state={dayWord(W, day)} clock={clock} first={m0} zone="UTC" homeHref="/lab/day-home" />
+        <HeaderRow title={EVENT.name} state={dayWord(W, day)} clock={clock} first={m0} zone="UTC" homeHref="/lab/day-home" />
         <Announce items={items} mode={cfg.announce} dwell={cfg.dwell} crawl={cfg.crawl} flap={flap} startPaused={!cfg.live} />
 
         <section className="pl-sec" aria-labelledby="pl-an">
@@ -128,7 +129,7 @@ export function PartsLab({ saved, q }: { saved: Partial<PartsCfg>; q: Record<str
           <div>
             <h2 id="pl-bp" className="pl-h">The boarding pass</h2>
             <p className="pl-note">{lead ? berlin.city.name + '’s leader, as its share card.' : 'The leader’s share card.'} Every field is the project&rsquo;s own.</p>
-            {lead ? <BoardingPass d={{ project: lead.p.name, pitch: lead.p.pitch, city: berlin.city.name, code: CODE[berlin.city.id], builder: '@' + lead.p.handle, entered: hhmm(lead.arrive + berlin.off) + ' ' + tz(berlin.off), place: ord(lead.rank), votes: fmtN(lead.v), link: 'hackday' + projectPath(berlin.city.id, slugOf(lead.p)), date: '10 Dec 2026' }} />
+            {lead ? <BoardingPass d={{ project: lead.p.name, pitch: lead.p.pitch, city: berlin.city.name, code: CODE[berlin.city.id], builder: '@' + lead.p.handle, entered: hhmm(lead.arrive + berlin.off) + ' ' + tz(berlin.off), place: ord(lead.rank), votes: fmtN(lead.v), link: projectPath(berlin.city.id, slugOf(lead.p)), date: '10 Dec 2026' }} />
               : <p className="pl-note">No city has an entry at this moment. Move the time on.</p>}
           </div>
           <div>

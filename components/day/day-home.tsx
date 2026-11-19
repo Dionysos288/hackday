@@ -7,8 +7,9 @@ import { FRAME } from '@/components/shared/page-parts';
 import { hhmm } from '@/lib/format';
 import { clampParts, partsVars, type PartsCfg } from '@/components/board/config';
 import { HeaderRow } from '@/components/board/header-row';
+import { AccountCell } from '@/components/account/account';
 import { Announce } from '@/components/board/announce';
-import { ScreenKey, SoundKey, step } from '@/components/board/prefs';
+import { SoundKey, step } from '@/components/board/prefs';
 import { useTick } from '@/components/board/clock';
 import { dayWord, homeAt, wireItems } from '@/components/board/day-model';
 import { DayProvider } from '@/components/home/day-context';
@@ -25,12 +26,15 @@ import { DayFooter } from './footer';
 import { clampFoot, type FootCfg } from './footer-config';
 import footSaved from '@/saved/footer.config.json';
 import { useRealClock, pageQuery } from './page-clock';
+import { liveHome, useSnapshots } from '@/lib/source';
+import type { DaySnap } from '@/lib/event/snapshot';
 import '@/components/board/board.css';
 import '@/components/home/day.css';
 import '@/components/home/sheet.css';
 import './day-home.css';
 import './rank-pictures.css';
 import './explain.css';
+import { EVENT } from '@/lib/day-data';
 
 /* The home on the day: the header row, the wire, the opening, the departures board, the final, how it works and the
    prizes. One component for the real home (/) and its tuning page (/lab/day-home):
@@ -51,10 +55,13 @@ const GROUPS: Group[] = [
 const L = lookCfg as { finRh: number; curve: number };
 
 /* page: the real home, with the server's time; base: the lab's baseline (today's home, framed) at a t on its own scale */
-export function DayHome({ saved, parts, q, page, base, foot }: {
+export function DayHome({ saved, parts, q, page, base, foot, live }: {
   saved: Partial<DayHomeCfg>; parts: Partial<PartsCfg>; q: Record<string, string | undefined>; page?: { nowMs: number }; base?: (t: number, worst: number) => ReactNode;
   /* the footer's look: saved/footer.config.json, or the footer lab's knobs */
   foot?: Partial<FootCfg>;
+  /* the event's own data, when a backend is set up: the first snapshot from the server, then read again every few
+     seconds. Without it (and in every lab) the page draws the seeded day. */
+  live?: { day: DaySnap | null };
 }) {
   const P = clampParts(parts), real = !!page, admin = !real || q.admin !== undefined;
   const DIRS = real ? DIRS_ALL.slice(1) : DIRS_ALL, CHOICES: Record<string, string[]> = { dir: DIRS.map(([d]) => d), final: ['thirty', 'diagram'] };
@@ -79,7 +86,8 @@ export function DayHome({ saved, parts, q, page, base, foot }: {
   const set = useCallback((k: string, v: unknown) => setCfg((c) => ({ ...c, [k]: v })), []);
   const day = dayOf(cfg.worst), S = sched(day);
   const ms = homeMoments({ ...HOME_DEF, ...day } as HomeCfg).map(([id, label, t]) => [id, label, nowOf(t, S)] as [string, string, number]);
-  const clock = useLabClock(cfg.t, !!cfg.live, cfg.speed), bm = useTick(clock, cfg.t, P.tick), W = homeAt(day, bm), dayFinal = dayFinalOf(W);
+  const clock = useLabClock(cfg.t, !!cfg.live, cfg.speed), bm = useTick(clock, cfg.t, P.tick), W0 = homeAt(day, bm), snaps = useSnapshots(!!live, null), dSnap = snaps.day || live?.day || null;
+  const W = live && dSnap ? liveHome(W0, dSnap, bm) : W0, dayFinal = dayFinalOf(W);
   const moved = useRealClock(clock, real, q);
   const { save, msg, rail } = useLabSave('day-home', 'lab-day-home-saved');
   const doSave = useCallback(() => save({ dir: cfg.dir, final: cfg.final, fastext: cfg.fastext, leaderPic: cfg.leaderPic, how: cfg.how }), [cfg, save]);
@@ -120,7 +128,7 @@ export function DayHome({ saved, parts, q, page, base, foot }: {
         <>
           <DayScreen />
           <main className="bd dl" style={partsVars(P) as CSSProperties} data-face={P.face} data-dir={cfg.dir} data-fastext={cfg.fastext ? '' : undefined}>
-            <HeaderRow title="Supabase Hackday" state={dayWord(W, day)} clock={clock} first={cfg.t} zone="UTC" homeHref={real ? '/' + carry(bm) : '/lab/day-home'} right={<span className="hr-keys">{P.sound === 'steps' ? <SoundKey /> : null}<ScreenKey /></span>} />
+            <HeaderRow title={EVENT.name} state={dayWord(W, day)} clock={clock} first={cfg.t} zone="UTC" homeHref={real ? '/' + carry(bm) : '/lab/day-home'} right={<><AccountCell /><span className="hr-keys">{P.sound === 'steps' ? <SoundKey /> : null}</span></>} />
             <Announce items={wireItems(W, 12)} mode={P.announce} dwell={P.dwell} crawl={P.crawl} flap={flap} startPaused={!cfg.live} />
             <Hero W={W} day={day} clock={clock} first={cfg.t} href={href} segSecs={!!P.segSecs} globe="edge" />
             {cfg.dir === 'wall' ? <Wall W={W} day={day} look={look} href={href} /> : <Board W={W} day={day} look={look} href={href} tick={P.tick} strips={cfg.dir === 'strips'} pic={!!cfg.leaderPic} />}
