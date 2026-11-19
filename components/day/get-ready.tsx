@@ -129,8 +129,7 @@ export function GetReady({ state = 'before', city, cityId, live = SERVER.live, u
             {live && !url && onSignIn ? <p className="gr-note"><button type="button" className="gr-link" aria-haspopup="dialog" onClick={onSignIn}>{signedIn ? 'Open your account' : 'Sign in to get your line'}</button></p> : null}
             {url && pass ? (pass.editorSeen
               ? <p className="gr-note gr-seen" data-on="">Editor connected · last call {lastCall(pass.editorSeen)}</p>
-              : <><p className="gr-note gr-seen">Not connected yet. Once the line is in your editor, say this in it to check:</p><Say say={checkIt()} /></>) : null}
-            <p className="gr-note">{EDITOR_ROOM}</p></div>
+              : <><p className="gr-note gr-seen">Not connected yet. Once the line is in your editor, say this in it to check:</p><Say say={checkIt()} /></>) : null}</div>
         </li>
         <li className="gr-step" data-now={now ? '' : undefined}><span className="gr-n" aria-hidden="true">{n(3)}</span>
           <div className="gr-body">
