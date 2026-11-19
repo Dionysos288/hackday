@@ -367,6 +367,12 @@ button.pf-go { padding: 0; border: 0; background: none; font: inherit; cursor: p
 .pf-dry-lines li { display: flex; gap: 12px; }
 .pf-dry-lines li[data-off] { visibility: hidden; }
 .pf-dry-lines li[data-k='say'] { color: var(--pf-ink); }
+.pf-dry-lines li[data-k='do'] { color: var(--pf-ink); }
+/* the two takes: the picked one in ink, the other muted; both keep the key's underline and press */
+.pf-dry-takes { display: flex; gap: 4px; padding: 4px 8px 0 12px; border-bottom: 1px solid var(--pf-rule); }
+.pf-dry .pf-take { color: var(--pf-muted); text-decoration-color: transparent; }
+.pf-dry .pf-take[aria-pressed='true'] { color: var(--pf-ink); text-decoration-color: currentColor; }
+@media (hover: hover) and (pointer: fine) { .pf-dry .pf-take:hover { color: var(--pf-ink); } }
 .pf-dry-lines li[data-k='ask'], .pf-dry-lines li[data-k='rule'] { color: var(--pf-soft); }
 .pf-dry-lines li[data-k='link'] { padding-top: 12px; border-top: 1px solid var(--pf-hair); color: var(--pf-ink); }
 .pf-caret { color: var(--pf-muted); }

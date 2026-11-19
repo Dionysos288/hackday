@@ -180,10 +180,10 @@ function SubmitForm({ o, who, mine, cityName, nameRef, roomRef, needRoom, onSave
       <p className={FM_P}>{closed
         ? (formErr || 'Submissions for ' + cityName + ' closed at ' + untilT + '.') + ' Your entry was not saved.'
         : <>{otherCity ? 'You already have an entry in ' + cityName + '. One entry per person, so this edits it. ' : ''}{live ? (who.handle ? <>Entering as <b>{who.handle}</b>. </> : null) : <>Entering as <b>@{who.handle}</b>. </>}One entry per person.{untilT ? ' You can edit it until ' + untilT + '.' : ''}</>}</p>
-      {/* the editor door shows once the server is open; until then one line says so, and the form is the way in */}
+      {/* the browser form first (it needs nothing set up), the editor door under it once the server is open; until then
+          one line says so, and the form is the way in */}
       {edit || closed ? null : SERVER.live ? <div className="gr-two mt-3">
         <p className={FM_NOTE}>The rules, for both ways in: {RULES.join(' ')}</p>
-        <FromEditor city={cityName || undefined} rules={false} />
         <h3 className="gr-in">In the browser</h3>
       </div> : <p className={FM_NOTE + ' mt-3'}>{RULES.join(' ')} Submitting from your editor opens later; for now, submit here.</p>}
       <form ref={formRef} className={FM_FORM} noValidate onSubmit={onSubmit}>
@@ -238,6 +238,10 @@ function SubmitForm({ o, who, mine, cityName, nameRef, roomRef, needRoom, onSave
           ) : null}
         </div>
       </form>
+      {edit || closed || !SERVER.live ? null : <div className="gr-two gr-after">
+        <h3 className="gr-in">Or from your editor</h3>
+        <FromEditor city={cityName || undefined} rules={false} label={null} />
+      </div>}
       </div>
     </>
   );

@@ -33,3 +33,8 @@ export function ipOf(req: Request): string | null {
   const ip = (f ? f.split(',')[0] : req.headers.get('x-real-ip') || '').trim();
   return /^[0-9a-f.:]+$/i.test(ip) ? ip : null;
 }
+
+/* the hold on outgoing email (owner, 2026-11-19: no emails until the site is done, while Luma registration is open).
+   On unless MAIL_HOLD=off: every email still becomes an outbox row (not sent), so nothing is lost; once lifted, the
+   desk's "send unsent links" catches up the places whose link never went out. */
+export function mailHeld(): boolean { return (process.env.MAIL_HOLD || '').trim().toLowerCase() !== 'off'; }

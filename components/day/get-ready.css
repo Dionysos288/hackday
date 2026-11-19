@@ -84,3 +84,19 @@
 .gr-note > .gr-link:only-child { display: inline-flex; align-items: center; min-height: 44px; }
 /* whether the person's editor has called: muted until it has */
 .gr-seen[data-on] { color: var(--ex-ink); }
+
+/* the two ways in: two framed cells side by side, one above the other on a phone */
+.gr-ways { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0; max-width: 760px; margin: 0; padding: 0; list-style: none; }
+.gr-way { display: grid; align-content: start; gap: 8px; padding: 14px; border: 1px solid var(--ex-border); }
+.gr-way + .gr-way { border-left: 0; }
+.gr-way .ex-k, .gr-way .gr-note { margin: 0; }
+.gr-way .gr-a { margin-top: 4px; }
+.gr-body > .ex-k { margin: 0 0 -6px; }
+.gr[data-compact] .gr-ways { grid-template-columns: minmax(0, 1fr); }
+.gr[data-compact] .gr-way + .gr-way { border-left: 1px solid var(--ex-border); border-top: 0; }
+@media (max-width: 640px) {
+  .gr-ways { grid-template-columns: minmax(0, 1fr); }
+  .gr-way + .gr-way { border-left: 1px solid var(--ex-border); border-top: 0; }
+}
+button.gr-a { background: transparent; cursor: pointer; }
+.gr-two.gr-after { margin: 28px 0 0; }

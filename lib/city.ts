@@ -144,7 +144,7 @@ export function lastTen(W: CityWorld): number {
   return W.arrived.reduce((a, o) => a + (o.v - o.mine) - votesAtMin(o.r, W.x, W.now - 10), 0);
 }
 export function rowById(W: CityWorld, id: number): Row | undefined { return W.rows.find((r) => r.p.id === id); }
-export function slugOf(p: Project): string { return slug(p.name); }
+export function slugOf(p: Project): string { return p.slug || slug(p.name); }
 
 /* ---------------- copy ---------------- */
 export function local(W: CityWorld, m: number): string { return hhmm(m + W.off); }

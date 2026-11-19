@@ -46,8 +46,8 @@ export function ourWheel(live?: Record<string, { people: number; status: WheelSt
       ['The winner', `${EVENT.pickers} pick one of the ${top * n}`],
     ],
     how: [
-      ['How do I enter?', `Register for your city on Luma, then come on ${EVENT.day} December. Building runs ${cfg.buildMin} minutes from your city’s start. ${startsSentence()} Submit your project from your editor or on your city’s page, then share it. Anyone with the link can vote.`],
-      ['How do I submit?', `Add the Builder Day server to your editor and say “${sayIt()}” It fills in the name, the pitch and the repository and sends them. You can also submit on your city’s page. Both ask for the code on the screen in the room, and both run the same checks.${SERVER.live ? '' : ' The server is not open yet. The line to add it will be in Get ready.'}`],
+      ['How do I enter?', `Register for your city on Luma, then come on ${EVENT.day} December. Building runs ${cfg.buildMin} minutes from your city’s start. ${startsSentence()} Submit your project on your city’s page or from your editor, then share it. Anyone with the link can vote.`],
+      ['How do I submit?', `Two ways. In the browser, on your city’s page, you type the code on the screen in the room, then your project’s name, a one-line pitch and its GitHub repository. There’s nothing to set up. From your editor, you add the Builder Day server before the day and say “${sayIt()}” It fills in the name, the pitch and the repository and sends them. Both ask for the code on the screen and run the same checks.${SERVER.live ? '' : ' The server is not open yet. The line to add it will be in Get ready.'}`],
       ['What is checked?', `${RULES.join(' ')} A repository made before the day is refused.`],
       ['Who can vote?', `Anyone with the link, after confirming an email once. Voting opens when building starts and closes ${cfg.voteAfter} minutes after it ends.`],
       ['Who goes to the final?', `The top ${top} by votes in each city, so ${top * n} finalists. First place in each city wins ${cityPrize}.`],

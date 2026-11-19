@@ -43,7 +43,7 @@ export function liveSched(base: Sched, cities: SnapCity[], nowMin: number, pickA
 
 /* ---------------- entries ---------------- */
 function projectOf(e: SnapEntry): Project {
-  return { id: e.no, name: e.name, pitch: e.pitch, handle: e.by || '', repo: (e.repo || '').replace(/^https?:\/\//, ''), demo: e.url.replace(/^https?:\/\//, ''), image: e.picture || undefined };
+  return { id: e.no, name: e.name, pitch: e.pitch, handle: e.by || '', repo: (e.repo || '').replace(/^https?:\/\//, ''), demo: e.url.replace(/^https?:\/\//, ''), image: e.picture || undefined, slug: e.slug };
 }
 /* the count after each of an entry's steps, oldest first, and its judges' presses as day-data's JudgeVote */
 function history(no: number, steps: SnapStep[]): { at: number[]; n: number[]; jv: JudgeVote[] } {

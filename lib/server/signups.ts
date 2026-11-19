@@ -28,16 +28,15 @@ async function read(): Promise<Record<string, Signup>> {
   const db = admin();
   const { data: cities, error: cityError } = await db.from('cities').select('id, luma_event_id').eq('event', EVENT.id);
   if (cityError) throw new Error(cityError.message);
-  const n = new Map<string, number>();
-  for (let from = 0; ; from += 1000) {
-    const { data: passes, error } = await db.from('passes').select('city').eq('event', EVENT.id).order('id').range(from, from + 999);
-    if (error) throw new Error(error.message);
-    (passes || []).forEach((p: { city: string }) => n.set(p.city, (n.get(p.city) || 0) + 1));
-    if (!passes || passes.length < 1000) break;
-  }
+  /* one exact count per city, in parallel: no rows come back, so it holds past the API's 1000-row page */
   const out: Record<string, Signup> = {};
   await Promise.all((cities || []).map(async (c: { id: string; luma_event_id: string | null }) => {
-    out[c.id] = { people: n.get(c.id) || 0, status: lumaOn() && c.luma_event_id ? await lumaStatus(c.luma_event_id) : 'open' };
+    const [{ count, error }, status] = await Promise.all([
+      db.from('passes').select('id', { count: 'exact', head: true }).eq('event', EVENT.id).eq('city', c.id),
+      lumaOn() && c.luma_event_id ? lumaStatus(c.luma_event_id) : Promise.resolve<WheelStatus>('open'),
+    ]);
+    if (error) throw new Error(error.message);
+    out[c.id] = { people: count || 0, status };
   }));
   return out;
 }

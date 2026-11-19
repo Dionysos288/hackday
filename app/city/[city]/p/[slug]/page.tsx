@@ -8,7 +8,6 @@ import type { PartsCfg } from '@/components/board/config';
 import { FormsProvider } from '@/components/forms/forms-provider';
 import { backendOn } from '@/lib/server/env';
 import { citySnapshot, pageSnaps } from '@/lib/server/snapshot';
-import { slug as slugify } from '@/lib/day-data';
 import { rankOrder } from '@/lib/event/snapshot';
 import { DayCity, type DayCityCfg } from '@/components/day/day-city';
 import { flatQuery as flat, projectOnDay } from '@/components/day/day';
@@ -44,7 +43,7 @@ export default async function Project({ params, searchParams }: Props) {
   if (!cityById(city)) notFound();
   const q = flat(await searchParams), nowMs = requestTime(), s = decodeURIComponent(slug);
   const live = backendOn() ? await pageSnaps(city) : undefined;
-  if (live ? !live.city?.entries.some((e) => slugify(e.name) === s || e.slug === s) : !projectOnDay(city, s, q, nowMs).row) notFound();
+  if (live ? !live.city?.entries.some((e) => e.slug === s) : !projectOnDay(city, s, q, nowMs).row) notFound();
   return (
     <>
       <FormsProvider live={backendOn()}><DayCity saved={saved as Partial<DayCityCfg>} parts={parts as Partial<PartsCfg>} q={q} page={{ nowMs, city, slug: s }} live={live} /></FormsProvider>

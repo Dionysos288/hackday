@@ -28,8 +28,9 @@ function placeMail(pass: Pass, to: string, city: CityLite, name: string | null, 
   return async () => {
     const link = linkFor(pass, base ? new Request(base) : undefined);
     /* to the account holding the place, since the link signs in as that account */
-    await send(to, 'link', { city: city.name, when: whenLocal(city.planned_start, city.offset_min), link, name: name || undefined }, city.id);
-    await admin().from('passes').update({ sent_at: new Date().toISOString() }).eq('id', pass.id);
+    const s = await send(to, 'link', { city: city.name, when: whenLocal(city.planned_start, city.offset_min), link, name: name || undefined }, city.id);
+    /* only a real send counts: a held or failed email leaves the place unsent, for the catch-up */
+    if (s.status === 'sent') await admin().from('passes').update({ sent_at: new Date().toISOString() }).eq('id', pass.id);
   };
 }
 

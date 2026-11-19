@@ -7,9 +7,10 @@ import { meNow, useFormsState } from '@/components/forms/store';
 import { useFlapText } from '@/components/preview/fold/flap';
 import './get-ready.css';
 
-/* Get ready: what to do before the day, and on the day how to submit from your editor. Step 0 of How it works.
-   - before: register, add the server to your editor, the sentence to say on the day, the rules that are checked.
-   - building: the same, with "say it now" first in weight and the browser as the other way in.
+/* Get ready: what to do before the day, and the two ways to submit on it. Step 0 of How it works.
+   - before: register; the two ways (the browser first, since it needs nothing set up); Supabase's server; then, only
+     for the editor way, the Builder Day line and the sentence to say; the rules, for both.
+   - building: the same, with the two ways first in weight and a key that opens the browser form.
    While the server is not open (SERVER.live false) no address is shown: the command cell is dashed and says so.
    The lab passes live and url to see the open state with a marked stand-in address. */
 
@@ -112,9 +113,10 @@ export function GetReady({ state = 'before', city, cityId, live = SERVER.live, u
   /* a person with a place: their own city in the first step, and whether their editor has called */
   const pass = url0 === undefined ? meNow()?.pass ?? null : null;
   const say = sayIt(city), now = state === 'building', reg = register && !now, n = (i: number) => i + (reg ? 1 : 0), choice = useEditor();
+  const where = city ? city + '’s page' : 'your city’s page';
   return (
     <section className="ex gr" data-compact={compact ? '' : undefined} data-state={state} aria-labelledby={id + '-h'}>
-      <div className="ex-top"><H level={level} id={id + '-h'}>{now ? 'Submit from your editor' : 'Get ready'}</H></div>
+      <div className="ex-top"><H level={level} id={id + '-h'}>{now ? 'Submit your project' : 'Get ready'}</H></div>
       <ol className="gr-steps">
         {reg ? (
           <li className="gr-step"><span className="gr-n" aria-hidden="true">1</span>
@@ -125,40 +127,52 @@ export function GetReady({ state = 'before', city, cityId, live = SERVER.live, u
                   <p className="gr-note">{HOW_TO_SUBMIT}</p></div>}
           </li>
         ) : null}
-        <li className="gr-step"><span className="gr-n" aria-hidden="true">{n(1)}</span>
+        {/* the two ways in, side by side and the browser first: it needs nothing set up, so the editor never reads as the only way */}
+        <li className="gr-step" data-now={now ? '' : undefined}><span className="gr-n" aria-hidden="true">{n(1)}</span>
+          <div className="gr-body"><p className="ex-t">{now ? 'Submit in your browser or from your editor' : 'On the day, submit in your browser or from your editor'}</p>
+            <ul className="gr-ways">
+              <li className="gr-way"><p className="ex-k">In the browser</p>
+                <p className="gr-note">On {where}, type the code on the screen in the room, then your project’s name, a one-line pitch and its GitHub repository. Nothing to set up.</p>
+                {now && onBrowser ? <button type="button" className="gr-a" onClick={onBrowser}>Submit in the browser</button> : null}</li>
+              <li className="gr-way"><p className="ex-k">From your editor</p>
+                <p className="gr-note">Say one sentence and your editor sends the name, the pitch and the repository for you. It needs the Builder Day server{now ? ', below.' : ', added below before the day.'}</p></li>
+            </ul>
+            <p className="gr-note">Both ask for the code on the screen in the room, and both run the same checks.</p></div>
+        </li>
+        <li className="gr-step"><span className="gr-n" aria-hidden="true">{n(2)}</span>
           <div className="gr-body"><p className="ex-t">Add Supabase’s server so your editor can set up your database</p>
             <Picker live url={SUPABASE_MCP.url} name={SUPABASE_MCP.name} choice={choice} docs={SUPABASE_MCP.docs} />
             <p className="gr-note">The first time, it opens Supabase in your browser to sign in.</p></div>
         </li>
-        <li className="gr-step"><span className="gr-n" aria-hidden="true">{n(2)}</span>
-          <div className="gr-body"><p className="ex-t">{url && pass ? 'Add your own Builder Day line so you can submit' : 'Add the Builder Day server so you can submit'}</p><Picker live={live} url={url} choice={choice} chooser={false} signedIn={signedIn} />
+        <li className="gr-step"><span className="gr-n" aria-hidden="true">{n(3)}</span>
+          <div className="gr-body"><p className="ex-k">Only to submit from your editor</p><p className="ex-t">{url && pass ? 'Add your own Builder Day line' : 'Add the Builder Day server'}</p><Picker live={live} url={url} choice={choice} chooser={false} signedIn={signedIn} />
             {live && !url && onSignIn ? <p className="gr-note"><button type="button" className="gr-link" aria-haspopup="dialog" onClick={onSignIn}>{signedIn ? 'Open your account' : 'Sign in to get your line'}</button></p> : null}
             {url && pass ? (pass.editorSeen
               ? <p className="gr-note gr-seen" data-on="">Editor connected · last call {lastCall(pass.editorSeen)}</p>
               : <><p className="gr-note gr-seen">Not connected yet. Once the line is in your editor, say this in it to check:</p><Say say={checkIt()} /></>) : null}</div>
         </li>
-        <li className="gr-step" data-now={now ? '' : undefined}><span className="gr-n" aria-hidden="true">{n(3)}</span>
+        <li className="gr-step"><span className="gr-n" aria-hidden="true">{n(4)}</span>
           <div className="gr-body">
+            <p className="ex-k">Only to submit from your editor</p>
             <p className="ex-t">{now ? 'Say it now' : 'On the day, say it'}</p>
             <Say say={say} />
             <p className="gr-note">Your editor takes the name, the pitch and the repository from the project it’s in and sends them. It answers with your project’s link, where you can add a picture.</p>
-            {now && onBrowser ? <p className="gr-note">Or <button type="button" className="gr-link" onClick={onBrowser}>submit in the browser</button>. Both run the same checks.</p> : null}
           </div>
         </li>
-        <li className="gr-step"><span className="gr-n" aria-hidden="true">{n(4)}</span>
-          <div className="gr-body"><p className="ex-t">What is checked</p><ul className="gr-rules">{RULES.map((r) => <li key={r}>{r}</li>)}</ul></div>
+        <li className="gr-step"><span className="gr-n" aria-hidden="true">{n(5)}</span>
+          <div className="gr-body"><p className="ex-t">What is checked, both ways</p><ul className="gr-rules">{RULES.map((r) => <li key={r}>{r}</li>)}</ul></div>
         </li>
       </ol>
     </section>
   );
 }
 
-/* The submit sheet's first part: from your editor. The sheet's second part is today's form, under "In the browser". */
-export function FromEditor({ city, live = SERVER.live, rules = true }: { city?: string; live?: boolean; rules?: boolean }) {
+/* The submit sheet's second part, under the browser form: from your editor. */
+export function FromEditor({ city, live = SERVER.live, rules = true, label = 'From your editor' }: { city?: string; live?: boolean; rules?: boolean; label?: string | null }) {
   const say = sayIt(city), mine = useFormsState().editor;
   return (
     <div className="ex gr gr-door">
-      <p className="ex-k">From your editor</p>
+      {label ? <p className="ex-k">{label}</p> : null}
       {live
         ? <><Say say={say} />
             <p className="gr-note">Say it in your editor with the Builder Day server added. {EDITOR_ROOM} It checks your repository against the rules and sends your entry, then answers with your project’s link, where you add a picture.</p>

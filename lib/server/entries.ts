@@ -183,11 +183,17 @@ export async function deleteEntry(p: Person): Promise<{ ok: true } | { ok: false
 }
 
 /* Refresh picture: the demo's share image again (the person's own upload is replaced only when they ask) */
-export async function refreshPicture(entryId: string): Promise<{ ok: true; picture: string | null } | { ok: false; error: string }> {
+export async function refreshPicture(entryId: string, o: { anyTime?: boolean } = {}): Promise<{ ok: true; picture: string | null } | { ok: false; error: string }> {
   const db = admin();
   const { data: e } = await db.from('entries').select('id, city, url, repo').eq('id', entryId).maybeSingle();
   if (!e) return { ok: false, error: 'That entry is gone.' };
   if (e.url === e.repo) return { ok: false, error: 'This entry has no demo link to take a picture from.' };
+  /* the builder's own refresh keeps the submit clock (not while paused, not after building closes); a host may any time */
+  if (!o.anyTime) {
+    const { data: c } = await db.from('cities').select('*').eq('id', e.city).single();
+    const clock = c ? clockSays(c, Date.now()) : 'That city is not one of ours.';
+    if (clock) return { ok: false, error: clock };
+  }
   const s = await shareImage(e.url as string);
   if (!s) return { ok: false, error: 'The demo page has no share image we could read. Upload a picture instead.' };
   const u = await store(e.city as string, e.id as string, s);

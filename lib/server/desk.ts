@@ -12,7 +12,7 @@ import { parseGuests, type Parsed } from '@/lib/luma';
 import { approvedGuests, lumaOn } from './luma';
 import { emailOK } from '@/lib/forms';
 import { mailDriver } from './mail';
-import { devMail } from './env';
+import { devMail, mailHeld } from './env';
 import { dayGate, forgetGate } from './gate';
 import { replaceEditorKey } from './repo-key';
 import { applyGuest, type CityLite } from './registrations';
@@ -62,7 +62,7 @@ export async function deskState(d: Desk, city: string | null): Promise<DeskState
     me: { email: d.person.email, name: d.person.name, super: d.super, roles: d.roles.map((r) => ({ role: r.role, city: r.city, budget: r.budget })) },
     city: cur, cities: mine, can: { host, judge, super: d.super },
     counts: null, guests: [], entries: [], scenes: [], people: [], outbox: [], log: [], pick: null,
-    mail: mailDriver(), devCodes: devMail(), luma: lumaOn(), hook: !!process.env.LUMA_WEBHOOK_SECRET,
+    mail: mailDriver(), mailHeld: mailHeld(), devCodes: devMail(), luma: lumaOn(), hook: !!process.env.LUMA_WEBHOOK_SECRET,
     gate: d.super ? await dayGate() : null,
   };
   if (!cur) return state;
@@ -184,8 +184,8 @@ export async function deskAct(d: Desk, a: Act, req: Request): Promise<ActResult>
         if (kept === 'held') await log(d, 'second registration under another email; place kept', city, p.id);
         if (made) added++;
         if (sendNow && made) {
-          await send(p.email, 'link', { city: c?.name as string, when: whenLocal(c?.planned_start as string, c?.offset_min as number), link: linkFor(pass, req), name: p.name || undefined }, city);
-          await db.from('passes').update({ sent_at: new Date().toISOString() }).eq('id', pass.id); sent++;
+          const s = await send(p.email, 'link', { city: c?.name as string, when: whenLocal(c?.planned_start as string, c?.offset_min as number), link: linkFor(pass, req), name: p.name || undefined }, city);
+          if (s.status === 'sent') { await db.from('passes').update({ sent_at: new Date().toISOString() }).eq('id', pass.id); sent++; }
         }
       }
       await log(d, 'import guests', city, null, { added, sent, ...preview });
@@ -200,8 +200,8 @@ export async function deskAct(d: Desk, a: Act, req: Request): Promise<ActResult>
       if (kept === 'checked-in') return { ok: false, error: email + ' is already checked in at ' + ((await cityRow(pass.city))?.name || pass.city) + ', so the place was not moved.' };
       const c = await cityRow(city!);
       if (a.send !== false) {
-        await send(p.email, 'link', { city: c?.name as string, when: whenLocal(c?.planned_start as string, c?.offset_min as number), link: linkFor(pass, req), name: p.name || undefined }, city);
-        await db.from('passes').update({ sent_at: new Date().toISOString() }).eq('id', pass.id);
+        const s = await send(p.email, 'link', { city: c?.name as string, when: whenLocal(c?.planned_start as string, c?.offset_min as number), link: linkFor(pass, req), name: p.name || undefined }, city);
+        if (s.status === 'sent') await db.from('passes').update({ sent_at: new Date().toISOString() }).eq('id', pass.id);
       }
       await log(d, 'add guest', city, p.id, { moved });
       return { ok: true, moved };
@@ -211,7 +211,7 @@ export async function deskAct(d: Desk, a: Act, req: Request): Promise<ActResult>
       if (!l || l.city !== city) return { ok: false, error: 'That person is not on this city’s list.', status: 404 };
       const c = await cityRow(city!);
       const s = await send(l.email, 'again', { city: c?.name as string, link: l.link, name: l.name || undefined }, city);
-      await db.from('passes').update({ sent_at: new Date().toISOString() }).eq('event', EVENT_ID).eq('person', String(a.person));
+      if (s.status === 'sent') await db.from('passes').update({ sent_at: new Date().toISOString() }).eq('event', EVENT_ID).eq('person', String(a.person));
       await log(d, 'send link again', city, String(a.person));
       return { ok: true, status: s.status };
     }
@@ -255,8 +255,8 @@ export async function deskAct(d: Desk, a: Act, req: Request): Promise<ActResult>
       for (const r of (rows || []) as Row[]) {
         const p = r.people as Row | null;
         /* to the account holding the place: its link signs in as that account */
-        await send(String(p?.email || r.list_email), 'link', { city: c?.name as string, when: whenLocal(c?.planned_start as string, c?.offset_min as number), link: linkFor(r as { id: string; key_version: number }, req), name: (p?.name as string) || undefined }, city);
-        await db.from('passes').update({ sent_at: new Date().toISOString() }).eq('id', r.id); sent++;
+        const s = await send(String(p?.email || r.list_email), 'link', { city: c?.name as string, when: whenLocal(c?.planned_start as string, c?.offset_min as number), link: linkFor(r as { id: string; key_version: number }, req), name: (p?.name as string) || undefined }, city);
+        if (s.status === 'sent') { await db.from('passes').update({ sent_at: new Date().toISOString() }).eq('id', r.id); sent++; }
       }
       await log(d, 'send unsent links', city, null, { sent });
       return { ok: true, sent };
@@ -303,7 +303,7 @@ export async function deskAct(d: Desk, a: Act, req: Request): Promise<ActResult>
     case 'entry.picture': {
       const { data } = await db.from('entries').select('id').eq('city', city!).eq('no', Number(a.no)).maybeSingle();
       if (!data) return { ok: false, error: 'That entry is not in this city.', status: 404 };
-      const r = await refreshPicture(data.id);
+      const r = await refreshPicture(data.id, { anyTime: true });
       if (!r.ok) return { ok: false, error: r.error, status: 422 };
       await log(d, 'refresh picture', city, data.id);
       return { ok: true };

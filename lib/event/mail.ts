@@ -42,8 +42,9 @@ export function render(t: Template, d: MailData): Mail {
     case 'link': return {
       subject: 'Your place in ' + city + ', ' + EVENT.name,
       ...body([hi, 'You’re on the list for ' + EVENT.name + ' in ' + city + (d.when ? '. Building starts at ' + d.when + ', local time.' : '.'),
-        'This link signs you in. Before the day it opens our page with your own editor line: add it to your editor, then say “' + checkIt() + '” to try it. On the day the same link opens ' + city + '’s page.',
-        'Keep it: it works until the day after, and you can open it again. ' + ON_LIST_NEXT + ' Anyone can vote.'],
+        'This link signs you in. On the day it opens ' + city + '’s page, where you submit your project in the browser. You type the code on the screen in the room, then your project’s name, a one-line pitch and its GitHub repository.',
+        'Rather submit from your editor? Open the link before the day for your own editor line, add it, then say “' + checkIt() + '” to try it.',
+        'Keep the link. It works until the day after, and you can open it again. ' + ON_LIST_NEXT + ' Anyone can vote.'],
         d.link ? { href: d.link, label: 'Open your place in ' + city } : undefined,
         ['Not you, or got this by mistake? Ignore it; nothing happens unless the link is opened.']),
     };

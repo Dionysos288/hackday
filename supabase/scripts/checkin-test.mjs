@@ -113,6 +113,15 @@ try {
   const v2 = await l2.go('/api/vote', { city: A, entry: entryNo, on: true });
   check('room code with a listed email: signed in and checked in, and may vote at once', r2.status === 200 && r2.body?.checkedIn === true && !!(await passOf(em('l2'))).passes.checked_in_at && v2.status === 200, JSON.stringify(r2) + JSON.stringify(v2));
 
+  // 6b. a listed guest who also judges: the room code proves the room, not the inbox, so it gives no session
+  const [j1] = await rest(e, 'people', { method: 'POST', body: JSON.stringify({ email: em('j1'), name: 'Listed judge' }) });
+  await rest(e, 'passes', { method: 'POST', body: JSON.stringify({ person: j1.id, city: A, source: 'luma' }) });
+  await rest(e, 'roles', { method: 'POST', body: JSON.stringify({ person: j1.id, role: 'judge', city: A }) });
+  const jr = jar(), j1r = await jr.go('/api/auth/room', { email: em('j1'), code: codeA, city: A }), j1me = await jr.go('/api/me');
+  check('room code with a judge\'s email: refused, says to use the emailed code; no session, not checked in', j1r.status === 403 && /runs the desk/.test(j1r.body?.error || '') && j1me.body?.signedIn === false && !(await passOf(em('j1'))).passes.checked_in_at, JSON.stringify(j1r) + JSON.stringify(j1me.body));
+  const jc = await byCode(em('j1')), j1c = await jc.go('/api/checkin', { code: codeA });
+  check('the same judge signed in by the six-digit code: the room code checks them in', j1c.status === 200 && !!(await passOf(em('j1'))).passes.checked_in_at, JSON.stringify(j1c));
+
   // 7. the host marks a guest in the room by hand, and takes it back; both in the log
   const host = await byCode('owner@hackday.test');
   const l3 = await passOf(em('l3'));
@@ -123,7 +132,7 @@ try {
   const logs = await rest(e, 'log?target=eq.' + l3.id + '&select=what&order=at');
   check('and takes it back; both written to the log', h2.status === 200 && !(await passOf(em('l3'))).passes.checked_in_at && logs.map((x) => x.what).join('|') === 'marked in the room|not in the room', JSON.stringify(logs));
   const st = await host.go('/api/desk/state?city=' + A);
-  check('the desk counts who is in the room', st.body?.counts?.inRoom === 2 && st.body?.guests?.filter((g) => g.inRoom).length === 2, JSON.stringify(st.body?.counts));
+  check('the desk counts who is in the room (l1, l2 and the judge)', st.body?.counts?.inRoom === 3 && st.body?.guests?.filter((g) => g.inRoom).length === 3, JSON.stringify(st.body?.counts));
 
   // 8. the editor server
   const l4 = await passOf(em('l4')), key = keyFor(l4.passes);

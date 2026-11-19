@@ -9,8 +9,8 @@ import { cookies } from 'next/headers';
 import { admin, asUser } from './supabase';
 import { DESK_COOKIE, deskMark } from './keys';
 import { send } from './mail';
-import { bootstrapSuper, ensurePass, ensurePerson, linkFor, norm, passOf, personByEmail, type Person } from './people';
-import { siteUrl } from './env';
+import { bootstrapSuper, ensurePass, ensurePerson, linkFor, norm, passOf, personByEmail, rolesOf, type Person } from './people';
+import { siteUrl, superAdmins } from './env';
 import { RESEND_S } from '@/lib/forms';
 import { whenLocal } from './time';
 import { guestStatus, lumaOn } from './luma';
@@ -111,6 +111,9 @@ export async function roomSignIn(email: string, code: string, city: string, ip: 
     }
   }
   if (!p || !pass) return { ok: false, field: 'email', error: roomNotListed(e, row.name as string) };
+  /* the room code proves a seat in the room, not the inbox: an email with a desk role (or one SUPER_ADMINS names) would
+     get that role's database rights with no code, so it signs in by the code from its email, then types the room code */
+  if (superAdmins().indexOf(e) >= 0 || (await rolesOf(p.id)).length) return { ok: false, field: 'email', error: 'This email runs the desk, so it signs in with the code we email you. Then type the room code.' };
   await checkIn(pass, 'room', null);
   const s = await signInAs(p.email);
   if (!s.ok) return { ok: false, field: 'code', error: s.error };

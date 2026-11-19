@@ -11,7 +11,7 @@ import type { CityLive } from './types';
 
 /* an entry as the pictures and rows want it: the entry's number is its id on the wall */
 export function projectOf(e: SnapEntry): Project {
-  return { id: e.no, name: e.name, pitch: e.pitch, handle: e.by ?? '', repo: e.repo ?? '', demo: e.url, image: e.picture ?? undefined };
+  return { id: e.no, name: e.name, pitch: e.pitch, handle: e.by ?? '', repo: e.repo ?? '', demo: e.url, image: e.picture ?? undefined, slug: e.slug };
 }
 
 /* each entry's votes (and judges' share) at a moment, from the steps */

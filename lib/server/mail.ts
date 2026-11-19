@@ -7,7 +7,7 @@
    Supabase's own mail is never used: codes and links come from Auth's generateLink, the email is ours. */
 import { render, type MailData, type Template } from '@/lib/event/mail';
 import { admin } from './supabase';
-import { devMail } from './env';
+import { devMail, mailHeld } from './env';
 import { EVENT } from '@/lib/day-data';
 
 /* the local stack's mail catcher, and only when it is on this machine */
@@ -25,7 +25,8 @@ async function toCatcher(url: string, to: string, mail: { subject: string; text:
 }
 
 export type Sent = { id: string; status: 'sent' | 'failed' | 'not_sent'; error?: string };
-export const mailDriver = () => (process.env.RESEND_API_KEY ? 'resend' : 'outbox') as 'resend' | 'outbox';
+/* held (see mailHeld) or no key: the outbox only. A machine without the key, or with the hold on, mails no real address */
+export const mailDriver = () => (process.env.RESEND_API_KEY && !mailHeld() ? 'resend' : 'outbox') as 'resend' | 'outbox';
 
 export async function send(to: string, template: Template, data: MailData, city?: string | null): Promise<Sent> {
   const db = admin();
@@ -34,7 +35,7 @@ export async function send(to: string, template: Template, data: MailData, city?
   const mail = render(template, data);
 
   if (mailDriver() === 'outbox') {
-    await db.from('outbox').update({ status: 'not_sent' }).eq('id', row.id);
+    await db.from('outbox').update({ status: 'not_sent', error: mailHeld() ? 'held: email is on hold (MAIL_HOLD)' : null }).eq('id', row.id);
     const c = catcher(); if (c) await toCatcher(c, to, mail);
     if (devMail()) console.log('[outbox] ' + template + ' to ' + to + ': ' + mail.subject + (data.link ? '\n         ' + data.link : ''));
     return { id: row.id, status: 'not_sent' };
