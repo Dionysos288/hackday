@@ -24,7 +24,7 @@ export async function generateMetadata({ params, searchParams }: Props) {
   if (backendOn()) {
     /* live: the entry from the city's snapshot */
     const snap = await citySnapshot(city), s = decodeURIComponent(slug);
-    const ranked = (snap?.entries || []).slice().sort(rankOrder), k = ranked.findIndex((e) => slugify(e.name) === s || e.slug === s);
+    const ranked = (snap?.entries || []).slice().sort(rankOrder), k = ranked.findIndex((e) => e.slug === s);
     if (k < 0) return {};
     const e = ranked[k], pitch = !e.pitch ? '' : /[.!?…]$/.test(e.pitch) ? e.pitch : e.pitch + '.';
     return pageMeta(e.name + ' · ' + c.name + ' · ' + EVENT.name, (pitch ? pitch + ' ' : '') + (snap!.city.buildStart ? ord(k + 1) + ' in ' + c.name + ' with ' + plural(e.votes, 'vote') + '.' : 'In ' + c.name + '.'));
