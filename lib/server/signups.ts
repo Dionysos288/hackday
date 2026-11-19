@@ -26,11 +26,15 @@ async function lumaStatus(eventId: string): Promise<WheelStatus> {
 
 async function read(): Promise<Record<string, Signup>> {
   const db = admin();
-  const [{ data: cities }, { data: passes }] = await Promise.all([
-    db.from('cities').select('id, luma_event_id').eq('event', EVENT.id),
-    db.from('passes').select('city').eq('event', EVENT.id),
-  ]);
-  const n = new Map<string, number>(); (passes || []).forEach((p: { city: string }) => n.set(p.city, (n.get(p.city) || 0) + 1));
+  const { data: cities, error: cityError } = await db.from('cities').select('id, luma_event_id').eq('event', EVENT.id);
+  if (cityError) throw new Error(cityError.message);
+  const n = new Map<string, number>();
+  for (let from = 0; ; from += 1000) {
+    const { data: passes, error } = await db.from('passes').select('city').eq('event', EVENT.id).order('id').range(from, from + 999);
+    if (error) throw new Error(error.message);
+    (passes || []).forEach((p: { city: string }) => n.set(p.city, (n.get(p.city) || 0) + 1));
+    if (!passes || passes.length < 1000) break;
+  }
   const out: Record<string, Signup> = {};
   await Promise.all((cities || []).map(async (c: { id: string; luma_event_id: string | null }) => {
     out[c.id] = { people: n.get(c.id) || 0, status: lumaOn() && c.luma_event_id ? await lumaStatus(c.luma_event_id) : 'open' };
