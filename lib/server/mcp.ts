@@ -103,7 +103,7 @@ async function call(who: Who, name: string, a: Record<string, unknown>, req: Req
   if (name === 'whoami') {
     const e = await entryOf(who.person.id);
     const city = await nameOfCity(who.pass.city), inRoom = !!who.pass.checked_in_at;
-    return text((who.person.name ? who.person.name + ', ' : '') + 'signed in for ' + city + '. '
+    return text((who.person.name ? who.person.name + ', you are' : 'You are') + ' signed in for ' + city + '. '
       + (inRoom ? 'Checked in with the room code. ' : 'Not checked in yet: call check_in with the four-character code on the screen in the room before you submit. ')
       + (e ? 'You have an entry: ' + e.name + ', ' + site + '/city/' + e.city + '/p/' + e.slug + '. Submitting again edits it.' : 'No entry yet.')
       + (who.person.name ? '' : ' Your city’s list has no name for you: pass by with your name when you submit.'),
