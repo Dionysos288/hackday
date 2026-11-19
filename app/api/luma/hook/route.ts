@@ -35,10 +35,8 @@ export async function POST(req: Request) {
   }
   const g = msg.data || {}, eventId = String(g.event?.id || g.event?.api_id || g.event_id || '');
   const city = eventId ? await cityByLumaEvent(eventId) : null;
+  const a = city ? await applyGuest(city, { email: emailOf(g), name: nameOf(g), id: g.id || g.api_id || null, status: String(g.approval_status || ''), registeredAt: g.registered_at || null }, 'hook', { base: siteUrl(req) }) : null;
   await db.from('log').insert({ what: 'luma hook', city: city?.id || null, target: hookId, data: { type: msg.type, event: eventId.slice(0, 80), status: g.approval_status || null, known: !!city } });
-  if (!city) return plain(200);   /* an event that is not one of ours: logged, nothing else */
-
-  const a = await applyGuest(city, { email: emailOf(g), name: nameOf(g), id: g.id || g.api_id || null, status: String(g.approval_status || ''), registeredAt: g.registered_at || null }, 'hook', { base: siteUrl(req) });
-  if (a.mail) after(a.mail);
+  if (a?.mail) after(a.mail);
   return plain(200);
 }
