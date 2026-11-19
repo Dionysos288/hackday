@@ -1,5 +1,11 @@
 {
   "step": 10,
+  "phoneStep": 12,
+  "phoneHubY": 0.47,
+  "phoneEdgeFrom": 0.98,
+  "phoneEdgeTo": 1.45,
+  "phoneFadeFrom": 1.2,
+  "phoneFadeTo": 1.65,
   "hubY": 0.52,
   "hubOfHeight": 0.4,
   "hubOfWidth": 0.28,
@@ -58,8 +64,10 @@
   "prizeCell": "gap",
   "prizeBand": "off",
   "prizeTurn": "loop",
-  "prizeSize": 2,
+  "prizeSize": 2.15,
   "prizeY": 0,
   "prizeCover": 0.5,
-  "prizeBandRows": 2
+  "prizeBandRows": 2,
+  "prizePhone": "lens",
+  "prizeWeight": 700
 }

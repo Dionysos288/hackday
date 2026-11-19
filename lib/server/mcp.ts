@@ -1,6 +1,5 @@
-/* mcp.ts: the editor server, for checking a builder's setup before the day and submitting on it (event-plan.md, "The MCP
-   side"; door-plan.md, D6). Streamable HTTP, stateless: every POST carries one JSON-RPC message (or, in the older
-   revisions, a batch) and gets JSON back; there is no session and no stream.
+/* mcp.ts: the editor server, for checking a builder's setup before the day and submitting on it. Streamable HTTP,
+   stateless: every POST carries one JSON-RPC message (or, in the older revisions, a batch) and gets JSON back; there is no session and no stream.
    Who is calling: the personal key, sent as "Authorization: Bearer <key>" by every editor that can send a header,
    and in the address (/api/mcp/<key>) only for an editor that cannot. It is the pass's editor key (editor_version),
    so replacing it does not end the emailed link. It says who, nothing more: Submit still needs the room code.
@@ -163,7 +162,7 @@ async function cityRow(id: string): Promise<CityRow> {
   return data as CityRow;
 }
 
-/* the dry run (door-plan.md, D6): who, where, when, the room code, and with a repository the checks the real submit
+/* the dry run: who, where, when, the room code, and with a repository the checks the real submit
    runs, said as what would happen on the day. The made-today rule does not block here; it is said as advice. */
 async function practice(who: Who, repo: string, site: string) {
   const c = await cityRow(who.pass.city), now = Date.now();

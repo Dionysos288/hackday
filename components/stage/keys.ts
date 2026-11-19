@@ -2,7 +2,7 @@
 import { useEffect, useRef } from 'react';
 import type { SceneRow, StageAction } from '@/lib/stage/types';
 
-/* The keys a laptop drives the wall with, the ones people already know from slides (event-plan.md, "The remote"):
+/* The keys a laptop drives the wall with, the ones people already know from slides:
    Right, Space, Page Down or N for next (so a clicker works); Left, Page Up or P for back; a number then Enter to jump;
    B to blank; Q for the QR; ? for the list; F for full screen (anyone may press F, even on a wall that is not driven).
    A press that asks first (Start building, Close voting) waits for Enter, and Esc cancels it. Keys are never animated:

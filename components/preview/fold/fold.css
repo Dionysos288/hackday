@@ -4,7 +4,7 @@
 
 .pf {
   --pf-ink: #f4f4f2; --pf-soft: #c9c9c5; --pf-muted: #b4b4af; --pf-rule: #6b6c6b; --pf-hair: #2b2c2c;
-  --pf-gutter: clamp(20px, 4.6vw, var(--pf-gutter-max));
+  --pf-gutter: max(clamp(20px, 4.6vw, var(--pf-gutter-max)), env(safe-area-inset-left, 0px), env(safe-area-inset-right, 0px));
   /* the mark's centre at the top of the page (today's), and the header's height in the page's flow */
   --pf-mc: 49px; --pf-hh: calc(var(--pf-mc) + var(--pf-hdr) / 2);
   position: relative; overflow-x: clip; color: var(--pf-ink); font-family: var(--wh-sans);
@@ -32,35 +32,54 @@
   mask-composite: intersect;
 }
 .pf-hdr::before { opacity: 0; transition: opacity calc(var(--dur-hover, 140ms) * 0.8) var(--ease-exit), visibility 0s calc(var(--dur-hover, 140ms) * 0.8); }
-/* the paper fades in as the page leaves the top, and out (a little faster) on the way back */
-.pf-hdr[data-paper]::before { visibility: visible; opacity: 1; transition: opacity var(--dur-hover, 140ms) var(--ease-out), visibility 0s; }
+/* the paper is a cut as the page leaves the top (a quick scroll never shows words under the mark), and fades out on
+   the way back */
+.pf-hdr[data-paper]::before { visibility: visible; opacity: 1; transition: none; }
 .pf-mark { position: static; flex: none; }
 .pf-mark a { position: relative; display: flex; align-items: center; gap: inherit; color: inherit; text-decoration: none; }
 /* a 44px hit area without moving the mark */
-.pf-mark a::after { content: ''; position: absolute; left: 0; right: 0; top: 50%; height: 48px; translate: 0 -50%; }
+/* the press area is at least 48 px both ways, when the name is hidden and only the mark is left */
+.pf-mark a::after { content: ''; position: absolute; left: min(0px, calc((100% - 48px) / 2)); right: min(0px, calc((100% - 48px) / 2)); top: 50%; height: 48px; translate: 0 -50%; }
 .pf-mark a:focus-visible, .pf-top:focus-visible, .pf-cell:focus-visible { outline: 2px solid var(--pf-ink); outline-offset: 4px; }
 /* the cells overlap by a pixel: the focused one comes forward so its ring is whole */
 .pf-cell:focus-visible { position: relative; z-index: 1; }
 /* the very top's links: How it works, and Sign in (or the account) once the person is known */
 .pf-tops { position: absolute; right: var(--pf-gutter); top: 0; display: flex; align-items: center; gap: 28px; height: 44px; }
 .pf-top { display: flex; align-items: center; height: 44px; padding: 0; border: 0; background: none; color: var(--pf-ink); font: 500 17px/1 var(--wh-sans); letter-spacing: -0.01em; text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 5px; cursor: pointer; white-space: nowrap; }
-.pf-tops { transition: opacity var(--dur-hover, 140ms) var(--ease-out), visibility 0s; }
-/* the very top's links give way to the cells: out a little faster than they come back */
-.pf-hdr[data-on] .pf-tops { visibility: hidden; opacity: 0; transition: opacity calc(var(--dur-hover, 140ms) * 0.8) var(--ease-exit), visibility 0s calc(var(--dur-hover, 140ms) * 0.8); }
+/* the very top's links give way to the cells. The bar grows out of Sign in: on, the Sign in cell takes the plain
+   link's place in the same frame (a cut, the board's way); off, the link is back in the frame the last cell goes. */
+.pf-tops { transition: visibility 0s linear calc((var(--pf-n, 1) - 1) * var(--pf-erase-step, 20ms)); }
+/* and when Tab brings the cells up at the top of the page, so the two Sign in never print over each other */
+.pf-hdr:has(.pf-cells:focus-within) .pf-tops,
+.pf-hdr[data-on] .pf-tops { visibility: hidden; transition: none; }
 .pf-top-s { display: none; }
 @media (max-width: 640px) { .pf-top { font-size: 15px; } }
 @media (max-width: 480px) { .pf-top-l { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; } .pf-top-s { display: inline; } }
 /* the cells: always laid out (so nothing moves), written in left to right a step apart when the header turns on */
 .pf-cells { display: flex; align-items: stretch; margin-left: auto; font: 500 13px/1 var(--wh-mono); white-space: nowrap; }
+/* Each cell appears and goes as a cut at its own step: written right to left from the last cell (Sign in) when the
+   header turns on, erased left to right a little faster when it turns off, so Sign in is the last to go. One base
+   rule with a delay by index, so a quick scroll back and forth retargets instead of restarting. --i is the cell's
+   place from the left, --pf-n how many cells there are. A press darkens the ground (the cells share borders, so none scales out of the row); hover lifts it. */
 .pf-cell {
   display: flex; align-items: center; gap: 8px; min-height: 44px; margin: 0 -1px 0 0; padding: 0 var(--pf-cell-pad); box-sizing: border-box;
   border: 1px solid var(--pf-rule); background: var(--wh-paper); color: var(--pf-ink); text-decoration: none; opacity: 0; pointer-events: none;
+  --pf-cd: calc(var(--i) * var(--pf-erase-step, 20ms)); --pf-bg-ms: var(--pf-hover-out, 150ms);
+  transition: opacity 0s linear var(--pf-cd), background-color var(--pf-bg-ms) var(--ease-out);
 }
 /* hidden by opacity, not visibility, so Tab still reaches them from the top of the page: focus shows them all */
 .pf-hdr[data-on] .pf-cell, .pf-cells:focus-within .pf-cell { opacity: 1; pointer-events: auto; }
-.pf-hdr[data-on] .pf-cell { transition: opacity 0s linear calc(var(--i) * var(--pf-write-step, 30ms)); }
-.pf-cell[aria-current] { background: var(--pf-ink); color: #0b0c0c; border-color: var(--pf-ink); }
-.pf-cell:active { scale: var(--press, 0.97); transition: scale var(--dur-press, 90ms) var(--ease-out); }
+.pf-hdr[data-on] .pf-cell { --pf-cd: calc((var(--pf-n, 1) - 1 - var(--i)) * var(--pf-write-step, 30ms)); }
+.pf-cells:focus-within .pf-cell { --pf-cd: 0s; }
+/* the lit cell is a cut, both ways: its fill is a layer of its own with no transition, so leaving it never shows a
+   light box under light words while the hover ground fades */
+.pf-cell { position: relative; isolation: isolate; }
+.pf-cell[aria-current] { color: #0b0c0c; border-color: var(--pf-ink); }
+.pf-cell[aria-current]::before { content: ''; position: absolute; inset: 0; z-index: -1; background: var(--pf-ink); }
+@media (hover: hover) and (pointer: fine) {
+  .pf-cell:not([aria-current]):hover { background-color: color-mix(in oklch, var(--pf-ink) 8%, var(--wh-paper)); --pf-bg-ms: var(--pf-hover-in, 100ms); }
+}
+.pf-cell:not([aria-current]):active { background-color: color-mix(in oklch, var(--pf-ink) 14%, var(--wh-paper)); --pf-bg-ms: 0s; }
 .pf-reg { gap: 10px; padding-left: 8px; }
 /* the docked globe is drawn by the wheel under the header: the cell is clear so the header's hole shows it */
 .pf[data-glass='fixed'][data-small='glass'] .pf-reg { background: transparent; }
@@ -71,7 +90,9 @@
 /* before the globe has docked (the cells shown by focus at the top), the lens is a plain disc */
 .pf-hdr:not([data-on]) .pf-reg-lens:not([data-globe]):not([data-dot]),
 :root:not([data-globes]) .pf-reg-lens[data-globe] { background: radial-gradient(circle at 40% 35%, #3a3b3b, #121313 70%); box-shadow: inset 0 0 0 1px var(--pf-rule); }
-.pf-reg-c { display: inline-block; text-align: left; }
+/* the city: as wide as its own name (the cell is in the mono face, so its width is its count in ch), and when the city
+   changes the width follows on screen, ease-in-out, while the flaps turn the letters; the cells to its left slide */
+.pf-reg-c { display: inline-block; text-align: left; white-space: pre; overflow: clip; overflow-clip-margin: 2px; vertical-align: bottom; transition: width var(--pf-reg-ms, 200ms) var(--ease-out, cubic-bezier(0.23, 1, 0.32, 1)); }
 button.pf-cell { font: inherit; cursor: pointer; }
 /* the account cell: the figure and its word, as wide as "Sign in" whatever it says, so nothing moves when it changes */
 .pf-acct { justify-content: center; min-width: calc(16px + 8px + 7ch + 2 * var(--pf-cell-pad)); }
@@ -90,9 +111,12 @@ button.pf-cell { font: inherit; cursor: pointer; }
   .pf-acct[data-state='out'] .pf-acct-w, .pf-acct[data-state='none'] .pf-acct-w { display: none; }
 }
 /* narrower still, the name steps aside while the header is on, so the register cell keeps its gutter */
-@media (max-width: 380px) { .pf-hdr[data-on] .pf-mark .wh-name { display: none; } }
+/* (and when Tab brings the cells up at the top of the page) */
+/* it comes back only once the cells are erased (they are still in the row while they go), so none is pushed aside */
+@media (max-width: 480px) { .pf-mark .wh-name { transition: position 0s linear calc(var(--pf-n, 1) * var(--pf-erase-step, 20ms)), visibility 0s linear calc(var(--pf-n, 1) * var(--pf-erase-step, 20ms)); transition-behavior: allow-discrete; } }
+@media (max-width: 380px) { .pf-hdr[data-on] .pf-mark .wh-name, .pf-hdr:has(.pf-cells:focus-within) .pf-mark .wh-name { position: absolute; visibility: hidden; transition-delay: 0s; } }
 /* with the account cell as well, the name steps aside on any phone while the header is on (the mark stays) */
-@media (max-width: 480px) { .pf-hdr[data-on][data-acct] .pf-mark .wh-name { display: none; } }
+@media (max-width: 480px) { .pf-hdr[data-on][data-acct] .pf-mark .wh-name, .pf-hdr[data-acct]:has(.pf-cells:focus-within) .pf-mark .wh-name { position: absolute; visibility: hidden; transition-delay: 0s; } }
 
 /* ---------- the first screen: the words, and where the header turns on ---------- */
 .pf-words { position: absolute; z-index: 3; left: var(--wh-gutter); top: calc(var(--pf-mc) + 22px + clamp(48px, 12svh, 140px)); }
@@ -101,25 +125,98 @@ button.pf-cell { font: inherit; cursor: pointer; }
 .pf-words p { margin: 0; }
 .pf-words-1 { font: 500 clamp(24px, 2.6vw, 40px)/1.1 var(--wh-sans); letter-spacing: -0.025em; text-wrap: balance; }
 .pf-words-2 { margin-top: 14px !important; font: 500 13px/1.4 var(--wh-mono); color: var(--pf-muted); }
+/* a phone on its side: the wheel's cells rise to the words, so the second line gives way (Get ready says it too) */
+@media (min-width: 721px) and (max-height: 480px) { .pf-words-2 { display: none; } }
 @media (max-width: 720px) {
   .pf-words { top: auto; bottom: calc(30px + 64px + 28px); max-width: calc(100% - 2 * var(--wh-gutter)); }
   .pf-words-1 { font-size: var(--pf-words-phone); }
+  /* on a phone the wheel's lower names pass behind the words and the register link: a halo of the page's own paper
+     keeps the letters clear of them */
+  .pf-words p, .pf .wh-cta-text { text-shadow: 0 0 6px var(--pf-paper, #0c0d0d), 0 0 14px var(--pf-paper, #0c0d0d), 0 0 24px var(--pf-paper, #0c0d0d); }
 }
-/* the first screen's arrival (intro-plan.md, A). Held: the words, the link's words, the cells and the top line wait
-   unseen for the wheel's first frame and the visitor's city; without script, or on a slow start, they show by
-   themselves after 1.6s. In: each fades up a step apart (the top line only fades: it holds the header's fixed paper,
-   which a transform would carry with it). */
-.pf[data-intro='hold'] :is(.pf-words-1 > span, .pf-words-2, .wh-cta-text, .pf-hdr:not([data-on])) { opacity: 0; animation: pf-show 0s 1.6s forwards; }
-.pf[data-intro='hold'] .wh-cells { visibility: hidden; }
+/* ---------- the first screen's arrival (arrive.ts; one of ten, by data-arrival) ----------
+   The words arrive by CSS from the first paint, never waiting for script. The rest of the first screen (the link, the
+   cells, the peek) waits unseen while held, for the wheel's first frame and the visitor's city (t0); without script,
+   or on a slow start, it shows by itself after 1.6s. The header and the mark are at rest from the first paint and
+   play no entrance. Every keyframe fills backwards only: once it ends the element is simply at rest, so hover and the
+   engine's own placing are never held by it. --pf-after moves the rest later (print: after the globe). */
+.pf[data-intro='hold'] :is(.wh-foot, .pf-main) { opacity: 0; animation: pf-show 0s 1.6s forwards; }
+.pf[data-intro='hold'] .wh-cells { visibility: hidden; animation: pf-vis 0s 1.6s forwards; }
 @keyframes pf-show { to { opacity: 1; } }
-.pf[data-intro='in'] :is(.pf-words-1 > span, .pf-words-2, .wh-cta-text) { animation: pf-rise var(--pf-in-ms) var(--ease-out) calc(var(--pf-in-lead) + var(--pf-k, 0) * var(--pf-in-step)) both; }
-.pf[data-intro='in'] .pf-hdr:not([data-on]) { animation: pf-fade var(--pf-in-ms) var(--ease-out) var(--pf-in-lead) both; }
+@keyframes pf-vis { to { visibility: visible; } }
+@media (scripting: none) { .pf[data-intro='hold'] :is(.wh-foot, .pf-main) { opacity: 1; animation: none; } .pf[data-intro='hold'] .wh-cells { visibility: visible; animation: none; } }
+
+/* the words: each line rises a few pixels from a little ink (never 0: the headline is the largest paint) while its red
+   and blue copies close onto it and fade, a step apart. The copies are pseudo-elements moved by translate (compositor
+   only). */
+.pf-words-1 > span { position: relative; }
+.pf-words-1 > span::before, .pf-words-1 > span::after { content: attr(data-t); position: absolute; inset: 0; z-index: -1; opacity: 0; pointer-events: none; }
+.pf-words-1 > span::before { color: rgb(255 70 70 / 0.5); }
+.pf-words-1 > span::after { color: rgb(70 130 255 / 0.5); }
 .pf-words-1 > span + span { --pf-k: 1; }
 .pf-words-2 { --pf-k: 2; }
-.wh-cta-text { --pf-k: 3; }
+.pf[data-arrival] :is(.pf-words-1 > span, .pf-words-2) { animation: pf-w-in var(--pf-w-ms) var(--ease-out) calc(var(--pf-k, 0) * var(--pf-w-step)) backwards; }
+.pf[data-arrival] .pf-words-1 > span::before { animation: pf-w-red var(--pf-w-ms) var(--ease-out) calc(var(--pf-k, 0) * var(--pf-w-step)) backwards; }
+.pf[data-arrival] .pf-words-1 > span::after { animation: pf-w-blue var(--pf-w-ms) var(--ease-out) calc(var(--pf-k, 0) * var(--pf-w-step)) backwards; }
+@keyframes pf-w-in { from { opacity: var(--pf-w-ink); translate: 0 var(--pf-w-rise); } }
+@keyframes pf-w-red { from { opacity: 1; translate: var(--pf-w-edge) 0; } to { opacity: 0; translate: 0 0; } }
+@keyframes pf-w-blue { from { opacity: 1; translate: calc(-1 * var(--pf-w-edge)) 0; } to { opacity: 0; translate: 0 0; } }
+/* mask: the headline's lines rise from behind a clip at full ink */
+.pf[data-arrival='mask'] .pf-words-1 > span { animation: pf-w-mask calc(var(--pf-w-ms) * 1.5) var(--ease-out) calc(var(--pf-k, 0) * var(--pf-w-step) * 1.25) backwards; }
+.pf[data-arrival='mask'] .pf-words-1 > span::before, .pf[data-arrival='mask'] .pf-words-1 > span::after { animation: none; }
+@keyframes pf-w-mask { from { translate: 0 100%; clip-path: inset(0 0 100% 0); } to { translate: 0 0; clip-path: inset(0 0 -0.25em 0); } }
+/* register: at full ink, no rise; only the red and the blue close, from further apart */
+.pf[data-arrival='register'] :is(.pf-words-1 > span, .pf-words-2) { animation: none; }
+.pf[data-arrival='register'] .pf-words-1 > span::before { animation: pf-w-red calc(var(--pf-w-ms) * 1.4) var(--ease-out) backwards; --pf-w-edge: calc(var(--pf-w-edge-r, 10px)); }
+.pf[data-arrival='register'] .pf-words-1 > span::after { animation: pf-w-blue calc(var(--pf-w-ms) * 1.4) var(--ease-out) backwards; --pf-w-edge: calc(var(--pf-w-edge-r, 10px)); }
+/* flap: the mono line is turned on flaps by script; the headline as tune */
+.pf[data-arrival='flap'] .pf-words-2 { animation: none; }
+/* sweep (before): the words fade up 8px, a step apart */
+.pf[data-arrival='sweep'] :is(.pf-words-1 > span, .pf-words-2) { animation: pf-rise 300ms var(--ease-out) calc(120ms + var(--pf-k, 0) * 60ms) backwards; }
+.pf[data-arrival='sweep'] .pf-words-1 > span::before, .pf[data-arrival='sweep'] .pf-words-1 > span::after { animation: none; }
 @keyframes pf-rise { from { opacity: 0; translate: 0 8px; } }
+/* back with the browser's Back or Forward: the words in one short step */
+:root[data-pf-back] .pf[data-back='quiet'] :is(.pf-words-1 > span, .pf-words-2) { animation: pf-w-in calc(var(--pf-w-ms) * 0.7) var(--ease-out) backwards; }
+:root[data-pf-back] .pf[data-back='quiet'] .pf-words-1 > span::before, :root[data-pf-back] .pf[data-back='quiet'] .pf-words-1 > span::after { animation: none; }
+
+/* from t0. The cells are written left to right a step apart, each a cut (they are a board); the link's small globe
+   scales from 0.92 and fades, its two lines rise a step apart; the peek fades last, since it says there is more below */
+.wh-cells > div:nth-child(2) { --pf-n: 0; } .wh-cells > div:nth-child(3) { --pf-n: 1; } .wh-cells > div:nth-child(4) { --pf-n: 2; } .wh-cells > div:nth-child(5) { --pf-n: 3; }
+.wh-cta-text > span:last-child { --pf-k: 1; }
+.pf[data-arrival='print'] { --pf-after: var(--pf-print-ms); }
+.pf[data-intro='in'] .wh-cells > div:not(.sr-only) { animation: pf-cut 0s linear calc(var(--pf-after, 0ms) + var(--pf-cells-at) + var(--pf-n, 0) * var(--pf-write-step)) backwards; }
+.pf[data-intro='in'] .wh-lens { animation: pf-lens var(--pf-link-ms) var(--ease-out) calc(var(--pf-after, 0ms) + var(--pf-link-at)) backwards; }
+.pf[data-intro='in'] .wh-cta-text > span { animation: pf-up var(--pf-link-ms) var(--ease-out) calc(var(--pf-after, 0ms) + var(--pf-link-at) + var(--pf-k, 0) * var(--pf-w-step)) backwards; }
+.pf[data-intro='in'] .pf-main { animation: pf-fade var(--pf-peek-ms) var(--ease-out) calc(var(--pf-after, 0ms) + var(--pf-peek-at)) backwards; }
+@keyframes pf-cut { from { opacity: 0; } }
+@keyframes pf-lens { from { opacity: 0; transform: scale(0.92); } }
+@keyframes pf-up { from { opacity: 0; translate: 0 var(--pf-w-rise); } }
 @keyframes pf-fade { from { opacity: 0; } }
-@media (scripting: none) { .pf[data-intro='hold'] :is(.pf-words-1 > span, .pf-words-2, .wh-cta-text, .pf-hdr) { opacity: 1; animation: none; } .pf[data-intro='hold'] .wh-cells { visibility: visible; } }
+/* the ones where the rest is simply there at t0: scan (behind its line), register (and closes), east (the cells flip
+   through the cities the wheel passes), quiet. Dial keeps the ordered tail above: cells, link, peek */
+.pf[data-intro='in']:is([data-arrival='scan'], [data-arrival='east'], [data-arrival='quiet'], [data-arrival='register']) :is(.wh-cells > div, .wh-lens, .wh-cta-text > span, .pf-main) { animation: none; }
+.pf[data-intro='in'][data-arrival='quiet'] :is(.wh-foot, .wh-cells, .pf-main) { animation: pf-fade var(--wh-canvas-in) var(--ease-out) backwards; }
+/* sweep (before): everything fades up together */
+.pf[data-intro='in'][data-arrival='sweep'] :is(.wh-cells > div, .wh-lens, .wh-cta-text > span, .pf-main) { animation: pf-rise 300ms var(--ease-out) 120ms backwards; }
+/* register: what is there closes from red and blue apart (a filter, on the few elements, once) */
+.pf[data-intro='in'][data-arrival='register'] :is(.wh-canvas, .wh-foot, .wh-cells, .pf-words-2) { animation: pf-split calc(var(--pf-w-ms) * 1.4) var(--ease-out) backwards; }
+@keyframes pf-split { from { filter: drop-shadow(var(--pf-w-edge-r, 10px) 0 rgb(255 70 70 / 0.6)) drop-shadow(calc(-1 * var(--pf-w-edge-r, 10px)) 0 rgb(70 130 255 / 0.6)); } to { filter: drop-shadow(0 0 rgb(255 70 70 / 0)) drop-shadow(0 0 rgb(70 130 255 / 0)); } }
+/* scan: from the first paint one line passes down the screen; behind it the ground is the canvas's empty frame, so
+   the screen lands row by row as it goes (stepped to whole rows of the screen's lines) */
+.pf-scan {
+  position: fixed; inset: 0; z-index: 4; pointer-events: none; animation-play-state: running;
+  background: radial-gradient(ellipse 50% 50% at 50% 50%, rgb(0 0 0 / calc(var(--wh-vig, 0.45) * 0.0000)) 0%, rgb(0 0 0 / calc(var(--wh-vig, 0.45) * 0.0020)) 20%, rgb(0 0 0 / calc(var(--wh-vig, 0.45) * 0.0156)) 40%, rgb(0 0 0 / calc(var(--wh-vig, 0.45) * 0.0527)) 60%, rgb(0 0 0 / calc(var(--wh-vig, 0.45) * 0.1250)) 80%, rgb(0 0 0 / calc(var(--wh-vig, 0.45) * 0.2441)) 100%, rgb(0 0 0 / calc(var(--wh-vig, 0.45) * 0.4219)) 120%, rgb(0 0 0 / calc(var(--wh-vig, 0.45) * 0.6699)) 140%, rgb(0 0 0 / calc(var(--wh-vig, 0.45) * 0.8240)) 150%), var(--wh-paper);
+  animation: pf-scan 720ms steps(24, end) both;
+}
+.pf-scan::before { content: ''; position: absolute; left: 0; right: 0; top: 0; height: 2px; background: rgb(244 244 242 / 0.55); box-shadow: 0 0 12px rgb(120 160 255 / 0.5); }
+@keyframes pf-scan { from { clip-path: inset(0 0 0 0); } 99.9% { clip-path: inset(100% 0 0 0); visibility: visible; } to { clip-path: inset(100% 0 0 0); visibility: hidden; } }
+.pf-scan::before { animation: pf-scan-line 720ms steps(24, end) both; }
+/* the line waits for t0 (the wheel's first frame), so it uncovers the wheel; the words stay over it, never waiting */
+.pf[data-intro='hold'] .pf-scan, .pf[data-intro='hold'] .pf-scan::before { animation-play-state: paused; }
+.pf[data-intro='hold'] .pf-scan::before { visibility: hidden; }
+.pf[data-arrival='scan'] .pf-words { z-index: 5; }
+@media (scripting: none) { .pf-scan { display: none; } }
+@keyframes pf-scan-line { from { translate: 0 0; } to { translate: 0 100lvh; } }
 .pf-sentinel { position: absolute; left: 0; width: 1px; height: 1px; pointer-events: none; }
 
 /* ---------- the sections ---------- */
@@ -130,7 +227,7 @@ button.pf-cell { font: inherit; cursor: pointer; }
 @media (max-width: 640px) { .pf-main { --pf-gap: var(--pf-gap-phone); } }
 .pf-part, .pf-plain-lede { box-sizing: border-box; width: 100%; max-width: calc(var(--pf-width) + 2 * var(--pf-gutter)); margin: 0 auto; padding: 0 var(--pf-gutter); scroll-margin-top: calc(var(--pf-hdr) + 24px); }
 .pf-part > .ex, .pf-part .gr { scroll-margin-top: calc(var(--pf-hdr) + 24px); }
-.pf-h, .pf-main .ex-h { font: 500 clamp(32px, 4vw, 56px)/1.02 var(--wh-sans); letter-spacing: -0.035em; margin: 0; }
+.pf-h, .pf-main .ex-h { font: 500 clamp(32px, 4vw, 56px)/1.02 var(--wh-sans); letter-spacing: -0.035em; margin: 0; text-wrap: balance; }
 .pf-lede { margin: 20px 0 0; max-width: 56ch; font: 400 19px/1.45 var(--wh-sans); color: var(--pf-soft); text-wrap: pretty; }
 .pf-plain-lede { margin-top: 0; }
 .pf-foot { position: relative; z-index: 3; }
@@ -197,26 +294,41 @@ button.pf-cell { font: inherit; cursor: pointer; }
 .pf-board { width: 100%; border-collapse: separate; border-spacing: 0; font: 500 13px/1.3 var(--wh-mono); }
 .pf-board thead th { padding: 0 12px 10px 0; text-align: left; font-weight: 500; color: var(--pf-muted); border-bottom: 1px solid var(--pf-rule); white-space: nowrap; }
 .pf-board td, .pf-board tbody th { height: var(--pf-row); padding: 0 12px 0 0; border-bottom: 1px solid var(--pf-hair); text-align: left; vertical-align: middle; }
-.pf-board tbody tr { color: var(--pf-muted); }
+.pf-board tbody tr { color: var(--pf-muted); transition: color var(--pf-line-ms, 120ms) var(--ease-out); }
 /* the dim reaches only the big names: the small text in a row stays readable (7:1 with the lines on) */
 .pf-board tbody .pf-city { color: rgb(244 244 242 / var(--pf-dim)); }
 /* the row under the 09:00 line is lit whole; the visitor's own city keeps its name at full ink and is told by its tag,
    a block of ink like the header's lit cell, so the two never look alike */
 .pf-board tbody tr[data-lit], .pf-board tbody tr:focus-within,
 .pf-board tbody tr[data-you] .pf-city, .pf-board tbody tr[data-mine] .pf-city, .pf-board tbody tr[data-lit] .pf-city, .pf-board tbody tr:focus-within .pf-city { color: var(--pf-ink); }
-@media (hover: hover) and (pointer: fine) { .pf-board tbody tr:hover, .pf-board tbody tr:hover .pf-city { color: var(--pf-ink); } }
+@media (hover: hover) and (pointer: fine) {
+  .pf-board tbody tr:hover, .pf-board tbody tr:hover .pf-city { color: var(--pf-ink); }
+}
 /* no double-tap zoom on the page's own presses */
 .pf a, .pf button { touch-action: manipulation; }
+/* controls, not content: a long press does not select their words */
+.pf-city, .pf-cell, .pf-key { -webkit-user-select: none; user-select: none; }
 .pf-city { display: inline-flex; align-items: center; min-height: 44px; padding: 0; border: 0; background: none; color: inherit; font: 500 var(--pf-city)/1 var(--wh-sans); letter-spacing: -0.03em; text-align: left; cursor: pointer; }
 .pf-city:focus-visible { outline: 2px solid var(--pf-ink); outline-offset: 4px; }
-.pf-city:active { scale: var(--press, 0.97); transition: scale var(--dur-press, 90ms) var(--ease-out); }
-.pf-you { display: block; width: fit-content; margin-top: 2px; padding: 3px 5px; background: var(--pf-ink); font: 500 12px/1 var(--wh-mono); color: #0b0c0c; }
+.pf-city { transition: scale var(--dur-press, 90ms) var(--ease-out), color var(--pf-line-ms, 120ms) var(--ease-out); }
+.pf-city:active { scale: var(--press, 0.97); }
+.pf-you { display: block; width: fit-content; margin-top: 2px; padding: 3px 5px; background: var(--pf-ink); font: 500 12px/1 var(--wh-mono); color: #0b0c0c; white-space: pre; }
+/* every row keeps its tag's line, so a name never moves when a tag comes or goes */
+.pf-you[data-none] { visibility: hidden; }
 /* the nearest city, when the visitor has turned to another: the same tag, outlined, so it is still found */
 .pf-you[data-quiet] { background: none; box-shadow: inset 0 0 0 1px var(--pf-rule); color: var(--pf-muted); }
 .pf-num { font-variant-numeric: tabular-nums; white-space: nowrap; }
 .pf-for { min-width: 17ch; }
 .pf-state { display: inline-flex; align-items: center; gap: 7px; white-space: nowrap; }
 .pf-state svg { width: 12px; height: 12px; flex: none; }
+/* every link on the page underlines the same way: 1px, and 2px on hover, over a short ease */
+.pf :is(.pf-go, .pf-top, .pf-key, .wh-cta-action) { transition-property: text-decoration-thickness, scale; transition-duration: var(--pf-line-ms, 120ms), var(--dur-press, 90ms); transition-timing-function: var(--ease-out); }
+@media (hover: hover) and (pointer: fine) {
+  .pf :is(.pf-go, .pf-top, .pf-key):hover, .pf .wh-cta:hover .wh-cta-action { text-decoration-thickness: 2px; }
+}
+/* the page's links press in a little too, gliding back on release */
+.pf .wh-cta { transition: scale var(--dur-press, 90ms) var(--ease-out); }
+.pf :is(.pf-go, .pf-top):active, .pf .wh-cta:active { scale: var(--press, 0.97); }
 button.pf-go { padding: 0; border: 0; background: none; font: inherit; cursor: pointer; }
 .pf-go { display: inline-flex; align-items: center; min-height: 44px; color: inherit; text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 5px; white-space: nowrap; }
 .pf-go:focus-visible { outline: 2px solid var(--pf-ink); outline-offset: 2px; }
@@ -229,8 +341,14 @@ button.pf-go { padding: 0; border: 0; background: none; font: inherit; cursor: p
   .pf-board, .pf-board tbody { display: block; }
   .pf-board tbody tr { display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; padding: 12px 0; border-bottom: 1px solid var(--pf-hair); }
   .pf-board td, .pf-board tbody th { display: block; height: auto; padding: 0; border: 0; }
-  .pf-board tbody th { grid-column: 1 / -1; }
-  .pf-board td:last-child { grid-column: 2; grid-row: 2 / span 4; align-self: center; }
+  /* the name and its Register on the first line; the facts under them, full width, so nothing runs into the link */
+  .pf-board tbody th { grid-column: 1; grid-row: 1; min-width: 0; }
+  .pf-board td:last-child { grid-column: 2; grid-row: 1; align-self: start; }
+  .pf-board td:not(:last-child) { grid-column: 1 / -1; }
+  .pf-city { text-wrap: balance; }
+  /* a stacked row has no line to keep: only a row with a tag shows one */
+  .pf-you[data-none] { display: none; }
+  .pf-you { margin: 2px 0 6px; }
   .pf-for { min-width: 0; }
   .pf-board td:nth-child(3)::before { content: 'For you: '; color: var(--pf-muted); }
   .pf-board td:nth-child(4)::after { content: ' people'; }
@@ -254,12 +372,20 @@ button.pf-go { padding: 0; border: 0; background: none; font: inherit; cursor: p
 .pf-caret { color: var(--pf-muted); }
 .pf-tickmark { flex: none; width: 10px; height: 6px; margin-top: 0.45em; border-left: 2px solid var(--pf-ink); border-bottom: 2px solid var(--pf-ink); transform: rotate(-45deg); }
 .pf-dry-cap { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 4px 8px 4px 24px; border-top: 1px solid var(--pf-rule); font: 500 12px/1.4 var(--wh-mono); color: var(--pf-muted); }
-.pf-key { display: inline-flex; align-items: center; min-height: 44px; padding: 0 12px; white-space: nowrap; border: 0; background: none; color: var(--pf-ink); font: inherit; text-decoration: underline; text-underline-offset: 4px; cursor: pointer; }
+.pf-key { display: inline-flex; align-items: center; min-height: 44px; padding: 0 12px; white-space: nowrap; border: 0; background: none; color: var(--pf-ink); font: inherit; text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 4px; cursor: pointer; }
 .pf-key:focus-visible { outline: 2px solid var(--pf-ink); outline-offset: -2px; }
-.pf-key:active { scale: var(--press, 0.97); transition: scale var(--dur-press, 90ms) var(--ease-out); }
+.pf-key { transition: scale var(--dur-press, 90ms) var(--ease-out); }
+/* the key keeps the width of its longer words, so it never grows when it says Play it again */
+.pf-key-w { display: inline-grid; justify-items: end; }
+.pf-key-w > span { grid-area: 1 / 1; text-decoration: underline; text-decoration-thickness: inherit; text-underline-offset: inherit; }
+.pf-key-w > span + span { visibility: hidden; }
+.pf-key:active { scale: var(--press, 0.97); }
 @media (max-width: 860px) {
   .pf-ready { grid-template-columns: minmax(0, 1fr); gap: 32px; }
   .pf-dry { position: static; }
+  /* stacked, the dry run only repeats the steps above it: it goes, and so does the last step's rule */
+  .pf-dry { display: none; }
+  .pf-ready[data-mode='dry'] .gr-step:last-child { border-bottom: 0; }
   .pf-dry-lines { min-height: 0; padding: 20px 16px; }
   .pf-dry-cap { padding-left: 16px; }
 }
@@ -288,10 +414,13 @@ button.pf-go { padding: 0; border: 0; background: none; font: inherit; cursor: p
 .pf-roll { position: fixed; left: 0; right: 0; top: 0; z-index: 29; background: #000; pointer-events: none; }
 
 @media (prefers-reduced-motion: reduce) {
-  .pf-hdr[data-on] .pf-cell { transition: none; }
+  .pf-cell, .pf-tops, .pf-reg-c, .pf-city, .pf-key, .pf .wh-cta, .pf :is(.pf-go, .pf-top, .wh-cta-action), .pf-board tbody tr, .pf-board .pf-city { transition: none !important; }
   .pf [data-pf-conv] { transition: none; }
   .pf-prize[data-bloom] .ex { animation: none; }
-  .pf[data-intro] :is(.pf-words-1 > span, .pf-words-2, .wh-cta-text, .pf-hdr) { animation: none; }
+  .pf :is(.pf-words-1 > span, .pf-words-2, .wh-cells > div, .wh-lens, .wh-cta-text > span, .wh-canvas) { animation: none !important; }
+  .pf .pf-words-1 > span::before, .pf .pf-words-1 > span::after { animation: none !important; }
+  .pf-scan { display: none; }
+  /* the link, the cells and the peek wait only for the visitor's city (never the wheel), then show as a cut */
   .pf-hdr::before, .pf-tops { transition: none; }
 }
 

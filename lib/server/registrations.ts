@@ -1,4 +1,4 @@
-/* registrations.ts: what one Luma registration does to a city's list (door-plan.md, D5 and "Every case"). The webhook,
+/* registrations.ts: what one Luma registration does to a city's list. The webhook,
    the desk's Sync and the check of one email all come through applyGuest, so they agree.
    - approved: the place is made (or brought up to date), matched on the address it is listed under; a registration
      for another city moves it only when it is the later one, and never once the person is checked in. "Your place in

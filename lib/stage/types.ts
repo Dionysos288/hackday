@@ -1,4 +1,4 @@
-/* The stage's shapes, as the two tables hold them (event-plan.md, "Tables"): a city's deck is rows of `scenes`, and
+/* The stage's shapes, as the two tables hold them: a city's deck is rows of `scenes`, and
    what is on the wall now is one `stage` row per city. Both drivers (the local one for the lab, the Realtime one for
    the real pages) move the same shapes, so the wall and the remote never know which one they are on. Pure. */
 

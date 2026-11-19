@@ -4,6 +4,7 @@ import { EDITOR_ROOM, HOW_TO_SUBMIT } from '@/lib/event/rule';
 import { EDITORS, RULES, SERVER, SUPABASE_MCP, checkIt, lineFor, sayIt } from '@/lib/hackday-server';
 import { LUMA_LIVE, lumaHref } from '@/lib/luma';
 import { meNow, useFormsState } from '@/components/forms/store';
+import { useFlapText } from '@/components/preview/fold/flap';
 import './get-ready.css';
 
 /* Get ready: what to do before the day, and on the day how to submit from your editor. Step 0 of How it works.
@@ -18,7 +19,9 @@ const H = ({ level, id, children }: { level: 2 | 3; id: string; children: string
 /* a copy key: the line goes to the clipboard and the key says so for a moment. Where the clipboard is blocked the
    line is selected instead and the key says which keys copy it. The words are read out once, from the live region. */
 export function CopyKey({ text, label, from }: { text: string; label: string; from?: RefObject<HTMLElement | null> }) {
-  const [said, setSaid] = useState(''), t = useRef(0);
+  const [said, setSaid] = useState(''), [wide, setWide] = useState('Copied'), t = useRef(0), word = useRef<HTMLSpanElement>(null);
+  /* the key's word turns on flaps to "Copied" and back */
+  useFlapText(word, said || 'Copy');
   useEffect(() => () => window.clearTimeout(t.current), []);
   const copy = async () => {
     let ok = false;
@@ -28,12 +31,15 @@ export function CopyKey({ text, label, from }: { text: string; label: string; fr
       if (el && sel) { sel.selectAllChildren(el); }
     }
     const mac = /Mac|iPhone|iPad/.test(navigator.userAgent);
-    setSaid(ok ? 'Copied' : 'Press ' + (mac ? '⌘C' : 'Ctrl+C'));
+    const msg = ok ? 'Copied' : 'Press ' + (mac ? '⌘C' : 'Ctrl+C');
+    /* the key is sized once for its longest word, so it never narrows again under a flap */
+    if (msg.length > wide.length) setWide(msg);
+    setSaid(msg);
     window.clearTimeout(t.current); t.current = window.setTimeout(() => setSaid(''), 1600);
   };
   return (
     <button type="button" className="gr-copy" onClick={copy} aria-label={label}>
-      <span aria-hidden="true" className="gr-copy-w"><span>{said || 'Copy'}</span><span className="gr-copy-g">Copied</span></span>
+      <span aria-hidden="true" className="gr-copy-w"><span ref={word}>Copy</span><span className="gr-copy-g">{wide}</span></span>
       <span className="gr-live" aria-live="polite">{said}</span>
     </button>
   );
@@ -59,14 +65,14 @@ export function Picker({ live, url, name: server = SERVER.name, choice, chooser 
     <div className="gr-pick">
       <p className="gr-cmd" data-off="">{signedIn
         ? 'Your own line comes with a place on a city’s list. Registered on Luma with another email? Your account moves the place to this one.'
-        : 'Your own line appears here once you are signed in: open the link in your email, or sign in with your email on this page.'}</p>
-      <p className="gr-note">It works in {EDITORS.map((e) => e.name).join(', ')}, and any editor that can add a remote MCP server. The line is yours alone; keep it to yourself.</p>
+        : 'Sign in and your own line appears here. Open the link in your email, or sign in with your email on this page.'}</p>
+      <p className="gr-note">It works in any editor that can add a remote MCP server. Keep the line to yourself. It signs in as you.</p>
     </div>
   );
   if (!live || !url) return (
     <div className="gr-pick">
       <p className="gr-cmd" data-off="">The server is not open yet. The line for your editor appears here when it is.</p>
-      <p className="gr-note">It works in {EDITORS.map((e) => e.name).join(', ')}, and any editor that can add a remote MCP server.</p>
+      <p className="gr-note">It works in any editor that can add a remote MCP server.</p>
     </div>
   );
   return (
@@ -79,7 +85,7 @@ export function Picker({ live, url, name: server = SERVER.name, choice, chooser 
       </fieldset> : null}
       <div className="gr-cmd" data-kind={ed?.kind}><pre ref={pre} tabIndex={ed?.kind === 'file' ? 0 : undefined} role={ed?.kind === 'file' ? 'region' : undefined} aria-label={ed?.kind === 'file' ? 'The lines for ' + ed.name : undefined}><code>{ed?.kind === 'command' ? words(line) : line}</code></pre><CopyKey text={line} label={ed ? 'Copy the line for ' + ed.name : 'Copy the address'} from={pre} /></div>
       <p className="gr-note">
-        {ed ? <>{ed.kind === 'command' ? 'Run it in a terminal.' : <>Add it to <code>{ed.where}</code> and save. If your editor asks to allow or start the server, say yes.</>} <a href={docs || ed.docs} target="_blank" rel="noreferrer">{docs ? 'Supabase’s guide' : ed.name + '’s guide'}</a></> : 'Any editor that can add a remote MCP server: give it this address.'}
+        {ed ? <>{ed.kind === 'command' ? 'Run it in a terminal.' : <>Add it to <code>{ed.where}</code> and save. If your editor asks to allow or start the server, say yes.</>} <a href={docs || ed.docs} target="_blank" rel="noreferrer">{docs ? 'Supabase’s guide' : ed.name + '’s guide'}</a></> : 'Give this address to any editor that can add a remote MCP server.'}
       </p>
     </div>
   );
@@ -120,12 +126,12 @@ export function GetReady({ state = 'before', city, cityId, live = SERVER.live, u
           </li>
         ) : null}
         <li className="gr-step"><span className="gr-n" aria-hidden="true">{n(1)}</span>
-          <div className="gr-body"><p className="ex-t">Add Supabase’s server, so your editor can make the database</p>
+          <div className="gr-body"><p className="ex-t">Add Supabase’s server so your editor can set up your database</p>
             <Picker live url={SUPABASE_MCP.url} name={SUPABASE_MCP.name} choice={choice} docs={SUPABASE_MCP.docs} />
             <p className="gr-note">The first time, it opens Supabase in your browser to sign in.</p></div>
         </li>
         <li className="gr-step"><span className="gr-n" aria-hidden="true">{n(2)}</span>
-          <div className="gr-body"><p className="ex-t">{url && pass ? 'Add your own Builder Day line, to submit' : 'Add the Builder Day server, to submit'}</p><Picker live={live} url={url} choice={choice} chooser={false} signedIn={signedIn} />
+          <div className="gr-body"><p className="ex-t">{url && pass ? 'Add your own Builder Day line so you can submit' : 'Add the Builder Day server so you can submit'}</p><Picker live={live} url={url} choice={choice} chooser={false} signedIn={signedIn} />
             {live && !url && onSignIn ? <p className="gr-note"><button type="button" className="gr-link" aria-haspopup="dialog" onClick={onSignIn}>{signedIn ? 'Open your account' : 'Sign in to get your line'}</button></p> : null}
             {url && pass ? (pass.editorSeen
               ? <p className="gr-note gr-seen" data-on="">Editor connected · last call {lastCall(pass.editorSeen)}</p>
@@ -135,7 +141,7 @@ export function GetReady({ state = 'before', city, cityId, live = SERVER.live, u
           <div className="gr-body">
             <p className="ex-t">{now ? 'Say it now' : 'On the day, say it'}</p>
             <Say say={say} />
-            <p className="gr-note">Your editor fills in the name, the pitch and the repository from the project it is in, and sends it. It answers with your project’s link; add a picture there.</p>
+            <p className="gr-note">Your editor takes the name, the pitch and the repository from the project it’s in and sends them. It answers with your project’s link, where you can add a picture.</p>
             {now && onBrowser ? <p className="gr-note">Or <button type="button" className="gr-link" onClick={onBrowser}>submit in the browser</button>. Both run the same checks.</p> : null}
           </div>
         </li>

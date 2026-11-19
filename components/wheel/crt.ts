@@ -191,9 +191,12 @@ export type CrtFrame = {
 export type Crt = { draw: (d: CrtFrame) => void; setLand: (img: TexImageSource) => void; rebuild: (c: WheelCfg) => void; lost: () => boolean; dispose: () => void };
 
 /* null where WebGL is not available, or where the program does not compile */
-export function createCrt(canvas: HTMLCanvasElement, cfg: WheelCfg): Crt | null {
-  const gl = canvas.getContext('webgl', { alpha: false, antialias: false });
-  if (!gl) return null;
+/* onRestored: after the GPU drops the context (a phone backgrounding the tab, GPU pressure) and gives it back, the
+   program, the triangle and the textures are made again, the land uploaded again, and the caller asked for a new frame */
+export function createCrt(canvas: HTMLCanvasElement, cfg: WheelCfg, onRestored?: () => void): Crt | null {
+  const maybe = canvas.getContext('webgl', { alpha: false, antialias: false });
+  if (!maybe) return null;
+  const gl: WebGLRenderingContext = maybe;
 
   let program: WebGLProgram | null = null;
   let u: Record<string, WebGLUniformLocation | null> = {};
@@ -215,7 +218,9 @@ export function createCrt(canvas: HTMLCanvasElement, cfg: WheelCfg): Crt | null 
     gl.uniform1i(at('uPicture'), 0); gl.uniform1i(at('uLand'), 1);
     return true;
   };
-  if (!build(cfg)) return null;
+  let cur = cfg, landImg: TexImageSource | null = null;
+  const setup = () => {
+  if (!build(cur)) return false;
 
   /* one triangle bigger than the screen covers it with no seam */
   gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
@@ -235,6 +240,12 @@ export function createCrt(canvas: HTMLCanvasElement, cfg: WheelCfg): Crt | null 
   gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array([0, 0, 0, 255]));
   gl.activeTexture(gl.TEXTURE0); tex(gl.CLAMP_TO_EDGE);
   gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array([0, 0, 0, 0]));
+  if (landImg) setLand(landImg);
+  return true;
+  };
+  if (!setup()) return null;
+  canvas.addEventListener('webglcontextlost', (e) => { e.preventDefault(); program = null; });
+  canvas.addEventListener('webglcontextrestored', () => { if (setup()) onRestored?.(); });
 
   const draw = (d: CrtFrame) => {
     if (gl.isContextLost()) return;
@@ -251,10 +262,11 @@ export function createCrt(canvas: HTMLCanvasElement, cfg: WheelCfg): Crt | null 
     gl.uniform3f(u.dock, d.dock?.x ?? 0, canvas.height - (d.dock?.y ?? 0), d.dock?.radius ?? 0); gl.uniform1f(u.dockGlow, d.dock?.glow ?? 0);
     gl.drawArrays(gl.TRIANGLES, 0, 3);
   };
-  const setLand = (img: TexImageSource) => {
+  function setLand(img: TexImageSource) {
+    landImg = img; if (gl.isContextLost()) return;
     gl.activeTexture(gl.TEXTURE1); gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img); gl.activeTexture(gl.TEXTURE0);
-  };
-  const rebuild = (c: WheelCfg) => { build(c); };
+  }
+  const rebuild = (c: WheelCfg) => { cur = c; if (!gl.isContextLost()) build(c); };
   const dispose = () => { if (program) gl.deleteProgram(program); program = null; };
   return { draw, setLand, rebuild, lost: () => gl.isContextLost(), dispose };
 }

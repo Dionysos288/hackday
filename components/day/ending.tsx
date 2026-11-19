@@ -13,7 +13,7 @@ import { cellSize, drawMap, mapLines, nightLines, placeMarks, printedAt, type Ma
 import { atZone, yourTime } from './ending-time';
 import './ending.css';
 
-/* How the preview page ends (globe plan, "The ending"): the world opened flat. One map across the full width in the
+/* How the preview page ends: the world opened flat. One map across the full width in the
    text globe's characters and hatch, every city a + with its code; each mark is the link to register there, and
    pointing at one moves the green brackets to it and the Register cell under the map with it. Then one row of cells
    (Register, largest; the date; the start there and in the visitor's time; the host), one row of links and the two
@@ -48,7 +48,7 @@ function gridFor(cfg: EndCfg, phone: boolean, width: number): MapGrid {
   return { rows: Math.max(8, Math.round((cols * (cfg.north - cfg.south)) / 360)), cols, north: cfg.north, south: cfg.south };
 }
 
-export function Ending({ cfg: given, wheel, cities, start, last, date, sound, links, style, face, board, markMode, play = 0, onMapPress }: {
+export function Ending({ cfg: given, wheel, cities, start, last, date, sound, links, style, face, board, markMode, play = 0, onMapPress, onPick }: {
   cfg: EndCfg; wheel: WheelCfg; cities: EndCity[];
   /* the page's city (the nearest, or the one chosen on the page): the green mark until the visitor points at another */
   start: number;
@@ -60,12 +60,17 @@ export function Ending({ cfg: given, wheel, cities, start, last, date, sound, li
   markMode: string;
   /* the lab: a new number plays the opening again; a press on the map away from a city */
   play?: number; onMapPress?: () => void;
+  /* a press on a city key also makes it the page's city, so every Register on the page agrees */
+  onPick?: (i: number) => void;
 }) {
   const cfg = clampEnd(given), phone = usePhone(), reduced = useReduced(), loaded = useLoaded();
   /* the city pointed at, while the page's city is the one it was pointed from (a new page city starts again from it) */
-  const [pointed, setPointed] = useState<{ i: number; from: number } | null>(null);
+  const [pointed, setPointed] = useState<{ i: number; from: number; held: boolean } | null>(null);
   const aim = pointed && pointed.from === start && pointed.i < cities.length ? pointed.i : Math.min(start, cities.length - 1);
-  const point = (i: number) => setPointed({ i, from: start });
+  /* a pointer or focus moves it for as long as it stays in the ending; a press on a city key holds it */
+  const point = (i: number) => setPointed((p) => (p?.held && p.i === i ? p : { i, from: start, held: false }));
+  const hold = (i: number) => { if (onPick) { setPointed(null); onPick(i); } else setPointed({ i, from: start, held: true }); };
+  const letGo = () => setPointed((p) => (p && !p.held ? null : p));
   const c = cities[aim];
 
   if (cfg.end === 'board') return <>{board}</>;
@@ -84,12 +89,13 @@ export function Ending({ cfg: given, wheel, cities, start, last, date, sound, li
   );
   const keys = (
     <div className="en-keys" role="group" aria-label="Choose a city">
-      {cities.map((x, i) => <button key={x.id} type="button" aria-pressed={i === aim} aria-label={x.name} onClick={() => point(i)}>{x.code}</button>)}
+      {cities.map((x, i) => <button key={x.id} type="button" aria-pressed={i === aim} onClick={() => hold(i)}>{x.code}<span className="sr-only"> {x.name}</span></button>)}
     </div>
   );
 
   return (
-    <footer className="bd en" data-end={cfg.end} data-face={face} style={{ ...style, '--en-cell': cfg.cell + 'px', '--en-tpl': `minmax(0, ${cfg.reg}fr) repeat(3, minmax(0, 1fr))`, '--en-tag': cfg.tag } as CSSProperties}>
+    <footer className="bd en" data-end={cfg.end} data-face={face} onPointerLeave={(e) => { if (e.pointerType === 'mouse' && !e.currentTarget.contains(document.activeElement)) letGo(); }}
+      onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node | null)) letGo(); }} style={{ ...style, '--en-cell': cfg.cell + 'px', '--en-tpl': `minmax(0, ${cfg.reg}fr) repeat(3, minmax(0, 1fr))`, '--en-tag': cfg.tag } as CSSProperties}>
       {telex ? <p className="en-tx" aria-hidden="true">ZCZC</p> : null}
       {cfg.mark === 'big' ? <div className="en-big" aria-hidden="true"><BuilderLogo /></div> : null}
       {cfg.end === 'flat' ? <FlatMap cfg={cfg} wheel={wheel} cities={cities} aim={aim} point={point} phone={phone} reduced={reduced} play={play} onPress={onMapPress} /> : null}
@@ -103,12 +109,13 @@ export function Ending({ cfg: given, wheel, cities, start, last, date, sound, li
           ))}</ul>
         </nav>
       ) : null}
-      {cfg.end === 'ident' ? keys : cells}
+      {/* on a phone the city keys come before the Register cell they change */}
       {cfg.end === 'flat' ? keys : null}
+      {cfg.end === 'ident' ? keys : cells}
       <div className="en-links">
         <nav aria-label="On this page and Supabase">
-          <a href={links.how}>How it works</a>
           <a href={links.prizes}>Prizes</a>
+          <a href={links.how}>How it works</a>
           <a href={links.questions}>Questions</a>
           <a href="https://supabase.com">supabase.com</a>
           <a href="https://supabase.com/docs">Docs</a>
@@ -122,7 +129,7 @@ export function Ending({ cfg: given, wheel, cities, start, last, date, sound, li
         {cfg.imprint ? (
           <p className="en-imp bd-k">
             {cfg.mark === 'small' ? <span className="en-mark" aria-hidden="true">{markMode === 'builder' ? <BuilderLogo /> : <HackMark id="en-mark" label="" />}</span> : null}
-            {EVENT.name} · {date}. The globe is set on a grid of {STUDY.cols} by {STUDY.rows} characters.
+            {EVENT.name} · {date}.
           </p>
         ) : null}
       </div>

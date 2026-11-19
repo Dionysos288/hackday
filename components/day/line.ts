@@ -6,7 +6,7 @@
    The globe keeps the order and the places of the day, not its minutes: a city lights when it crosses the line, which
    is within an hour of its real 09:00 and in the same order (east to west), but the turn is the same speed all day.
 
-   Rules this file keeps (sequence-plan.md):
+   Rules this file keeps:
    - the globe's angle is start + rate x time; a press adds a difference that decays to zero along a smootherstep, so
      the speed never steps (lineAngle);
    - every mark has an age and comes in over at least cfg.fadeIn and out over at least cfg.fadeOut (env);
@@ -595,10 +595,10 @@ function content(x: X, S: Score, o: View, L: Lay, t: number, k: number, evOnly: 
   const inFinal = list ? t >= 0 : t >= S.Fs - 0.01;
   if (!inFinal || !hc) return;
   /* a row of the line-up: the city's three cells first, on the side the flights come in from, then its code, then YOU.
-     From nine cities (side layout) the rows go into two banks, filled down then across, the first half on the left;
+     From nine cities (either layout) the rows go into two banks, filled down then across, the first half on the left;
      the gap inside a city's three cells is under half the space between rows, which is under half the gutter, and a
      code sits nearer its own cells than anything else. YOU then goes in the panel's head, after your city's code. */
-  const cw = L.cw, two = cfg.lBanks === 'two' && !L.stack && cs.length >= 9, per = two ? Math.ceil(cs.length / 2) : cs.length;
+  const cw = L.cw, two = cfg.lBanks === 'two' && cs.length >= 9, per = two ? Math.ceil(cs.length / 2) : cs.length;
   const bankOf = (ci: number) => (two && ci >= per ? 1 : 0), cg = two ? 2.5 : 5;
   const pitch = two ? Math.min(15, (L.py1 - 3 - L.py0 - L.ly0) / (per + 0.5)) : L.lh;
   const bankW = top * cw + (top - 1) * cg + 3 + 3 * charW(fs), bankX = (b: number) => (b ? X1 - bankW : X0);

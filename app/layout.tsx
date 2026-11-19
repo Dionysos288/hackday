@@ -6,6 +6,8 @@ import cityCfg from '@/saved/city.config.json';
 import motionCfg from '@/saved/motion.config.json';
 import { clampMotion, motionCss } from '@/lib/motion';
 import { headScript } from '@/components/ground/head-script';
+import { SITE_URL } from '@/lib/site';
+import { EVENT } from '@/lib/day-data';
 import './globals.css';
 
 /* Geist 400/500/600 and Geist Mono 500 are the only faces. globals.css reads them through these two variables. */
@@ -22,9 +24,12 @@ const HEAD = headScript({
 const MOTION = motionCss(clampMotion(motionCfg));
 
 export const metadata: Metadata = {
+  metadataBase: new URL(SITE_URL),
+  applicationName: EVENT.name,
+  formatDetection: { telephone: false, address: false, email: false },
   icons: { icon: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 109 113'><path fill='%2324a06a' d='M63.7 110.3c-2.9 3.6-8.7 1.6-8.7-3L54 40.1h45.2c8.2 0 12.8 9.5 7.7 15.9z'/><path fill='%233ecf8e' d='M45.3 2.1c2.9-3.6 8.7-1.6 8.7 3l.5 67.2H9.8c-8.2 0-12.8-9.5-7.7-15.9z'/></svg>" },
 };
-export const viewport: Viewport = { width: 'device-width', initialScale: 1, viewportFit: 'cover', themeColor: '#131413' };
+export const viewport: Viewport = { width: 'device-width', initialScale: 1, viewportFit: 'cover', interactiveWidget: 'resizes-content', themeColor: '#131413', colorScheme: 'dark' };
 
 /* The head script sets the ground's colours, data-paper, data-ground and a few classes on <html> before React
    hydrates, so <html> is allowed to differ from the server's. */

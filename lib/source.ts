@@ -1,4 +1,4 @@
-/* source.ts: where the real pages get their numbers (event-plan.md, "Reading: one snapshot per city").
+/* source.ts: where the real pages get their numbers.
    - No backend configured: the seeded world of lib/day-data.ts, as today; every lab, every ?moment= still and
      tools/agree.mjs read only that.
    - A backend: the snapshots from /api/city/<id>/snapshot and /api/day/snapshot, turned into the very shapes the pages

@@ -1,5 +1,5 @@
 /* entries.ts: the one submit, for both doors (the form on a city's page and the editor's MCP tool), with the checks of
-   lib/hackday-server.ts really run (event-plan.md, "Submitting"):
+   lib/hackday-server.ts really run:
    - the clock: only while building runs in the entry's city, and not while a super admin has paused submissions;
    - one entry per person: a second submit edits the first;
    - the repository (required): GitHub must be able to read it, and it must be made on the day (a block); a fork is a
@@ -61,7 +61,14 @@ export async function repoFacts(repo: string, dayStart: string | null): Promise<
   try {
     const h: Record<string, string> = { accept: 'application/vnd.github+json', 'user-agent': 'SupabaseBuilderDay/1' };
     if (process.env.GITHUB_TOKEN) h.authorization = 'Bearer ' + process.env.GITHUB_TOKEN;
-    const r = await fetch('https://api.github.com/repos/' + m[1] + '/' + m[2], { headers: h, signal: AbortSignal.timeout(T) });
+    const at = 'https://api.github.com/repos/' + m[1] + '/' + m[2];
+    let r = await fetch(at, { headers: h, signal: AbortSignal.timeout(T) });
+    /* an organisation can refuse a token by its own rules (an enterprise that caps a token's lifetime, say); a public
+       repository can still be read without one */
+    if ((r.status === 401 || r.status === 403) && h.authorization) {
+      delete h.authorization;
+      r = await fetch(at, { headers: h, signal: AbortSignal.timeout(T) });
+    }
     if (r.status === 404) return { readable: false };
     if (!r.ok) return null;   /* rate limit or GitHub down: not checked, never refused for it */
     const j = await r.json() as { created_at?: string; fork?: boolean; private?: boolean };

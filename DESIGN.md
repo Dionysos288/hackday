@@ -22,7 +22,7 @@ Time runs across. Things hang on it in rows. One green line marks now. On the ho
 | Format | Ten cities on one day, each at its own local time. Build for 90 minutes. Voting opens when building opens and closes 30 minutes after building ends. |
 | The final | The top 3 projects by votes in each city go to the final: 30 finalists. Ties at 3rd go to the earlier entry (placeholder: the tie rule is not confirmed). |
 | Winners | Each city's first place wins the city prize. Ant and Copple pick one global winner from the 30, who wins the global prize. |
-| Prizes | City prize: a MacBook Pro (placeholder). Global prize: not named yet. Both live in `lib/prizes.ts`. |
+| Prizes | City prize: a MacBook Neo. Global prize: $10,000. Both live in `lib/prizes.ts`. |
 | Judges | Each judge has 50 votes and may put several on one project. Judge votes add to the same tally as everyone's and are marked on the row ("12 from judges"). Judges are added through an admin panel, later. |
 | Who votes | Anyone with the link, after confirming an email once. Sharing a project while building is a main action. |
 

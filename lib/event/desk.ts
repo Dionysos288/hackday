@@ -33,7 +33,7 @@ export type DeskState = {
   hook?: boolean;
 };
 
-/* the line hosts paste into Luma's confirmation message, the same for everyone (door-plan.md, D5). It must not ask
+/* the line hosts paste into Luma's confirmation message, the same for everyone. It must not ask
    people to confirm or register anywhere else: Luma drops such events from discovery. */
 export const lumaLine = (site: string) => 'Set up your editor before the day: ' + site.replace(/\/+$/, '') + '/in';
 export type ImportPreview = { fresh: number; already: number; elsewhere: number; bad: number; badList: string[]; skipped: number; repeats: number };
@@ -52,7 +52,7 @@ export const FLAG_WORDS: Record<string, string> = {
   'key': 'The builder’s editor line was in the repository (replaced; they were told)',
 };
 
-/* the host's one next thing, in order through the day (event-plan.md, "A host's desk") */
+/* the host's one next thing, in order through the day */
 export type Next = { key: string; label: string; hint: string };
 export function nextThing(c: DeskCity, now: number): Next {
   if (c.buildStart == null) {

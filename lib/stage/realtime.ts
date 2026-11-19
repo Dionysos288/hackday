@@ -1,4 +1,4 @@
-/* The Realtime driver: the real wall and remote, joined through Supabase (event-plan.md, "The stage"). The browser
+/* The Realtime driver: the real wall and remote, joined through Supabase. The browser
    follows the city's `stage` and `scenes` rows on one channel, `stage:<city>`; presence on the same channel counts
    the walls, so the remote can say "Screen connected". Presses never write a table from the browser: they go to the
    server action (send), which checks the host and writes the row, and the change comes back to every screen.

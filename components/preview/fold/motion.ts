@@ -43,23 +43,27 @@ export function useConverge(root: RefObject<HTMLElement | null>, on: boolean, ke
     const vh = window.innerHeight;
     const stops = hs.map((h) => {
       const r = h.getBoundingClientRect(); if (r.top < vh && r.bottom > 0) return () => {};
-      h.setAttribute('data-pf-conv', 'wait'); return once(h, 0.3, () => h.setAttribute('data-pf-conv', 'in'));
+      h.setAttribute('data-pf-conv', 'wait'); return once(h, 0.3, () => { if (h.getAttribute('data-pf-conv') === 'wait') h.setAttribute('data-pf-conv', 'in'); });
     });
     return () => { stops.forEach((s) => s()); hs.forEach((h) => h.removeAttribute('data-pf-conv')); };
   }, [root, on, key]);
 }
 
 export type JumpMode = 'roll' | 'smooth' | 'cut';
+/* the roll running now, if any: a new jump stops it first */
+let rolling: (() => void) | null = null;
+
 export function jumpTo(id: string, mode: JumpMode, o: { ms: number; bar: number; ease: string; byKey: boolean; scroller: HTMLElement | null }) {
   const el = document.getElementById(id); if (!el) return;
   const head = el.matches('h2, h3') ? el : el.querySelector<HTMLElement>('h2, h3') ?? el;
   const land = () => { if (!head.hasAttribute('tabindex')) head.setAttribute('tabindex', '-1'); head.focus({ preventScroll: true }); };
-  history.replaceState(null, '', '#' + id);
+  /* the address stays the page's own: a part's name in it would open the page part way down the next time */
   const up = el.getBoundingClientRect().top < 0;
   if (mode === 'smooth' && !o.byKey && !reducedMotion()) { el.scrollIntoView({ behavior: 'smooth', block: 'start' }); window.setTimeout(land, 600); return; }
   el.scrollIntoView({ block: 'start' });
   land();
   const box = o.scroller;
+  rolling?.(); rolling = null;
   if (mode !== 'roll' || o.byKey || reducedMotion() || o.ms <= 0 || !box) return;
   /* the roll: the new frame comes up (or down) from the window's edge with the black blanking bar on its leading edge */
   const H = window.innerHeight, dir = up ? -1 : 1, from = dir * (H + o.bar);
@@ -68,11 +72,20 @@ export function jumpTo(id: string, mode: JumpMode, o: { ms: number; bar: number;
   /* the screen kit's small globes are drawn from where their elements were: hidden while the frame rolls, drawn again
      where it lands */
   const root = document.documentElement; root.setAttribute('data-pf-rolling', '');
-  const done = () => { bar.remove(); root.removeAttribute('data-pf-rolling'); window.dispatchEvent(new Event('scroll')); };
+  let a: Animation | null = null, b: Animation | null = null;
+  let ended = false;
+  const done = () => {
+    if (ended) return; ended = true; bar.remove();
+    if (rolling === stop || rolling === null) { rolling = null; root.removeAttribute('data-pf-rolling'); }
+    window.dispatchEvent(new Event('scroll'));
+  };
+  /* a second jump during a roll ends this one where it is: one bar, never two */
+  const stop = () => { a?.cancel(); b?.cancel(); done(); };
+  rolling = stop;
   try {
     const opt = { duration: o.ms, easing: o.ease, fill: 'both' as const };
-    const a = box.animate([{ transform: `translateY(${from}px)` }, { transform: 'translateY(0)' }], opt);
-    bar.animate(dir > 0 ? [{ transform: `translateY(${H}px)` }, { transform: `translateY(${-o.bar}px)` }] : [{ transform: `translateY(${-o.bar}px)` }, { transform: `translateY(${H}px)` }], opt);
-    a.finished.then(() => a.cancel(), () => {}).finally(done);
+    a = box.animate([{ transform: `translateY(${from}px)` }, { transform: 'translateY(0)' }], opt);
+    b = bar.animate(dir > 0 ? [{ transform: `translateY(${H}px)` }, { transform: `translateY(${-o.bar}px)` }] : [{ transform: `translateY(${-o.bar}px)` }, { transform: `translateY(${H}px)` }], opt);
+    const run = a; run.finished.then(() => run.cancel(), () => {}).finally(done);
   } catch { done(); }
 }

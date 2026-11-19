@@ -167,7 +167,7 @@ export async function deskAct(d: Desk, a: Act, req: Request): Promise<ActResult>
         } catch (e) { return { ok: false, error: (e instanceof Error ? e.message : 'Luma did not answer.') + ' Try again, or import the CSV.' }; }
       } else parsed = parseGuests(String(a.text || ''));
       const emails = parsed.guests.map((g) => g.email);
-      /* places are matched on the address they were listed under, whoever holds them now (door-plan.md) */
+      /* places are matched on the address they were listed under, whoever holds them now */
       const { data: known } = emails.length ? await db.from('passes').select('list_email, city').eq('event', EVENT_ID).in('list_email', emails) : { data: [] };
       const here = new Set<string>(), elsewhere = new Map<string, string>();
       (known || []).forEach((p: Row) => { if (p.city === city) here.add(p.list_email as string); else elsewhere.set(p.list_email as string, p.city as string); });

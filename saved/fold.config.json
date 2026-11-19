@@ -53,11 +53,10 @@
   "wordsPhone": 20,
   "acct": "merged",
   "acctTop": "both",
-  "intro": "sweep",
   "introSweep": 1.5,
-  "introMs": 420,
-  "introWords": 300,
-  "introStagger": 60,
-  "introLead": 120,
-  "rowTotal": 360
+  "introMs": 300,
+  "rowTotal": 360,
+  "arrival": "dial",
+  "dialSweep": 3,
+  "back": "quiet"
 }

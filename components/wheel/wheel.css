@@ -4,7 +4,7 @@
 :root:has(.wh-pin:not(.wh-flow)) { overflow: hidden; scrollbar-gutter: auto; overscroll-behavior: none; }
 .wh-pin {
   --wh-ink: #f4f4f2; --wh-muted: #8a8a86; --wh-rule: #6b6c6b;
-  --wh-gutter: clamp(20px, 4.6vw, 88px);
+  --wh-gutter: max(clamp(20px, 4.6vw, 88px), env(safe-area-inset-left, 0px), env(safe-area-inset-right, 0px));
   position: fixed; inset: 0; overflow: clip;
   background: var(--wh-paper); color: var(--wh-ink); font-family: var(--wh-sans);
   -webkit-font-smoothing: antialiased; color-scheme: dark;
@@ -59,6 +59,9 @@
   /* two cells share a border line, so the colour must not be see-through */
   border: 1px solid var(--wh-rule); background: var(--wh-paper);
 }
+/* the three cells stay on one row on the narrowest phones (360 and 320 wide) */
+@media (max-width: 400px) { .wh-cells > div:not(.sr-only) { gap: 6px; padding: 9px 9px; } }
+@media (max-width: 340px) { .wh-cells { font-size: 12px; } .wh-cells > div:not(.sr-only) { gap: 5px; padding: 8px 7px; } }
 .wh-cells dd { margin: 0; }
 .wh-cells svg { flex: none; width: 12px; height: 12px; }
 /* dark text on a light cell, at 7 to 1 or more */
@@ -78,7 +81,7 @@ button.wh-cta { appearance: none; margin: 0; padding: 0; border: 0; background: 
 .wh-lens { flex: none; width: 64px; height: 64px; }
 /* the text globe's family: the small globe is dots on its own canvas (dot-globes.ts); it grows on hover as the glass did */
 .dot-globe { display: block; width: 100%; height: 100%; }
-.wh-lens[data-dot] { transition: scale 150ms ease-out; }
+.wh-lens[data-dot] { transition: scale var(--dur-hover, 150ms) var(--ease-out, ease-out); }
 @media (hover: hover) and (pointer: fine) { .wh-cta:hover .wh-lens[data-dot] { scale: 1.14; } }
 .wh-cta:focus-visible .wh-lens[data-dot] { scale: 1.14; }
 @media (prefers-reduced-motion: reduce) { .wh-lens[data-dot] { transition: none; } }
@@ -122,3 +125,20 @@ button.wh-cta { appearance: none; margin: 0; padding: 0; border: 0; background: 
     radial-gradient(circle var(--dock-radius, 0px) at var(--dock-x, 0px) var(--dock-y, 0px), transparent calc(100% - 1px), #000 100%);
   mask-composite: intersect;
 }
+
+/* ---------- the ground before the first frame ----------
+   In a page's flow the canvas starts unseen and fades in on its first frame; under it is its own empty frame drawn in
+   CSS (the paper and the shader's vignette, the same curve: darker by vignette x (1.25 d)^3 at d from the middle, in the
+   canvas's own square), so the ground never changes and only the wheel's content appears. The grain averages out. */
+.wh-flow::before {
+  content: ''; position: absolute; inset: 0 0 auto 0; height: 100lvh; pointer-events: none;
+  background: radial-gradient(ellipse 50% 50% at 50% 50%, rgb(0 0 0 / calc(var(--wh-vig, 0.45) * 0.0000)) 0%, rgb(0 0 0 / calc(var(--wh-vig, 0.45) * 0.0020)) 20%, rgb(0 0 0 / calc(var(--wh-vig, 0.45) * 0.0156)) 40%, rgb(0 0 0 / calc(var(--wh-vig, 0.45) * 0.0527)) 60%, rgb(0 0 0 / calc(var(--wh-vig, 0.45) * 0.1250)) 80%, rgb(0 0 0 / calc(var(--wh-vig, 0.45) * 0.2441)) 100%, rgb(0 0 0 / calc(var(--wh-vig, 0.45) * 0.4219)) 120%, rgb(0 0 0 / calc(var(--wh-vig, 0.45) * 0.6699)) 140%, rgb(0 0 0 / calc(var(--wh-vig, 0.45) * 0.8240)) 150%), var(--wh-paper);
+}
+.wh-fixed:not(.wh-rides)::before { position: fixed; }
+.wh-flow .wh-canvas { transition: opacity var(--wh-canvas-in, 240ms) var(--ease-out, ease-out); }
+.wh-flow .wh-canvas:not([data-drawn]) { opacity: 0; }
+/* a small globe of dots comes in when its land map does, never as a cut */
+.wh-flow .dot-globe, .pf .dot-globe { animation: wh-dot-in var(--wh-canvas-in, 240ms) var(--ease-out, ease-out) backwards; }
+@keyframes wh-dot-in { from { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .wh-flow .wh-canvas, .wh-flow .dot-globe, .pf .dot-globe { transition: none; animation: none; } }
+@media (scripting: none) { .wh-flow .wh-canvas:not([data-drawn]) { opacity: 1; } }

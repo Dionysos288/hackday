@@ -4,11 +4,11 @@ import { StatusIcon, STATUS_LABEL } from '@/components/wheel/wheel';
 import { CODE } from '@/lib/places';
 import { CITY_WORD } from '@/lib/day-data';
 import type { OurFact } from '../facts';
-import { reducedMotion } from './flap';
+import { flapInto, flapOpts, reducedMotion } from './flap';
 
 /* Ten cities, one day: the board. Ten rows, east to west: the city (a button that makes it the visitor's city), when
    it starts there, that start in the visitor's own time, people, its state, and a register link. Over it, stuck under
-   the header, the belt: the land as a strip of dots with a tick for each city and a fixed line marked 09:00. The belt
+   the header, the belt: the land as a strip of dots with a tick for each city and a fixed line marked Starts (each city at its own Luma start). The belt
    travels as the rows pass (Sydney under the line as the first row enters, San Francisco as the last leaves), and the
    row whose city is under the line is lit. Pointing at or focusing a row brings its city under the line. */
 
@@ -135,11 +135,11 @@ export function FoldBoard({ cities, cur, nearest, pick, mode, beltSpan, beltLead
             <canvas ref={land} className="pf-land" />
             {cities.map((c) => <span key={c.id} className="pf-tick"><span>{CODE[c.id] ?? c.name.slice(0, 3).toUpperCase()}</span></span>)}
           </div>
-          <span className="pf-nine"><span>09:00</span></span>
+          <span className="pf-nine"><span>Starts</span></span>
         </div>
       ) : mode === 'clocks' ? <Clocks cities={cities} /> : null}
       <table className="pf-board">
-        <caption className="sr-only">The {CITY_WORD} cities, east to west, each starting at 09:00 local time</caption>
+        <caption className="sr-only">The {CITY_WORD} cities, east to west, each with its local start</caption>
         <thead>
           <tr><th scope="col">City</th><th scope="col">Starts there</th><th scope="col">For you</th><th scope="col">People</th><th scope="col">State</th><th scope="col"><span className="sr-only">Register</span></th></tr>
         </thead>
@@ -148,13 +148,13 @@ export function FoldBoard({ cities, cur, nearest, pick, mode, beltSpan, beltLead
             <tr key={c.id} data-pf-wait="" data-you={i === cur ? '' : undefined} data-mine={i === mine ? '' : undefined}>
               <th scope="row">
                 <button type="button" className="pf-city" aria-pressed={i === cur} onClick={() => pick(i)}>{c.name}</button>
-                {i === mine ? <span className="pf-you">You’re on the list</span>
-                  : i === cur ? <span className="pf-you">{mine >= 0 ? 'On the wheel' : i === nearest ? 'Nearest to you' : 'Your pick'}</span>
-                  : i === nearest && mine < 0 ? <span className="pf-you" data-quiet="">Nearest to you</span> : null}
+                {i === mine ? <Tag key="mine" text="You’re on the list" />
+                  : i === cur ? (() => { const t = mine >= 0 ? 'On the wheel' : i === nearest ? 'Nearest to you' : 'Your pick'; return <Tag key={t} text={t} />; })()
+                  : i === nearest && mine < 0 ? <Tag key="quiet" text="Nearest to you" quiet /> : <span className="pf-you" data-none="" aria-hidden="true">{'\u00a0'}</span>}
               </th>
               <td className="pf-num">{c.session}</td>
               <td className="pf-num pf-for">{forYou ? forYou[i] : '\u00a0'}</td>
-              <td className="pf-num">{c.count.replace(' people', '')}</td>
+              <td className="pf-num">{c.count.replace(/ (people|person)$/, '')}</td>
               <td><span className="pf-state" data-status={c.status}><StatusIcon status={c.status} />{STATUS_LABEL[c.status]}</span></td>
               <td>{i === mine && onMine
                 ? <button type="button" className="pf-go" aria-haspopup="dialog" onClick={onMine}>Your place<span className="sr-only"> in {c.name}: your account</span></button>
@@ -179,4 +179,16 @@ function Clocks({ cities }: { cities: OurFact[] }) {
       })}
     </ol>
   );
+}
+
+/* a row's tag. When it comes onto a row in view (a city picked on the wheel or the board), its words settle on flaps;
+   on the page's first paint, or off screen, it is simply there. A new tag is a new element (keyed by its words). */
+function Tag({ text, quiet = false }: { text: string; quiet?: boolean }) {
+  const el = useRef<HTMLSpanElement>(null);
+  useEffect(() => {
+    const e = el.current; if (!e || e.closest('[data-pf-wait]')) return;
+    const b = e.getBoundingClientRect(); if (b.bottom < 0 || b.top > window.innerHeight || performance.now() < 2500) return;
+    return flapInto(e, text, flapOpts(e), ' '.repeat(text.length));
+  }, [text]);
+  return <span ref={el} className="pf-you" data-quiet={quiet ? '' : undefined}>{text}</span>;
 }

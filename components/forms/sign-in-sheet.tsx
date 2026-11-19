@@ -81,7 +81,7 @@ function SignInBody({ o, start, emRef, firstDigit, onSignedIn }: { o: SignInOpts
     if (!t) { setEmErr('Enter the email you used on Luma.'); emRef.current?.focus(); return; }
     if (!checkEmail()) { emRef.current?.focus(); return; }
     const addr = t; busyRef.current = true; setLinkBusy(true); setLinkSent('');
-    store.sendLinkAgain(addr).then((r) => { busyRef.current = false; setLinkBusy(false); if (!openRef.current) return; setLinkSent(r.ok ? 'If ' + addr + ' is on ' + (o.cityName ? o.cityName + '’s' : 'a city’s') + ' list, your link is on its way.' : r.error); });
+    store.sendLinkAgain(addr).then((r) => { busyRef.current = false; setLinkBusy(false); if (!openRef.current) return; setLinkSent(r.ok ? 'If ' + addr + ' is on ' + (o.cityName ? o.cityName + '’s' : 'a city’s') + ' list, your link is on its way.' : (r.error || 'We could not send your link. Try again.')); });
   };
   /* focus after the step has rendered */
   const focusNext = useRef<number | null>(null);
@@ -158,7 +158,7 @@ function SignInBody({ o, start, emRef, firstDigit, onSignedIn }: { o: SignInOpts
         {canRoom ? <p className={FM_NOTE + (linkSent ? '' : ' sr-only')} role="status">{linkSent}</p> : null}
       </form>
       <form className={FM_FORM} data-step="code" hidden={step !== 'code'} noValidate onSubmit={(e) => { e.preventDefault(); verify(digits); }}>
-        <fieldset className="fm-code" id={id + '-cd'} aria-describedby={id + '-ce'} aria-busy={checking || undefined}>
+        <fieldset className="fm-code" id={id + '-cd'} aria-describedby={id + '-p ' + id + '-ce'} aria-busy={checking || undefined}>
           <legend className="sr-only">Six-digit code</legend>
           {digits.map((d, i) => (
             <input key={i} ref={(el) => { ins.current[i] = el; if (i === 0) firstDigit.current = el; }} type="text" inputMode="numeric" pattern="[0-9]*" autoComplete={i ? 'off' : 'one-time-code'} autoCapitalize="none" autoCorrect="off" spellCheck={false} enterKeyHint="done"
@@ -166,7 +166,7 @@ function SignInBody({ o, start, emRef, firstDigit, onSignedIn }: { o: SignInOpts
               onChange={(e) => onDigit(i, e.target.value)} onKeyDown={(e) => onKey(i, e)} onPaste={(e) => onPaste(i, e)} onFocus={(e) => e.target.select()} />
           ))}
         </fieldset>
-        <ErrBox id={id + '-ce'} msg={codeErr} />
+        <ErrBox id={id + '-ce'} msg={codeErr} live />
         <p className="sr-only" role="status" id={id + '-st'}>{status}</p>
         <button className="fm-b g w-full" type="submit" disabled={checking} aria-busy={checking || undefined}>{checking ? 'Checking code…' : (o.verb || 'Sign in')}</button>
         <div className={FM_ACT}>

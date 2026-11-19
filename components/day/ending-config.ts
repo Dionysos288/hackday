@@ -1,4 +1,4 @@
-/* The ending's config (globe plan, "The ending"): tuned at /lab/ending, saved in saved/ending.config.json, read by the
+/* The ending's config: tuned at /lab/ending, saved in saved/ending.config.json, read by the
    preview page. The modes' first values in END_CHOICES are listed plain-first only where the plan names a plain one;
    END_DEF holds the plan's picks and END_PLAIN today's ending, one press apart in the lab. */
 

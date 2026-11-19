@@ -1,4 +1,4 @@
-/* repo-key.ts: is this person's editor key in their repository? (door-plan.md, D6, "The key found in the repository")
+/* repo-key.ts: is this person's editor key in their repository?
    Editors write their server settings into the project folder when asked to (a project-level install), and a public
    repository then carries the key. We read the files editors write there, and any other file whose name has "mcp" in
    it, and look for the person's current key. Found: the key is replaced (editor_version goes up, so the old line stops
@@ -24,7 +24,10 @@ export async function keyInRepo(repo: string, key: string): Promise<string[] | n
   try {
     const h: Record<string, string> = { accept: 'application/vnd.github+json', 'user-agent': 'SupabaseBuilderDay/1' };
     if (process.env.GITHUB_TOKEN) h.authorization = 'Bearer ' + process.env.GITHUB_TOKEN;
-    const r = await fetch('https://api.github.com/repos/' + owner + '/' + name + '/git/trees/HEAD?recursive=1', { headers: h, signal: AbortSignal.timeout(T) });
+    const at = 'https://api.github.com/repos/' + owner + '/' + name + '/git/trees/HEAD?recursive=1';
+    let r = await fetch(at, { headers: h, signal: AbortSignal.timeout(T) });
+    /* an organisation that refuses the token by its own rules: a public repository still reads without one */
+    if ((r.status === 401 || r.status === 403) && h.authorization) { delete h.authorization; r = await fetch(at, { headers: h, signal: AbortSignal.timeout(T) }); }
     if (r.status === 404 || r.status === 409) return [];   /* not found, or an empty repository: nothing to carry a key */
     if (!r.ok) return null;
     const j = await r.json() as { tree?: { path: string; type: string; size?: number }[] };

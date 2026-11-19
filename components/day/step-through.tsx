@@ -273,7 +273,7 @@ export function DayTour({ cfg, F, steps, day, compact, id, heading, style, speed
             <input ref={bar} className="ex-range" type="range" min={0} max={isLine ? ticks.max : 3} step={isLine ? 0.01 : 0.05} defaultValue={0} aria-label="Moment in the day" aria-valuetext={names[0] + ', step 1 of 3'}
               onInput={(e) => onBar(Number(e.currentTarget.value))} onKeyDown={onBarKey} onPointerDown={() => { clickRef.current = true; clock.setGrab(true); }} onPointerUp={() => { clickRef.current = false; clock.setGrab(false); }} onPointerCancel={() => clock.setGrab(false)} onBlur={() => clock.setGrab(false)} />
             <ol className="ex-ticks" aria-hidden="true">
-              {names.slice(0, 3).map((n, i) => <li key={n} style={isLine ? { left: (100 * ticks.at[i]).toFixed(3) + '%' } : undefined}>{n}</li>)}
+              {names.slice(0, 3).map((n, i) => <li key={n} style={isLine && i ? { left: `calc(14px + ${ticks.at[i].toFixed(4)} * (100% - 28px))` } : undefined}>{n}</li>)}
             </ol>
           </div>
         ) : null}

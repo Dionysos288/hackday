@@ -1,4 +1,4 @@
--- The public can never read an email (event-plan.md, "Tables"). Checked three ways: what the public may select, by
+-- The public can never read an email. Checked three ways: what the public may select, by
 -- column, across the whole schema; what each private table answers to the public and to another signed-in person;
 -- and which functions the public may call.
 begin;

@@ -1,4 +1,4 @@
--- Who may submit (event-plan.md, rule 7c): the check-in lives on the pass, a place on a list comes from Luma or a
+-- Who may submit: the check-in lives on the pass, a place on a list comes from Luma or a
 -- host only (no walk-ins), and nobody but the person themself reads their own check-in.
 begin;
 select plan(8);

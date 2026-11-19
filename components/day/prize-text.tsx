@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useRef, type ReactNode } from 'react';
-import { MONO, type WheelCfg } from '@/components/wheel/config';
+import { MONO, PRIZE_LENS_MIN, type WheelCfg } from '@/components/wheel/config';
 import { globeLook } from '@/components/wheel/globe-look';
 import { STUDY, drawTextGlobe, layoutOf, loadFrames, loadLand, sizeOf, type Frames, type LandMap, type Layout, type TextGlobeLook } from '@/components/wheel/text-globe';
 import { useReduced } from './tube';
@@ -48,8 +48,7 @@ function lensCells(mask: Uint8ClampedArray, mw: number, mh: number, lay: Layout,
     if (x + colW < 0 || x > mw || y + lineH < 0 || y > mh) continue;
     const all = share(x, y, colW, lineH);
     if (all === 0) continue;
-    cut.push([x, y, colW, lineH]);
-    if (all >= cover) { fill.push([x, y, colW, lineH]); full.push([x, y, colW, lineH]); continue; }
+    if (all >= cover) { cut.push([x, y, colW, lineH]); fill.push([x, y, colW, lineH]); full.push([x, y, colW, lineH]); continue; }
     /* an edge cell: the half the digit covers most, if it covers enough of it */
     const hw = Math.round(colW / 2), hh = Math.round(lineH / 2);
     const halves: [number, Rect][] = [
@@ -57,13 +56,15 @@ function lensCells(mask: Uint8ClampedArray, mw: number, mh: number, lay: Layout,
       [share(x, y, colW, hh), [x, y, colW, hh]], [share(x, y + hh, colW, lineH - hh), [x, y + hh, colW, lineH - hh]],
     ];
     halves.sort((a, b) => b[0] - a[0]);
-    if (halves[0][0] >= cover) fill.push(halves[0][1]);
+    /* a cell that gets nothing drawn keeps the type: cutting it would leave a hole in the digit */
+    if (halves[0][0] >= cover) { cut.push([x, y, colW, lineH]); fill.push(halves[0][1]); }
   }
   return { cut, fill, full };
 }
 
 /* `rule`: the line that says who wins, set right under the amount (before the row of small globes) */
-export function PrizeText({ amount, cities, cfg, check = false, rule }: { amount: string; cities: TextCity[]; cfg: WheelCfg; check?: boolean; rule?: ReactNode }) {
+/* `arrive`: the amount has its one moment when it first comes into view (the preview page) */
+export function PrizeText({ amount, cities, cfg, check = false, rule, arrive = false }: { amount: string; cities: TextCity[]; cfg: WheelCfg; check?: boolean; rule?: ReactNode; arrive?: boolean }) {
   const host = useRef<HTMLDivElement>(null), cv = useRef<HTMLCanvasElement>(null), reduced = useReduced();
   useEffect(() => {
     const el = host.current, c = cv.current; if (!el || !c) return;
@@ -71,11 +72,14 @@ export function PrizeText({ amount, cities, cfg, check = false, rule }: { amount
     let art: { frames: Frames | null; land: LandMap | null } | null = null, live = true, raf = 0, timer = 0;
     /* the motion's state: the step of the turn (-1: not begun), the city visited (still), the digits shown (none) */
     let turn = -1, visit = -1, shown = reduced ? Infinity : 0, low = false;
+    /* lens and protected: how many figures are in, from the right (all, unless it arrives: see below) */
+    const glyphs = Array.from(amount);
+    let settle = glyphs.length, settleT = 0;
     const fam = font('--font-geist') || 'sans-serif', mono = MONO.geist.replace(/var\((--[\w-]+)\)/g, (_m, v: string) => font(v) || 'monospace');
     const green = font('--green') || '#3ecf8e';
     const mode = cfg.prize, still = STUDY.first, steps = STUDY.frames;
     const ink = `rgb(${cfg.ink} ${cfg.ink} ${cfg.ink - 2})`;
-    const look: TextGlobeLook = { ...globeLook(cfg, mono, green), marks: 'all', rim: false };
+    const look: TextGlobeLook = { ...globeLook(cfg, mono, green), marks: 'all', rim: false, weight: cfg.prizeWeight };
     /* the cities on the shirt's side, in the order they start (the list is east to west, the order of the day) */
     const near = cities.map((ct, i) => ({ ct, i })).filter(({ ct }) => Math.cos((ct.lat * Math.PI) / 180) * Math.cos(((ct.lon - still) * Math.PI) / 180) > 0.08);
     const facingNow = () => (turn >= 0 && turn < steps ? still - turn * STUDY.step : still);
@@ -97,7 +101,9 @@ export function PrizeText({ amount, cities, cfg, check = false, rule }: { amount
       if (!w || !h) return;
       if (c.width !== w || c.height !== h) { c.width = w; c.height = h; }
       ctx.clearRect(0, 0, w, h);
-      const phone = el.clientWidth < 560;
+      /* a narrow column: the phone's own arrangement, unless it keeps the wide one (the lens), which it drops when too narrow */
+      const small = el.clientWidth < 560, wide = small && cfg.prizePhone === 'lens';
+      const pmNow = !small ? null : wide ? (el.clientWidth < PRIZE_LENS_MIN ? 'none' as const : null) : cfg.prizePhone, phone = pmNow !== null;
       const set = (s: number) => { ctx.font = `500 ${s}px ${fam}`; ctx.letterSpacing = -0.04 * s + 'px'; ctx.textBaseline = 'alphabetic'; ctx.textAlign = 'left'; return ctx.measureText(amount); };
       /* the digits' height and how far the baseline sits below their middle, for a size */
       const digit = (s: number) => { set(s); const z = ctx.measureText('0'); return { capH: z.actualBoundingBoxAscent + z.actualBoundingBoxDescent, lift: (z.actualBoundingBoxAscent - z.actualBoundingBoxDescent) / 2 }; };
@@ -127,20 +133,24 @@ export function PrizeText({ amount, cities, cfg, check = false, rule }: { amount
       }
 
       /* lens and protected: the type's size from the room, the globe's from the type; measured once per size */
-      const lensed = mode === 'lens' && !!art?.frames;
-      const key = [w, h, amount, mode, lensed, phone, cfg.prizeSize, cfg.prizeY, cfg.prizeOverlap, cfg.prizeCover].join(':');
+      /* on a phone the globe may hang clear of the digits (no lens) or not be drawn at all */
+      const pm = pmNow, globed = mode === 'lens' && !!art?.frames && pm !== 'none', lensed = globed && pm !== 'clear';
+      const key = [w, h, amount, mode, globed, lensed, phone, small, pm, cfg.prizeSize, cfg.prizeY, cfg.prizeOverlap, cfg.prizeCover].join(':');
       if (memo.key !== key) {
         let fs = lensed && !phone ? (h - 2 * ratio) / (cfg.prizeSize * 0.73) : h * 0.62;
         const off = document.createElement('canvas'); off.width = w; off.height = h;
         const o = off.getContext('2d'); if (!o) return;
         let geo: Geo | null = null;
+        /* a phone's globe is small: the study's 25 rows would be 6 px each, so it takes the mid grid (rows about 10 px) */
+        const cell = small ? 'mid' as const : 'large' as const;
+        /* the fit shrinks the type a little under the room each try (measured text rounds), and the last try is kept */
         for (let tries = 0; tries < 5 && !geo; tries++) {
           const m = set(fs), d = digit(fs);
           /* protected: the band shows before the amount too, three cells of it */
           const R0 = (cfg.prizeSize * d.capH) / 2, x0 = mode === 'protected' ? 3 * Math.max(1, Math.round(R0 / STUDY.rx)) : 0;
           const room = lensed && !phone ? w : w * 0.94;
-          if (m.width + x0 > room) { fs *= room / (m.width + x0); continue; }
-          const yc = phone && lensed ? 2 * ratio + d.capH * 0.62 : h / 2, base = yc + d.lift;
+          if (m.width + x0 > room && tries < 4) { fs *= (0.995 * room) / (m.width + x0); continue; }
+          const yc = phone && globed ? 2 * ratio + d.capH * 0.62 : h / 2, base = yc + d.lift;
           set(fs);
           o.clearRect(0, 0, w, h); o.font = ctx.font; o.letterSpacing = ctx.letterSpacing; o.textBaseline = 'alphabetic'; o.fillStyle = '#fff';
           o.fillText(amount, x0, base);
@@ -153,21 +163,22 @@ export function PrizeText({ amount, cities, cfg, check = false, rule }: { amount
           zl++;
           let R = R0, cx: number, cy = yc + cfg.prizeY * R;
           if (phone) {
-            /* the globe hangs below, centred under the last 0, its top through the 0's lower part (the 0 before it all but
-               untouched), at least 150 px tall so its characters read; the amount is set smaller until it fits */
-            const dip = yc + 0.3 * d.capH;
+            /* the globe hangs below, centred under the last 0, at least 150 px tall so its characters read; raised, its top
+               a third of the way up the 0 (the 0 before it all but untouched); clear, its rim a little under the digits.
+               The amount is set smaller until it fits */
+            const dip = pm === 'clear' ? yc + 0.5 * d.capH + 6 * ratio : yc + d.capH / 6;
             R = Math.min(Math.max(R0, 75 * ratio), (h - ratio - dip) / 2);
             cx = (zl + zr) / 2; cy = dip + R;
-            if (lensed && cx + R > w - ratio && tries < 4) { fs *= (w - R - ratio) / cx; continue; }
+            if (globed && cx + R > w - ratio && tries < 4) { fs *= (0.995 * (w - R - ratio)) / cx; continue; }
             cx = Math.min(cx, w - R - ratio);
           } else {
             cx = cfg.prizeOverlap === 'whole' ? zl + 0.86 * R : (zl + zr) / 2 + R;
-            if (lensed && cx + R > w - ratio) { fs *= (w - ratio) / (cx + R); continue; }
+            if (lensed && cx + R > w - ratio && tries < 4) { fs *= (0.995 * (w - ratio)) / (cx + R); continue; }
           }
           let lay: Layout | null = null, lens: Lens | null = null;
-          if (lensed && art) {
-            lay = layoutOf({ x: cx, y: cy, r: R, ratio, facing: still, frames: art.frames, land: art.land, look, size: 'large' });
-            lens = lay ? lensCells(mask, w, h, lay, cx, cy, R, cfg.prizeCover) : null;
+          if (globed && art) {
+            lay = layoutOf({ x: cx, y: cy, r: R, ratio, facing: still, frames: art.frames, land: art.land, look, size: cell });
+            lens = lay && lensed ? lensCells(mask, w, h, lay, cx, cy, R, cfg.prizeCover) : null;
           }
           geo = { fs, base, yc, R, cx, cy, zr, x0, mask, lens, lay };
         }
@@ -204,8 +215,8 @@ export function PrizeText({ amount, cities, cfg, check = false, rule }: { amount
         set(geo.fs);
       }
 
+      if (lay && art) drawTextGlobe(ctx, { x: cx, y: cy, r: R, ratio, facing, cities, active, bracket: active >= 0, frames: art.frames, land: art.land, look, size: lay.size });
       if (lens && lay && art) {
-        drawTextGlobe(ctx, { x: cx, y: cy, r: R, ratio, facing, cities, active, bracket: active >= 0, frames: art.frames, land: art.land, look, size: 'large' });
         /* the digit's cells: each cell cleared, then filled solid (a hairline left between cells) or with the densest
            character */
         for (const [x, y, cw, ch] of lens.cut) ctx.clearRect(x, y, cw, ch);
@@ -221,13 +232,29 @@ export function PrizeText({ amount, cities, cfg, check = false, rule }: { amount
       }
       /* the lab's check: the real type drawn over the cells, to see that they line up */
       if (check) { ctx.fillStyle = 'rgba(255, 70, 70, 0.45)'; ctx.fillText(amount, x0, base); }
+      /* the arrival: the figures come in from the right, one a step; the ones not in yet are cleared */
+      if (settle < glyphs.length) { set(geo.fs); const k = glyphs.length - settle; ctx.clearRect(0, 0, Math.ceil(x0 + ctx.measureText(glyphs.slice(0, k).join('')).width), h); }
     };
     const go = () => { if (!raf) raf = requestAnimationFrame(draw); };
     Promise.all([loadFrames(), loadLand(), document.fonts?.ready]).then(([frames, land]) => { if (live) { art = { frames, land }; go(); } });
     /* the motion: once, when the amount is well in view */
     const stepMs = 1000 / cfg.globeFps;
     let looping = false;
+    /* the one moment, the first time the amount is well in view (arrive): the figures from the right within
+       --pf-prize-ms, the small globes lit and the codes written a step apart (prize-text.css). Only if it starts off
+       screen and with motion; otherwise it is simply there. */
+    const pt = el.parentElement, cssMs = (v: string, d: number) => { const n = parseFloat(getComputedStyle(el).getPropertyValue(v)); return isFinite(n) ? n : d; };
+    const arrives = arrive && !reduced && mode !== 'none' && el.getBoundingClientRect().top > window.innerHeight;
+    if (arrives) { settle = 0; pt?.setAttribute('data-pt', 'wait'); }
+    const arrival = () => {
+      if (!arrives || settle >= glyphs.length || settleT) return;
+      pt?.setAttribute('data-pt', 'in');
+      const step = cssMs('--pf-prize-ms', 600) / glyphs.length;
+      const next = () => { settle++; go(); settleT = settle < glyphs.length ? window.setTimeout(next, step) : 0; };
+      next();
+    };
     const io = new IntersectionObserver(([e]) => {
+      if (e.isIntersecting) arrival();
       if (looping && !e.isIntersecting) { window.clearTimeout(timer); looping = false; return; }
       if (!e.isIntersecting || reduced) return;
       if (!(mode === 'lens' && cfg.prizeTurn === 'loop')) io.disconnect();
@@ -263,14 +290,14 @@ export function PrizeText({ amount, cities, cfg, check = false, rule }: { amount
     io.observe(el);
     const ro = new ResizeObserver(go); ro.observe(el);
     go();
-    return () => { live = false; cancelAnimationFrame(raf); window.clearTimeout(timer); io.disconnect(); ro.disconnect(); };
-  }, [amount, cities, cfg, reduced, check]);
+    return () => { live = false; cancelAnimationFrame(raf); window.clearTimeout(timer); window.clearTimeout(settleT); io.disconnect(); ro.disconnect(); pt?.removeAttribute('data-pt'); };
+  }, [amount, cities, cfg, reduced, check, arrive]);
   return (
-    <div className="pt" data-prize={cfg.prize}>
+    <div className="pt" data-prize={cfg.prize} data-phone={cfg.prizePhone}>
       <div ref={host} className="pt-stage"><canvas ref={cv} aria-hidden="true" /></div>
       {rule}
       <ul className="pt-row" aria-label={`One in each of the ${cities.length} cities`}>
-        {cities.map((ct) => <li key={ct.code}><span className="pt-dot" data-dot="" data-lat={ct.lat} data-lon={ct.lon} aria-hidden="true" /><span>{ct.code}</span></li>)}
+        {cities.map((ct, i) => <li key={ct.code} style={{ ['--i' as string]: i }}><span className="pt-dot" data-dot="" data-lat={ct.lat} data-lon={ct.lon} aria-hidden="true" /><span>{ct.code}</span></li>)}
       </ul>
     </div>
   );

@@ -7,7 +7,7 @@ import { CITY_IDS } from '@/lib/day-data';
 /* Two jobs.
    1. The old city address: /city.html?city=<id>&moment=vote becomes /city/<id>?moment=vote, every other parameter
       kept. Without a city it goes to Berlin, as the old page did.
-   2. The gate (door-plan.md, D2). Before the day pages open, the home and the city pages (a project's own address
+   2. The gate. Before the day pages open, the home and the city pages (a project's own address
       too) send visitors to the preview page with a temporary redirect, the wheel on that city. A signed-in host, judge
       or super admin passes; so does ?admin on a site without the backend, and on the local dev server. The desk, the
       stage, /in, the labs and the API are not gated. */

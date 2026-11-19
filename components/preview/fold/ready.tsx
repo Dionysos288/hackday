@@ -36,8 +36,8 @@ function DryRun({ city, cityId, auto, step, hold }: { city: string; cityId: stri
     timers.current.forEach((t) => window.clearTimeout(t)); timers.current = [];
     setRun((r) => r + 1);
     if (reducedMotion() || step <= 0) { setShown(null); return; }
-    setShown(0);
-    for (let i = 1; i <= n; i++) timers.current.push(window.setTimeout(() => setShown(i === n ? null : i), i * step + (i === n ? hold : 0)));
+    setShown(1);
+    for (let i = 2; i <= n; i++) timers.current.push(window.setTimeout(() => setShown(i === n ? null : i), (i - 1) * step + (i === n ? hold : 0)));
   }, [n, step, hold]);
   useEffect(() => (auto ? once(box.current, 0.5, play) : undefined), [auto, play]);
   useEffect(() => () => timers.current.forEach((t) => window.clearTimeout(t)), []);
@@ -53,7 +53,7 @@ function DryRun({ city, cityId, auto, step, hold }: { city: string; cityId: stri
       </ol>
       <figcaption id="pf-dry-cap" className="pf-dry-cap">
         <span>{SERVER.live ? 'What submitting looks like on the day.' : 'A rehearsal of submitting on the day. The server is not open yet.'}</span>
-        <button type="button" className="pf-key" onClick={play}>{run ? 'Play it again' : 'Play it'}</button>
+        <button type="button" className="pf-key" onClick={play}><span className="pf-key-w"><span>{run ? 'Play it again' : 'Play it'}</span><span aria-hidden="true">Play it again</span></span></button>
       </figcaption>
     </figure>
   );

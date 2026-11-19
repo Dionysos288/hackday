@@ -1,4 +1,4 @@
-// checkin-test.mjs: who may submit (event-plan.md, rule 7c), through the site's own routes and the editor server.
+// checkin-test.mjs: who may submit, through the site's own routes and the editor server.
 //   node supabase/scripts/checkin-test.mjs [--site http://localhost:4399]
 // The site must run on the local stack with HACKDAY_FAKE_GITHUB=1 (so submits do not ask GitHub). It uses Tokyo (as
 // the city building now) and Singapore (another city), makes people under @checkin.test, and puts everything back.

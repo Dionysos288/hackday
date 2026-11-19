@@ -167,9 +167,9 @@ html.preload *, html.preload *::before, html.preload *::after { transition: none
 
 /* ---- the page itself ---- */
 @layer base {
-  html { background: var(--c-ground); color-scheme: dark; scrollbar-gutter: stable; overflow-x: clip; }
+  html { background: var(--c-ground); color-scheme: dark; scrollbar-gutter: stable; overflow-x: clip; -webkit-tap-highlight-color: transparent; }
   html[data-paper="graphite"] { color-scheme: light; }
-  body { min-height: 100vh; background: var(--c-ground); color: var(--c-ink); font: var(--w-regular) var(--t-md)/1.5 var(--font-sans);
+  body { min-height: 100svh; background: var(--c-ground); color: var(--c-ink); font: var(--w-regular) var(--t-md)/1.5 var(--font-sans);
     -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; font-synthesis: none; -webkit-text-size-adjust: 100%; }
   :focus-visible { outline: 2px solid var(--c-ink); outline-offset: 2px; }
   ::selection { background: color-mix(in oklch, var(--c-ink) 22%, transparent); }

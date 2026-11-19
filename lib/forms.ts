@@ -29,7 +29,7 @@ export const CHECKS: Record<FieldName, (v: string | boolean) => string> = {
   repo: (v) => !String(v).trim() ? 'Add the link to the GitHub repo.' : githubOK(String(v)) ? '' : 'Use the GitHub link to the repo, like https://github.com/you/project.',
   demo: (v) => !String(v).trim() || urlOK(String(v)) ? '' : 'Check the demo link. Use a full address, like https://demo.example.com.',
   video: (v) => !String(v).trim() || urlOK(String(v)) ? '' : 'Check the video link. Use a full address, like https://youtu.be/abc123.',
-  rules: (v) => v ? '' : 'Check the box to confirm you built this during the hackathon.',
+  rules: (v) => v ? '' : 'Check the box to confirm you built this during Builder Day.',
 };
 export function pictureError(f: { type: string; size: number }): string {
   return PIC_TYPES.indexOf(f.type) < 0 ? 'Use a JPEG, PNG or WebP picture.' : f.size > MAX_PIC ? 'That picture is ' + (f.size / 1048576).toFixed(1) + ' MB. Use one under 5 MB.' : '';

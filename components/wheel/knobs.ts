@@ -15,11 +15,13 @@ export const PRIZE_KNOBS: Knob[] = [
   { k: 'prize', kind: 'select', label: 'Prize' }, { k: 'prizeOverlap', kind: 'select', label: 'Overlap' }, { k: 'prizeCell', kind: 'select', label: 'Digit cells' },
   { k: 'prizeBand', kind: 'select', label: 'Band' }, { k: 'prizeTurn', kind: 'select', label: 'Turn' },
   { k: 'prizeSize', kind: 'range', label: 'Globe / digits' }, { k: 'prizeY', kind: 'range', label: 'Globe lower' }, { k: 'prizeCover', kind: 'range', label: 'Cover' }, { k: 'prizeBandRows', kind: 'range', label: 'Band rows' },
+  { k: 'prizePhone', kind: 'select', label: 'On a phone' }, { k: 'prizeWeight', kind: 'range', label: 'Land weight' },
 ];
 
 /* Every knob of the wheel, the glass and the screen, as the wheel lab and the preview's admin panel show them. */
 export const WHEEL_GROUPS: Group[] = [
   { name: 'Wheel', knobs: [{ k: 'step', kind: 'range', label: 'Angle step' }, { k: 'hubY', kind: 'range', label: 'Hub height' }, { k: 'hubOfHeight', kind: 'range', label: 'Radius / height' }, { k: 'hubOfWidth', kind: 'range', label: 'Radius / width' }] },
+  { name: 'Phone', knobs: [{ k: 'phoneStep', kind: 'range', label: 'Angle step' }, { k: 'phoneHubY', kind: 'range', label: 'Hub height' }, { k: 'phoneEdgeFrom', kind: 'range', label: 'Glass edge from' }, { k: 'phoneEdgeTo', kind: 'range', label: 'Glass edge to' }, { k: 'phoneFadeFrom', kind: 'range', label: 'Fade from' }, { k: 'phoneFadeTo', kind: 'range', label: 'Gone at' }] },
   { name: 'Mode', knobs: [{ k: 'font', kind: 'select', label: 'Face' }, { k: 'mark', kind: 'select', label: 'Mark' }, { k: 'globe', kind: 'select', label: 'Globe' }] },
   { name: 'Names', knobs: [ { k: 'labelSize', kind: 'range', label: 'Size' }, { k: 'labelFrom', kind: 'range', label: 'Start' }, { k: 'labelPush', kind: 'range', label: 'Active out' }, { k: 'track', kind: 'range', label: 'Tracking' }, { k: 'ink', kind: 'range', label: 'Ink' }, { k: 'dim', kind: 'range', label: 'Others' }, { k: 'fadeFrom', kind: 'range', label: 'Fade from' }, { k: 'fadeTo', kind: 'range', label: 'Gone at' }] },
   { name: 'Globe', knobs: [{ k: 'face', kind: 'range', label: 'City faces' }, { k: 'core', kind: 'range', label: 'Land ball' }, { k: 'glassSplit', kind: 'range', label: 'Colour split' }, { k: 'openScale', kind: 'range', label: 'Link hover' }, { k: 'globeFps', kind: 'range', label: 'Text frames / s' }, { k: 'globeEdge', kind: 'range', label: 'Text globe smear' }, { k: 'globeShift', kind: 'range', label: 'Text globe left' }, { k: 'bareShift', kind: 'range', label: 'No globe: hub right' }] },
@@ -44,8 +46,8 @@ export const GLOBE_LABELS: Record<string, string> = {
   'globePick:off': 'Off', 'globePick:on': 'On', 'globeRim:plain': 'Plain', 'globeRim:ticks': 'Latitudes',
   'prize:beside': 'Beside the amount', 'prize:lens': 'Lens over the last 0', 'prize:protected': 'Protected, no globe', 'prize:none': 'None, digits step in',
   'prizeOverlap:edge': 'Edge through the 0', 'prizeOverlap:whole': 'Whole 0 inside', 'prizeCell:gap': 'Cells, hairline', 'prizeCell:block': 'Cells, touching', 'prizeCell:char': 'Densest character',
-  'prizeBand:off': 'None', 'prizeBand:hatch': 'Hatch', 'prizeBand:stars': 'Stars', 'prizeTurn:still': 'Still', 'prizeTurn:once': 'One turn in view', 'prizeTurn:loop': 'Keeps turning',
+  'prizeBand:off': 'None', 'prizeBand:hatch': 'Hatch', 'prizeBand:stars': 'Stars', 'prizeTurn:still': 'Still', 'prizeTurn:once': 'One turn in view', 'prizeTurn:loop': 'Keeps turning', 'prizePhone:raise': 'Raised into the 0', 'prizePhone:clear': 'Under, rim clear', 'prizePhone:lens': 'On the 0, as wide', 'prizePhone:none': 'No globe',
   'globeBlink:forever': 'Forever', 'globeBlink:few': 'A few, then holds', 'globeHandover:leave': 'Leave', 'globeHandover:thin': 'Thin out',
 };
 export function wheelLabel(k: string, v: string): string { return GLOBE_LABELS[k + ':' + v] ?? WHEEL_LABELS[v] ?? v; }
-export const WHEEL_INT = new Set(['ink', 'wheelPx', 'dragPx', 'ghosts', 'edgeTaps', 'paper', 'linePeriod', 'statusDelay', 'globeFps', 'ringCount', 'globeBlinks', 'globeMid', 'globeLarge', 'globeSweep', 'globeWake', 'globeHold', 'globeThinSteps', 'globeDots', 'globeSeed', 'prizeBandRows']);
+export const WHEEL_INT = new Set(['ink', 'wheelPx', 'dragPx', 'ghosts', 'edgeTaps', 'paper', 'linePeriod', 'statusDelay', 'globeFps', 'ringCount', 'globeBlinks', 'globeMid', 'globeLarge', 'globeSweep', 'globeWake', 'globeHold', 'globeThinSteps', 'globeDots', 'globeSeed', 'prizeBandRows', 'prizeWeight']);

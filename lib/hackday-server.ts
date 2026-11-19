@@ -43,7 +43,7 @@ export const CHECKS: Check[] = [
   { id: 'one', what: 'A second entry from the same person', from: 'Our records', does: 'update',
     say: () => 'You already have an entry. This one replaces it; nothing else changes.' },
   { id: 'age', what: 'The repository was made before the day', from: 'GitHub (when it was created)', does: 'block',
-    say: (v) => 'This repository was made on ' + (v.made || 'an earlier day') + ', before the hackathon. Start a new repository today, push your work there, then send it again.' },
+    say: (v) => 'This repository was made on ' + (v.made || 'an earlier day') + ', before Builder Day. Start a new repository today, push your work there, then send it again.' },
   { id: 'fork', what: 'A fork of an older repository', from: 'GitHub', does: 'flag' },
   { id: 'push', what: 'One push carries most of the code, or pushes only at the end', from: 'GitHub activity', does: 'flag' },
   { id: 'dates', what: 'Commit dates from before the start', from: 'GitHub commits', does: 'flag' },
@@ -52,7 +52,7 @@ export const CHECKS: Check[] = [
 ];
 
 /* The editors in the picker, and how each adds a remote (Streamable HTTP) server for the user, not into the project
-   folder, with the key in an Authorization header (door-plan.md, rule 6). From each editor's own docs, read again on
+   folder, with the key in an Authorization header. From each editor's own docs, read again on
    2026-11-18. kind: a command to run, or a snippet for a file. line(base, name, key): with no key (Supabase's own
    server) there is no header.
    - Claude Code: --scope user and --header are documented apart; the one line puts them together.

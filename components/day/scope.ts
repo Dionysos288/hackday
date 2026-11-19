@@ -70,7 +70,7 @@ export type ScopeCfg = {
      fade-in and fade-out floors (ms); far-side brightness and the width of its ramp (degrees); the others' light at
      the pick; the seam (ms); a click at the pick when sound is on */
   turnMode: TurnMode; panel: PanelMode; afterglow: Afterglow; smallLayout: SmallLayout;
-  /* the text globe's signs (globe-plan.md, How it works): the grid as the wire (meridians every 30 degrees, five
+  /* the text globe's signs: the grid as the wire (meridians every 30 degrees, five
      parallels) or the text globe's template (limb, equator, two parallels, the middle column, dotted); the cities as
      glowing dots or a + each (yours a green [+]); the Final's line-up in one column or, from nine cities, two banks */
   lGrid: LineGrid; lMarks: LineMarks; lBanks: LineBanks;

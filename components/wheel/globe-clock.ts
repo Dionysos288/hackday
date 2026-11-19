@@ -27,11 +27,19 @@ export class GlobeClock {
   out: ClockOut = { facing: 0, trail: [], reveal: null, bracket: false };
   constructor(public cfg: ClockCfg) {}
 
-  /* the arrival, once: it starts on the next step */
-  arrive() { if (this.cfg.arrive !== 'none' && !this.cfg.reduced) this.wantArrive = true; }
+  private mode: 'sweep' | 'print' = 'sweep';
+  private steps = 1;
+  /* the arrival, once: it starts on the next step. A page may name its own mode and length (its first screen's
+     arrival); otherwise the saved ones */
+  arrive(mode?: 'sweep' | 'print', steps?: number) {
+    if (this.cfg.reduced || (!mode && this.cfg.arrive === 'none')) return;
+    this.mode = mode ?? (this.cfg.arrive === 'print' ? 'print' : 'sweep'); this.steps = steps ?? this.cfg.sweep; this.wantArrive = true;
+  }
   /* forget the steps (a jump, or a new config): the next tick draws */
   reset() { this.k = -1; this.key = ''; this.out.trail = []; }
   arriving() { return this.wantArrive || this.out.reveal !== null; }
+  /* an arrival asked for that has not reached its first step: the globe is not drawn whole meanwhile */
+  pending() { return this.wantArrive; }
 
   /* `facing` is where the turn is now (degrees), `settled` whether the wheel has come to rest on a city.
      Returns true when the globe's picture changed on this step. */
@@ -48,8 +56,8 @@ export class GlobeClock {
       if (this.wantArrive) { this.wantArrive = false; this.arriveAt = k; }
       if (this.arriveAt >= 0) {
         const step = k - this.arriveAt;
-        if (step > c.sweep) { this.arriveAt = -1; o.reveal = null; }
-        else o.reveal = { mode: c.arrive === 'print' ? 'print' : 'sweep', step, steps: c.sweep };
+        if (step > this.steps) { this.arriveAt = -1; o.reveal = null; }
+        else o.reveal = { mode: this.mode, step, steps: this.steps };
       }
       if (settled) {
         if (this.restAt < 0) this.restAt = k;

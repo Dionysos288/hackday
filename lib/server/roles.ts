@@ -1,4 +1,4 @@
-/* roles.ts: who may do what on the desk, in one place (event-plan.md, "Roles"). Every desk action asks here first.
+/* roles.ts: who may do what on the desk, in one place. Every desk action asks here first.
    - super: everything, in every city;
    - host: their city's guest list, entries, deck, door, and adding minutes (a host of every city is possible);
    - judge: their votes (the database checks those) and seeing flags in their city.

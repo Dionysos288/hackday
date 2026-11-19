@@ -1,4 +1,4 @@
-/* The deck every city starts with (event-plan.md, "The deck every city starts with"): the default wording, the steps
+/* The deck every city starts with: the default wording, the steps
    of each scene, what the next press does in words, and the host's notes. A host adds, hides and reorders on the desk;
    the event scenes can be hidden, never deleted. At most twelve words on an intro scene. The wording says "your
    editor"; a city may set the tool's name in its deck data (`editor`). Pure. */
@@ -19,7 +19,7 @@ export const NEEDS: [string, string][] = [
 export const ONE: string[] = ['Postgres', 'Storage', 'Edge Functions', 'Auth', 'Vector', 'Realtime'];
 
 /* the site's own rules (the entry checks hold them), and Supabase */
-/* who may submit and who may vote (event-plan.md 7c), said the same way on every scene that says it, and never
+/* who may submit and who may vote, said the same way on every scene that says it, and never
    the same way as each other */
 export const TO_SUBMIT = 'To submit, sign in with the email you gave Luma and the room code. Then the Submit button appears.';
 export const TO_VOTE = 'Anyone can vote: give an email and confirm it once.';

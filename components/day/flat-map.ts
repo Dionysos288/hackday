@@ -1,6 +1,6 @@
 import { hash3, landAt, sunHeight, type LandMap } from '@/components/wheel/text-globe';
 
-/* The world opened flat (globe plan, "The ending"): the text globe's land unrolled into one map, in the same characters
+/* The world opened flat: the text globe's land unrolled into one map, in the same characters
    and by the same rules. Longitude runs across the full 360 degrees, latitude down from `north` to `south`, each cell a
    plain step of both (the map is equirectangular, so with the globe's tall cells it keeps the world's proportions).
    - Land is the globe's one hatch, `::|`, fixed to the cells: `|` where (column + row) is a multiple of 3.
@@ -8,7 +8,7 @@ import { hash3, landAt, sunHeight, type LandMap } from '@/components/wheel/text-
    - Every city is a `+` in its cell; the chosen one is the green `[+]`. Two cities that fall in one cell, or side by
      side, are moved a row apart, so each keeps its own mark and its own target.
    - With the sun, the night side's hatch thins to `: :`, then to `.` deeper in the night, as on the globe.
-   - On a phone the map is dots (one per cell of land, on a square grid), as the small globes are.
+   - On a phone the map is dots (one per cell of land, on a square grid), as the small globes are, and has no equator.
    Pure: the picture is a function of the land map, the grid, the cities and the seed. */
 
 export type MapGrid = { rows: number; cols: number; north: number; south: number };
@@ -111,7 +111,8 @@ const grey = (v: number, a: number) => `rgba(${v}, ${v}, ${Math.max(0, v - 2)}, 
 const units = new Map<string, number>();
 function sizeFor(ctx: CanvasRenderingContext2D, font: string, cell: number) {
   let u = units.get(font);
-  if (!u) { ctx.font = `500 100px ${font}`; u = ctx.measureText('0').width / 100 || 0.6; units.set(font, u); }
+  /* measured with no tracking, whatever the canvas carried before */
+  if (!u) { const ls = ctx.letterSpacing; ctx.letterSpacing = '0px'; ctx.font = `500 100px ${font}`; u = ctx.measureText('0').width / 100 || 0.6; ctx.letterSpacing = ls; units.set(font, u); }
   return cell / u;
 }
 
@@ -142,13 +143,11 @@ export function drawMap(ctx: CanvasRenderingContext2D, d: MapDraw) {
   }
 
   if (d.dots) {
-    /* a phone: a dot for each cell of land, the equator every other cell, the cities larger */
+    /* a phone: a dot for each cell of land and the cities larger. No equator: in dots it reads as a rule across the map */
     const p = Math.min(colW, lineH), rad = Math.max(0.6, p * 0.22);
     for (let r = 0; r < g.rows; r++) for (let c = 0; c < g.cols; c++) {
-      const ch = lines[r][c]; if (ch === ' ' || !shown(r, c) || marked.has(r * 10000 + c)) continue;
-      const sea = ch === '.';
-      if (sea && c % 2) continue;
-      ctx.fillStyle = grey(L.ink, sea ? L.grid : ch === '|' || ch === ':' ? 1 : 0.8);
+      const ch = lines[r][c]; if (ch === ' ' || ch === '.' || !shown(r, c) || marked.has(r * 10000 + c)) continue;
+      ctx.fillStyle = grey(L.ink, ch === '|' || ch === ':' ? 1 : 0.8);
       ctx.beginPath(); ctx.arc((c + 0.5) * colW, (r + 0.5) * lineH, rad, 0, Math.PI * 2); ctx.fill();
     }
     for (const m of d.marks) {

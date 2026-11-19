@@ -46,7 +46,7 @@
 /* ---------------- the field ---------------- */
 .fm-i { display: block; width: 100%; height: var(--fm-field); margin: 0; padding: 0 var(--s-3); border: 0; border-radius: var(--r-0); background: none; color: var(--c-ink);
   font: var(--w-regular) var(--t-md)/1 var(--font-sans); box-shadow: inset 0 0 0 var(--line-thin) var(--c-ink-3); appearance: none; -webkit-appearance: none;
-  transition: box-shadow var(--dur-hover) ease-out; touch-action: manipulation; }
+  transition: box-shadow var(--dur-hover) var(--ease-out); touch-action: manipulation; }
 .fm-i::placeholder { color: var(--c-ink-3); opacity: 1; }
 .fm-i:focus { outline: none; }
 .fm-i:focus-visible { outline: var(--fm-ring) solid var(--c-ink); outline-offset: var(--fm-ring); }   /* the ring sits outside, so focus never looks like the invalid frame */
@@ -73,7 +73,7 @@
 
 /* the picture: a 16:9 frame that is the drop target and shows the preview */
 .fm-pic { position: relative; display: grid; place-items: center; aspect-ratio: 16 / 9; width: 100%; overflow: hidden; cursor: pointer;
-  outline: var(--line-thin) dashed var(--c-ink-3); outline-offset: calc(-1 * var(--line-thin)); transition: background-color var(--dur-hover) ease-out; }
+  outline: var(--line-thin) dashed var(--c-ink-3); outline-offset: calc(-1 * var(--line-thin)); transition: background-color var(--dur-hover) var(--ease-out); }
 .fm-pic.has-img { outline-style: solid; outline-color: var(--c-line); }
 .fm-pic.is-over { background: var(--c-tint-2); }
 .fm-pic img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
@@ -84,7 +84,7 @@
   border: 0; border-radius: var(--r-0); background: none; color: var(--c-ink); box-shadow: inset 0 0 0 var(--line-thin) var(--c-ink);
   font: var(--w-medium) var(--t-sm)/1 var(--font-sans); text-decoration: none; white-space: nowrap; cursor: pointer;
   touch-action: manipulation; -webkit-tap-highlight-color: transparent; user-select: none;
-  transition: background-color var(--dur-hover) ease-out, transform var(--dur-press) var(--ease-out); }
+  transition: background-color var(--dur-hover) var(--ease-out), transform var(--dur-press) var(--ease-out); }
 .fm-b.g { background: var(--c-accent); color: var(--c-accent-ink); box-shadow: none; }
 .fm-b:active:not(:disabled) { transform: scale(var(--press)); }
 .fm-b:focus { outline: none; }

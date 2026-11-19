@@ -1,8 +1,8 @@
 /* day-data.ts: the one model both pages read, so a city's row on the home and that city's own page always agree:
    the cities, the schedule, the clock, and each city's seeded project list.
 
-   The date is decided: 10 December 2026. The cities are the Luma events'. Placeholder, not confirmed: the 09:00 local start
-   (most Luma events say 18:00).
+   The date is decided: 10 December 2026. The cities are the Luma events', and so is each city's start: the local time its
+   Luma event starts (18:00 in most). Not confirmed: whether building starts then or after the doors.
    Offsets are December UTC offsets in minutes. Sunrise and sunset are approximate local times for mid-December, used only to draw the daylight band; they
    are not checked against an almanac.
 
@@ -12,29 +12,44 @@
    generators, after everything else, so adding them changed no count and no winner. Pure: no window, no DOM. */
 import { PAST, SAMPLE_PROJECTS, type PastEvent, type Project } from './data';
 
-export type City = { i: number; id: string; name: string; offset: number; rise: number; set: number };
+export type City = { i: number; id: string; name: string; offset: number; rise: number; set: number; start: number };
 
 function hm(s: string): number { const p = s.split(':'); return +p[0] * 60 + +p[1]; }
-const C: [string, string, number, string, string][] = [
-  ['seoul', 'Seoul', 540, '07:40', '17:15'],
-  ['singapore', 'Singapore', 480, '06:59', '19:00'],
-  ['peshawar', 'Peshawar', 300, '07:00', '17:05'],
-  ['nouakchott', 'Nouakchott', 0, '07:40', '18:45'],
-  ['london', 'London', 0, '07:59', '15:51'],
-  ['rosario', 'Rosario', -180, '05:35', '20:10'],
-  ['santiago', 'Santiago', -180, '06:25', '20:55'],
-  ['manta', 'Manta', -300, '06:05', '18:20'],
-  ['new-york', 'New York City', -300, '07:09', '16:28'],
-  ['toronto', 'Toronto', -300, '07:45', '16:42'],
-  ['san-salvador', 'San Salvador', -360, '05:55', '17:25'],
-  ['austin', 'Austin', -360, '07:20', '17:32'],
-  ['mexico-city', 'Mexico City', -360, '07:05', '18:00'],
-  ['san-francisco', 'San Francisco', -480, '07:14', '16:51'],
+/* id, name, December UTC offset, sunrise, sunset, the local start (the Luma event's start time) */
+const C: [string, string, number, string, string, string][] = [
+  ['seoul', 'Seoul', 540, '07:40', '17:15', '18:00'],
+  ['singapore', 'Singapore', 480, '06:59', '19:00', '18:00'],
+  ['peshawar', 'Peshawar', 300, '07:00', '17:05', '11:30'],
+  ['nouakchott', 'Nouakchott', 0, '07:40', '18:45', '11:30'],
+  ['london', 'London', 0, '07:59', '15:51', '18:00'],
+  ['rosario', 'Rosario', -180, '05:35', '20:10', '18:00'],
+  ['santiago', 'Santiago', -180, '06:25', '20:55', '18:00'],
+  ['manta', 'Manta', -300, '06:05', '18:20', '10:00'],
+  ['new-york', 'New York City', -300, '07:09', '16:28', '18:00'],
+  ['toronto', 'Toronto', -300, '07:45', '16:42', '18:00'],
+  ['san-salvador', 'San Salvador', -360, '05:55', '17:25', '16:00'],
+  ['austin', 'Austin', -360, '07:20', '17:32', '18:00'],
+  ['mexico-city', 'Mexico City', -360, '07:05', '18:00', '18:00'],
+  ['san-francisco', 'San Francisco', -480, '07:14', '16:51', '18:00'],
 ];
 /* east to west, always (rule 1) */
-export const CITIES: City[] = C.map((r, i) => ({ i, id: r[0], name: r[1], offset: r[2], rise: hm(r[3]), set: hm(r[4]) }));
+export const CITIES: City[] = C.map((r, i) => ({ i, id: r[0], name: r[1], offset: r[2], rise: hm(r[3]), set: hm(r[4]), start: hm(r[5]) }));
 export const CITY_IDS: string[] = CITIES.map((c) => c.id);
 export function cityById(id: string): City | undefined { return CITIES.find((c) => c.id === id); }
+/* the starts in words, from the cities: the usual local start (the one most cities share) and the others by name */
+const hm2 = (m: number) => String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0');
+const tally = new Map<number, City[]>(); CITIES.forEach((c) => tally.set(c.start, [...(tally.get(c.start) || []), c]));
+const byCount = [...tally.entries()].sort((a, b) => b[1].length - a[1].length || a[0] - b[0]);
+/* local minutes of the start most cities share */
+export const USUAL_START = byCount[0][0];
+export const cityStartLocal = (c: { start: number }) => hm2(c.start);
+const and = (a: string[]) => a.length < 2 ? a.join('') : a.slice(0, -1).join(', ') + ' and ' + a[a.length - 1];
+/* "Most cities start at 18:00 local time; Peshawar and Nouakchott at 11:30, Manta at 10:00 and San Salvador at 16:00." */
+export function startsSentence(): string {
+  if (byCount.length === 1) return 'Every city starts at ' + hm2(USUAL_START) + ' local time.';
+  const rest = byCount.slice(1).map(([m, cs]) => and(cs.map((c) => c.name)) + ' at ' + hm2(m));
+  return 'Most cities start at ' + hm2(USUAL_START) + ' local time; ' + and(rest) + '.';
+}
 /* how many cities, as words for the copy ("Fourteen cities") */
 const WORDS = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten', 'eleven', 'twelve', 'thirteen', 'fourteen', 'fifteen', 'sixteen', 'seventeen', 'eighteen', 'nineteen', 'twenty'];
 export const CITY_COUNT = CITIES.length;
@@ -65,10 +80,12 @@ export const EPOCH = Date.UTC(EVENT.year, EVENT.month - 1, EVENT.day);
 export function pastEvents(): PastEvent[] { return PAST; }
 
 /* ---------------- the schedule ---------------- */
-export type ScheduleKind = 'sun' | 'same';
+/* luma: each city at its own Luma start, local; sun: every city at startHour local; same: every city at startHour UTC.
+   startHour is also the usual local start (18:00, ten of the fourteen), which the drawings show as one line. */
+export type ScheduleKind = 'luma' | 'sun' | 'same';
 export type SchedCfg = { schedule: ScheduleKind | string; startHour: number; buildMin: number; voteAfter: number; pickAfter: number };
 /* the schedule knobs both pages share, with the home's defaults */
-export const SCHED: SchedCfg = { schedule: 'sun', startHour: 9, buildMin: 90, voteAfter: 30, pickAfter: 60 };
+export const SCHED: SchedCfg = { schedule: 'luma', startHour: 18, buildMin: 90, voteAfter: 30, pickAfter: 60 };
 
 export type CitySched = { city: City; start: number; buildEnd: number; end: number };
 export type Sched = { cs: CitySched[]; first: number; last: number; pickAt: number; winStart: number; winEnd: number };
@@ -84,7 +101,7 @@ const clamp = (v: number, a: number, b: number) => Math.min(b, Math.max(a, v));
    building closes. */
 export function sched(c: SchedCfg): Sched {
   const cs = CITIES.map((city) => {
-    const start = c.schedule === 'same' ? c.startHour * 60 : c.startHour * 60 - city.offset;
+    const start = c.schedule === 'same' ? c.startHour * 60 : (c.schedule === 'sun' ? c.startHour * 60 : city.start) - city.offset;
     return { city, start, buildEnd: start + c.buildMin, end: start + c.buildMin + c.voteAfter };
   });
   const first = Math.min(...cs.map((x) => x.start)), last = Math.max(...cs.map((x) => x.end));

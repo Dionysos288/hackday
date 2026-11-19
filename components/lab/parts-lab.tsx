@@ -24,7 +24,7 @@ import '@/components/board/board.css';
 import './day/day-lab.css';
 import { EVENT } from '@/lib/day-data';
 
-/* The parts lab (D1 of the day plan): every new part of the day pages alone, fed by the model at a moment of the day,
+/* The parts lab: every new part of the day pages alone, fed by the model at a moment of the day,
    with every value on a knob. Save writes saved/parts.config.json, which the day labs read.
    The lab clock runs live from the moment (speed: seconds a second), so flips and flashes happen as they would on the
    day. Keys: \ panel, S save. */

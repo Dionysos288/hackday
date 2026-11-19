@@ -11,7 +11,7 @@ import { PLACEHOLDER_URL } from '@/lib/hackday-server';
 import '@/components/board/board.css';
 import '@/components/day/get-ready.css';
 
-/* The door lab (door-plan.md, D3): every account state side by side. The header cell on the day home's header and on
+/* The door lab: every account state side by side. The header cell on the day home's header and on
    Berlin's, signed out, with a place, and with none; then the account sheet's body for each kind of person. The
    people are made up; the editor address is the placeholder, never a real key. */
 

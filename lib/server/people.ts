@@ -14,7 +14,7 @@ export type Pass = {
 export type Role = { id: string; role: 'super' | 'host' | 'judge'; city: string | null; budget: number };
 
 export const PASS_COLS = 'id, person, city, source, key_version, editor_version, sent_at, opened_at, checked_in_at, checked_in_how, list_email, luma_status, luma_registered_at, claimed_at, editor_seen_at';
-/* one event per site (door-plan.md, decision 7): every place read or made here is in this one */
+/* one event per site: every place read or made here is in this one */
 export const EVENT_ID = EVENT.id;
 export const norm = (email: string) => String(email || '').trim().toLowerCase();
 
@@ -55,7 +55,7 @@ export type LumaFacts = { guestId?: string | null; status?: string | null; regis
 export type Ensured = { pass: Pass; made: boolean; moved: string | null; kept?: 'later' | 'checked-in' | 'held' };
 
 /* A place on a city's list (from Luma or a host; never from the room code), matched on the address it is listed
-   under (door-plan.md, "The model"). One per address and one per account in the event.
+   under. One per address and one per account in the event.
    - Listed already in this city: Luma's facts are brought up to date.
    - Listed in another city: a host's add moves it; a Luma registration moves it only when it is the later one
      (decision 11), and never once the person is checked in. A move clears the check-in, which was for the other room.

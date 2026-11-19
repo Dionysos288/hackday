@@ -224,7 +224,7 @@ function SubmitForm({ o, who, mine, cityName, nameRef, roomRef, needRoom, onSave
         <div className={FM_F}>
           <label className="fm-chk"><input type="checkbox" name="rules" aria-describedby={id + '-e-rules'} aria-invalid={err.rules ? true : undefined} checked={f.rules}
             onChange={(e) => { setF((x) => ({ ...x, rules: e.target.checked })); if (err.rules) check('rules', e.target.checked); }} />
-          <span>I built this during the hackathon.</span></label>
+          <span>I built this during Builder Day.</span></label>
           <ErrBox id={id + '-e-rules'} msg={err.rules || ''} />
         </div>
         <ErrBox id={id + '-e-form'} msg={closed ? '' : formErr} />

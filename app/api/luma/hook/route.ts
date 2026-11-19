@@ -1,4 +1,4 @@
-/* POST /api/luma/hook: Luma's webhook (door-plan.md, D5). Luma sends guest.registered and guest.updated for every
+/* POST /api/luma/hook: Luma's webhook. Luma sends guest.registered and guest.updated for every
    event on the calendar; a new guest fires both, and a delivery can come twice, so everything here is safe to run
    again. Read 2026-11-18 (help.luma.com/p/webhooks): the header Webhook-Signature is "t=<unix seconds>,v1=<hex>", the
    hex is HMAC-SHA256 over "<t>.<raw body>" with the webhook's secret as given (whsec_…), Webhook-Id names the

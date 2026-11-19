@@ -1,4 +1,4 @@
--- The event record and places that keep their email (door-plan.md, "The model"): one place per account and one per
+-- The event record and places that keep their email: one place per account and one per
 -- listed address in an event, the email a place was listed under is kept when someone else claims it, and nobody but
 -- the server reads any of the new columns.
 begin;

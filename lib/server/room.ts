@@ -1,4 +1,4 @@
-/* room.ts (server): the room code and the check-in it gives (event-plan.md, rule 7c).
+/* room.ts (server): the room code and the check-in it gives.
    Only a person on a city's list who has typed that city's room code with their own email (or whom a host has marked
    as in the room at the desk) may submit, edit or delete an entry. The check-in is kept on the pass for the day, so a
    new room code later does not undo it. Both doors (the web form and the editor server) go through mayBuild, from

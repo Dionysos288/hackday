@@ -1,15 +1,16 @@
 'use client';
-import { useEffect, useRef, type MouseEvent, type RefObject } from 'react';
+import { useCallback, useEffect, useRef, useState, type MouseEvent, type RefObject } from 'react';
 import { MarkFace, type MarkMode } from '@/components/wheel/wheel';
 import { Person, type CellState } from '@/components/account/account';
-import { flapInto, type FlapOpts } from './flap';
+import { flapInto, useFlapText, type FlapOpts } from './flap';
+import { EVENT } from '@/lib/day-data';
 
 /* The header: the wheel's own top row, stuck to the top of the window. At the top of the page it is today's row (the
    mark and the name left, one link right). Once the page leaves the top it gets the paper and one rule; once the
    wheel's active row reaches it, its right side becomes cells, written left to right a step apart: the parts of the page, and the register cell with a
    small glass globe (the wheel's own globe docks there). The cell of the part on screen is lit. The register cell's
    city turns on flaps when the visitor's city changes.
-   The account (door-plan.md, D3): a cell after the register cell, "Sign in" or the person's city code; with a place
+   The account: a cell after the register cell, "Sign in" or the person's city code; with a place
    and `merged`, the register cell itself becomes the account ("You're in Berlin"), since there is nothing left to
    register for. With `top`, Sign in (or the account) is also a plain link at the very top, beside the top link. */
 
@@ -21,7 +22,7 @@ const acctShort = (a: Acct) => (a.state === 'place' ? 'You’re in ' + a.code : 
 export type Part = { id: string; label: string };
 export function FoldHeader({ on, paper, parts, lit, reg, lens, jump, flap, plainTop, topLink = true, globe, dot, mirror, acct, mark = 'name' }: {
   on: boolean; paper?: boolean; parts: Part[]; lit: string | null;
-  reg: { href: string; city: string; waiting: boolean; width: number };
+  reg: { href: string; city: string; waiting: boolean };
   lens: RefObject<HTMLSpanElement | null>; jump: (id: string, e: MouseEvent) => void; flap: FlapOpts;
   /* the top link: "How it works", which now goes to that part */
   plainTop?: boolean; topLink?: boolean;
@@ -38,24 +39,32 @@ export function FoldHeader({ on, paper, parts, lit, reg, lens, jump, flap, plain
 }) {
   const cityEl = useRef<HTMLSpanElement>(null), last = useRef(reg.city), shown = useRef(on);
   useEffect(() => { shown.current = on; }, [on]);
+  /* the verb turns on flaps too when the city's state changes (Register for, Waiting list); rendered with its first
+     words only, so React and the flaps never write the same text */
+  const verb = reg.waiting ? 'Waiting list ' : 'Register for ', [verb0] = useState(verb), verbEl = useRef<HTMLSpanElement>(null);
+  const whenShown = useCallback(() => shown.current, []);
+  useFlapText(verbEl, verb, whenShown);
   useEffect(() => {
     const el = cityEl.current; if (!el || last.current === reg.city) return;
-    const from = last.current.padEnd(reg.width); last.current = reg.city;
-    /* the flaps play only where they can be seen: while the cells are off the city is simply set */
-    if (!shown.current) { el.textContent = reg.city.padEnd(reg.width); return; }
-    return flapInto(el, reg.city.padEnd(reg.width), flap, from);
-  }, [reg.city, reg.width, flap]);
+    const from = last.current; last.current = reg.city;
+    /* the flaps play only where they can be seen: while the cells are off the city is simply set. The cell's width
+       follows the letters shown, so the name is never clipped while it turns; the flaps go from the old length to the new */
+    if (!shown.current) { el.textContent = reg.city; el.style.width = reg.city.length + 'ch'; return; }
+    return flapInto(el, reg.city, flap, from, true);
+  }, [reg.city, flap]);
   const mine = !!acct && acct.merged && acct.state === 'place';
   const lensEl = dot
     ? <span ref={lens} className="pf-reg-lens" aria-hidden="true" data-dot="" data-lat={dot.lat} data-lon={dot.lon} />
     : <span ref={lens} className="pf-reg-lens" aria-hidden="true" {...(globe ? { 'data-globe': '', 'data-lat': globe.lat, 'data-lon': globe.lon } : {})}>{globe ? null : <canvas ref={mirror} className="pf-reg-mirror" />}</span>;
   return (
-    <header className="pf-hdr" data-on={on ? '' : undefined} data-paper={paper ? '' : undefined} data-acct={acct ? '' : undefined}>
-      <h1 className="wh-wordmark pf-mark" data-mark={mark === 'builder' ? 'builder' : 'name'}><a href="#top" onClick={(e) => jump('top', e)}><MarkFace mark={mark === 'builder' ? 'builder' : 'name'} /></a></h1>
+    <header className="pf-hdr" style={{ ['--pf-n' as string]: parts.length + (plainTop ? 0 : 1) + (acct && !mine ? 1 : 0) }} data-on={on ? '' : undefined} data-paper={paper ? '' : undefined} data-acct={acct ? '' : undefined}>
+      <h1 className="wh-wordmark pf-mark" data-mark={mark === 'builder' ? 'builder' : 'name'}><a href="#top" aria-label={EVENT.name} onClick={(e) => jump('top', e)}><MarkFace mark={mark === 'builder' ? 'builder' : 'name'} /></a></h1>
       {topLink || acct?.top ? (
-        <div className="pf-tops" aria-hidden={on || undefined}>
-          {topLink ? <a className="pf-top" href="#how" onClick={(e) => jump('how', e)} tabIndex={on ? -1 : undefined}>How it works</a> : null}
-          {acct?.top ? <button type="button" className="pf-top" data-acct={acct.state} aria-haspopup="dialog" tabIndex={on ? -1 : undefined} onClick={acct.open}><span className="pf-top-l">{acctWords(acct)}</span><span className="pf-top-s" aria-hidden="true">{acctShort(acct)}</span></button> : null}
+        /* with the cells there (focus shows them from the top), the top links are for the pointer only: Tab and a screen
+           reader meet each link once, in the cells */
+        <div className="pf-tops" aria-hidden={on || !plainTop || undefined}>
+          {topLink ? <a className="pf-top" href="#how" onClick={(e) => jump('how', e)} tabIndex={on || !plainTop ? -1 : undefined}>How it works</a> : null}
+          {acct?.top ? <button type="button" className="pf-top" data-acct={acct.state} aria-haspopup="dialog" tabIndex={on || !plainTop ? -1 : undefined} onClick={acct.open}><span className="pf-top-l">{acctWords(acct)}</span><span className="pf-top-s" aria-hidden="true">{acctShort(acct)}</span></button> : null}
         </div>
       ) : null}
       {plainTop ? null : (
@@ -74,7 +83,7 @@ export function FoldHeader({ on, paper, parts, lit, reg, lens, jump, flap, plain
             <a className="pf-cell pf-reg" href={reg.href} style={{ ['--i' as string]: parts.length }}>
               {lensEl}
               <span className="sr-only">{reg.waiting ? 'Join the waiting list in ' : 'Register for '}{reg.city}</span>
-              <span aria-hidden="true" className="pf-reg-w">{reg.waiting ? 'Waiting list ' : 'Register for '}<span ref={cityEl} className="pf-reg-c" style={{ minWidth: reg.width + 'ch' }}>{reg.city}</span></span>
+              <span aria-hidden="true" className="pf-reg-w"><span ref={verbEl}>{verb0}</span><span ref={cityEl} className="pf-reg-c" style={{ width: reg.city.length + 'ch' }}>{reg.city}</span></span>
               <span aria-hidden="true" className="pf-reg-s">{reg.waiting ? 'Waitlist' : 'Register'}</span>
             </a>
           )}

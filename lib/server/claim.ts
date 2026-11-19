@@ -1,4 +1,4 @@
-/* claim.ts: "Registered with a different email?" (door-plan.md, D4). A signed-in person with no place types the address
+/* claim.ts: "Registered with a different email?". A signed-in person with no place types the address
    they registered with; that address gets a six-digit code; typing it moves the place to the signed-in account. The
    place keeps the address it was listed under (so Luma's sync never makes it again for the old address), and its
    check-in stays.

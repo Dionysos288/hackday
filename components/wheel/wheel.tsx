@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode, type RefObject } from 'react';
-import { MONO, SANS, type WheelCfg, type WheelMark } from './config';
+import { MONO, PHONE_WHEEL, SANS, fitWheel, type WheelCfg, type WheelMark } from './config';
 import { createWheel, type WheelCity, type WheelEngine, type WheelFlow } from './engine';
 import { mountDotGlobes } from './dot-globes';
 import { HackMark } from './mark';
@@ -26,13 +26,13 @@ export function MarkFace({ mark, id }: { mark: MarkMode; id?: string }) {
   if (mark === 'builder') return <><BuilderLogo className="wh-builder" /><span className="wh-name">{EVENT.name}</span></>;
   return <>{mark === 'both' ? <SupabaseMark /> : null}<HackMark id={id} label={mark === 'both' ? EVENT.name : mark === 'name' ? '' : EVENT.short} />{mark === 'name' ? <span className="wh-name">{EVENT.name}</span> : null}</>;
 }
-export const STATUS_LABEL: Record<WheelStatus, string> = { open: 'Open', nearing: 'Nearing capacity', full: 'Waiting list' };
+export const STATUS_LABEL: Record<WheelStatus, string> = { open: 'Open', nearing: 'Filling up', full: 'Waiting list', soon: 'Opens soon' };
 
 /* each state has its words and its own shape, a ring that fills up, so it does not read by colour alone */
 export function StatusIcon({ status }: { status: WheelStatus }) {
   return (
     <svg viewBox="0 0 12 12" aria-hidden="true">
-      {status === 'full' ? <circle cx="6" cy="6" r="5" fill="currentColor" /> : <circle cx="6" cy="6" r="4.25" fill="none" stroke="currentColor" strokeWidth="1.5" />}
+      {status === 'full' ? <circle cx="6" cy="6" r="5" fill="currentColor" /> : <circle cx="6" cy="6" r="4.25" fill="none" stroke="currentColor" strokeWidth="1.5" strokeDasharray={status === 'soon' ? '2 2' : undefined} />}
       {status === 'nearing' ? <path d="M6 1.75a4.25 4.25 0 0 1 0 8.5z" fill="currentColor" /> : null}
     </svg>
   );
@@ -41,7 +41,7 @@ export function StatusIcon({ status }: { status: WheelStatus }) {
 export function wheelVars(c: WheelCfg): CSSProperties {
   return {
     '--wh-paper': `rgb(${c.paper} ${c.paper + 1} ${c.paper + 1})`, '--wh-line-a': c.lineAlpha, '--wh-line-p': c.linePeriod + 'px',
-    '--wh-sans': SANS[c.font], '--wh-mono': MONO[c.font],
+    '--wh-sans': SANS[c.font], '--wh-mono': MONO[c.font], '--wh-vig': c.vignette,
   } as CSSProperties;
 }
 
@@ -67,11 +67,14 @@ export function Wheel({ cities, cfg, start = 0, noGl = false, cells = true, mark
     const e = createWheel({ pin: pin.current, canvas: canvas.current, cells: cellsEl.current, foot: footEl.current, grip: grip.current,
       /* read when used: the link and its lens are new elements when the city's press changes (a link or a button) */
       get lens() { return lens.current; }, get cta() { return cta.current; } },
-      { ...first.current, noGl, onCity: (i) => { setCur(i); onCityRef.current?.(i); }, flow: flowRef.current });
+      { ...first.current, cfg: fitWheel(first.current.cfg, window.matchMedia(PHONE_WHEEL).matches), noGl, onCity: (i) => { setCur(i); onCityRef.current?.(i); }, flow: flowRef.current });
     eng.current = e; if (engineRef) engineRef.current = e;
     return () => { e.destroy(); eng.current = null; if (engineRef) engineRef.current = null; };
   }, [noGl, engineRef]);
-  useEffect(() => { eng.current?.setCfg(cfg); }, [cfg]);
+  /* the phone's own spacing, kept when the window crosses 640 px */
+  const [narrow, setNarrow] = useState(false);
+  useEffect(() => { const mq = window.matchMedia(PHONE_WHEEL), on = () => setNarrow(mq.matches); on(); mq.addEventListener('change', on); return () => mq.removeEventListener('change', on); }, []);
+  useEffect(() => { eng.current?.setCfg(fitWheel(cfg, window.matchMedia(PHONE_WHEEL).matches)); }, [cfg, narrow]);
   /* the text globe's small globe by the link; in a page's flow the page draws every small globe itself */
   const text = cfg.globe === 'ascii', hasFlow = !!flow;
   useEffect(() => (text && !hasFlow && pin.current ? mountDotGlobes(pin.current, cfg) : undefined), [text, hasFlow, cfg]);
@@ -89,7 +92,7 @@ export function Wheel({ cities, cfg, start = 0, noGl = false, cells = true, mark
   }, [city, cfg.statusDelay]);
 
   return (
-    <div ref={pin} className={'wh-pin' + (flow ? ' wh-flow' + (flow.fixed ? ' wh-fixed' : '') : '') + (className ? ' ' + className : '')} style={flow ? { ...wheelVars(cfg), '--wh-peek': flow.peek + 'px' } as CSSProperties : wheelVars(cfg)}>
+    <div ref={pin} role="region" aria-label="Choose your city" className={'wh-pin' + (flow ? ' wh-flow' + (flow.fixed ? ' wh-fixed' : '') : '') + (className ? ' ' + className : '')} style={flow ? { ...wheelVars(cfg), '--wh-peek': flow.peek + 'px' } as CSSProperties : wheelVars(cfg)}>
       {/* the text globe is a picture of its own: one image, named by the city it is turned to */}
       <canvas key={noGl ? '2d' : 'gl'} ref={canvas} className="wh-canvas" {...(text ? { role: 'img', 'aria-label': `The world drawn in characters, turned to ${city.name}` } : { 'aria-hidden': true })} />
       {flow ? null : <h1 className="wh-wordmark" data-mark={mark}><MarkFace mark={mark} /></h1>}

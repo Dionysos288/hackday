@@ -1,4 +1,4 @@
-// door-test.mjs: signing in before the day, against the local stack (door-plan.md, "Checks"). Start the site with
+// door-test.mjs: signing in before the day, against the local stack. Start the site with
 //   HACKDAY_FAKE_GITHUB=1 LUMA_API_KEY=test LUMA_API_URL=http://127.0.0.1:4395/v1 LUMA_WEBHOOK_SECRET=whsec_localtest
 //   (the editor server is the site's own /api/mcp unless NEXT_PUBLIC_HACKDAY_MCP_URL names another at build time)
 // then: node supabase/scripts/door-test.mjs [--site http://localhost:4399]

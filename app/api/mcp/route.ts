@@ -1,5 +1,5 @@
 /* /api/mcp: the editor server (lib/server/mcp.ts), with the person's key in "Authorization: Bearer <key>". This is the
-   address every install line uses where the editor can send a header (door-plan.md, rule 6); /api/mcp/<key> stays for
+   address every install line uses where the editor can send a header; /api/mcp/<key> stays for
    an editor that cannot. GET would open a stream, which this server does not offer (405, as the transport allows). */
 import { handleMcp } from '@/lib/server/mcp';
 import { offline } from '@/lib/server/http';

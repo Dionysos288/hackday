@@ -9,9 +9,8 @@ import { mmss } from './parts';
 import { useAwake, useSecond, useSnap } from './use';
 import './remote.css';
 
-/* The remote: the host's phone, for a thumb, in the dark, held by someone who is talking (event-plan.md, "The
-   remote"). The lower part of the screen is Next, one key; Back sits above it, smaller. At the top: the scene, the
-   step, what the next press does in words, the notes, the city's time and the time left. Under that the keys that
+/* The remote: the host's phone, for a thumb, in the dark, held by someone who is talking. The lower part of the
+   screen is Next, one key; Back sits above it, smaller. At the top: the scene, the step, what the next press does in words, the notes, the city's time and the time left. Under that the keys that
    belong to the scene, then Blank, QR and the list of scenes. Start building and Close voting ask once; nothing else
    asks. When the link is down every key is off and the remote says so, so a press is never lost without a word. Keys
    are never animated: each press is a cut on the wall. A pressed key darkens for as long as the thumb is on it. */

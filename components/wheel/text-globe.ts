@@ -184,6 +184,8 @@ export type TextGlobeLook = {
   leader: boolean; thin: boolean; study: boolean; rim: boolean;
   /* the wake's length in steps, the sun's height under which the night side goes from `: :` to `.`, the tag's size in cells */
   wake: number; night: number; tag: number;
+  /* the land's and the marks' font weight (500 when not given) */
+  weight?: number;
 };
 export const LOOK_DEF: TextGlobeLook = {
   ink: 232, dim: 0.42, grid: 0.52, markInk: 0.62, green: '#3ecf8e', ground: '#000', font: 'ui-monospace, Menlo, monospace',
@@ -275,7 +277,9 @@ const fontSize = new Map<string, number>();
 /* the font size whose advance is one cell */
 function sizeFor(ctx: CanvasRenderingContext2D, font: string, cell: number) {
   let unit = fontSize.get(font);
-  if (!unit) { ctx.font = `500 100px ${font}`; unit = ctx.measureText('0').width / 100 || 0.6; fontSize.set(font, unit); }
+  /* measured with no tracking: the canvas may still carry another text's letter-spacing (the prize's digits do), and
+     the unit is kept for the whole page */
+  if (!unit) { const ls = ctx.letterSpacing; ctx.letterSpacing = '0px'; ctx.font = `500 100px ${font}`; unit = ctx.measureText('0').width / 100 || 0.6; ctx.letterSpacing = ls; fontSize.set(font, unit); }
   return cell / unit;
 }
 const grey = (v: number, a: number) => `rgba(${v}, ${v}, ${Math.max(0, v - 2)}, ${a})`;
@@ -296,7 +300,9 @@ export function drawTextGlobe(ctx: CanvasRenderingContext2D, d: TextGlobeDraw): 
   const { g, colW, lineH, left, top, facing } = lay, lines = linesAt(d, lay, facing);
   const seed = d.seed ?? 1, drop = d.drop ?? 0, rv = d.reveal ?? null;
   ctx.save();
-  ctx.font = `500 ${sizeFor(ctx, L.font, colW)}px ${L.font}`; ctx.letterSpacing = '0px'; ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+  /* the two faces by name: the canvas gives a weight of 700 back as "bold", so the weight is never swapped in the string */
+  const px = sizeFor(ctx, L.font, colW), plain = `500 ${px}px ${L.font}`, heavy = L.weight && L.weight !== 500 ? `${L.weight} ${px}px ${L.font}` : '';
+  ctx.font = plain; ctx.letterSpacing = '0px'; ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
   if (d.clip) { ctx.save(); ctx.beginPath(); ctx.arc(d.x, d.y, d.clip * d.r, 0, Math.PI * 2); ctx.clip(); }
 
   /* the marks: the cells under them are cleared (one cell, one character); thinning takes the other cities too */
@@ -375,7 +381,9 @@ export function drawTextGlobe(ctx: CanvasRenderingContext2D, d: TextGlobeDraw): 
     }
     const at = top + r * lineH + lineH / 2;
     ctx.fillStyle = grey(L.ink, L.grid); ctx.fillText(grid, left, at);
+    if (heavy) ctx.font = heavy;
     ctx.fillStyle = grey(L.ink, 1); ctx.fillText(land, left, at); ctx.fillText(cur, left, at);
+    if (heavy) ctx.font = plain;
     if (sweepRow >= 0) { ctx.fillStyle = grey(L.ink, L.dim); ctx.fillText(dim, left, at); }
     if (lead.size) { ctx.fillStyle = L.green; ctx.fillText(led, left, at); }
   }

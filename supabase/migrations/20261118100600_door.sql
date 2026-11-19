@@ -1,4 +1,4 @@
--- The event as one record, and a place that keeps the email it was listed under (door-plan.md, "The model").
+-- The event as one record, and a place that keeps the email it was listed under.
 --
 --   * events: one row per event. What changes while the site is live lives here: when the day pages open (opens_at,
 --     null means three hours before the first city's planned start) and the desk's override (open). The name, the

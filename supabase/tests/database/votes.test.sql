@@ -1,4 +1,4 @@
--- The voting rules, on the server (event-plan.md, "Voting rules"):
+-- The voting rules, on the server:
 -- one public vote per project per confirmed email; not on your own entry; nothing before building starts, after
 -- voting closes or while it is paused; a judge has a budget in total, may put several on one project, and is counted
 -- apart; a tie goes to who reached the count first. Also: only a host starts or extends the clock, only for their city.

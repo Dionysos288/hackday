@@ -1,4 +1,4 @@
--- Who may submit (event-plan.md, rule 7c): a place on the city's list, and a check-in with the room code typed with
+-- Who may submit: a place on the city's list, and a check-in with the room code typed with
 -- that email (or a host marking the guest as in the room at the desk). The check-in is kept on the pass for the day:
 -- changing the room code later does not undo it. Voting is unchanged.
 -- No walk-ins: a place on a list comes from Luma or from a host, never from the room code.

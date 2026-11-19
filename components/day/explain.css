@@ -5,7 +5,7 @@
 /* the footer's links land here: clear of the sticky header */
 .ex { scroll-margin-top: 24px; }
 .ex-top { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 16px; margin: 0 0 20px; }
-.ex-h { margin: 0; font: 500 32px/1.05 var(--ex-sans); letter-spacing: -0.03em; color: var(--ex-ink); }
+.ex-h { margin: 0; font: 500 32px/1.05 var(--ex-sans); letter-spacing: -0.03em; color: var(--ex-ink); text-wrap: balance; }
 /* a quiet key at the heading's end (Play the day). Nothing on the page pauses the drawings with a key: Screen off stills
    them, and pressing a drawing holds it (.sc[data-hold] below) */
 .ex-key { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; margin: 0 -10px 0 0; padding: 0 10px; border: 0; background: none; color: var(--ex-muted); font: 500 12px/1 var(--ex-face); letter-spacing: 0.02em; cursor: pointer;
@@ -156,6 +156,7 @@
 .ex-stage { min-width: 0; }
 /* each step's heading is a button: the lamp on top, the name and the line; never moves when it lights */
 .ex-stepb { display: grid; gap: 12px; width: 100%; min-height: 44px; margin: 0; padding: 0 0 4px; border: 0; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.ex-stepb:active .ex-t { opacity: 0.7; }
 .ex-stepb:focus-visible { outline: 2px solid var(--ex-ink); outline-offset: 4px; }
 @media (hover: hover) and (pointer: fine) { .ex[data-layout="reel"] .ex-mon:not([data-on]) .ex-stepb:hover .ex-t { color: var(--ex-ink); } }
 .ex[data-compact] .ex-stepb { gap: 8px; }

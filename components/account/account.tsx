@@ -12,7 +12,7 @@ import { ErrBox, FM_F, FM_FORM, FM_H, FM_L, FM_NOTE, FM_P, FM_T, Sheet, useSheet
 import '@/components/forms/forms.css';
 import './account.css';
 
-/* The account: a cell in the header of every page, and the sheet it opens (door-plan.md, D3).
+/* The account: a cell in the header of every page, and the sheet it opens.
    - The cell. Signed out it says "Sign in". Signed in with a place it shows the place's city code; with no place,
      "Account". Its width is kept for the longest of these, so the header never moves when /api/me answers. The first
      answer swaps the label at once (the page is still arriving); a sign-in or sign-out after that fades the new label

@@ -16,7 +16,7 @@ import { tokEase, tokMs, wipe } from '@/components/shared/motion';
 import { DATE, type Href } from './home-parts';
 import './footer.css';
 
-/* How every day page ends (footer plan, 2026-11-17). One footer for the day home and the city pages, in four
+/* How every day page ends. One footer for the day home and the city pages, in four
    directions, tuned at /lab/footer and saved in saved/footer.config.json:
    - horizon: the wheel's glass globe rising from a horizon, the ten cities on an arc over it, the city you are on (or
      the one that is live) at the top and lit; pointing at a name turns the globe to that city. The globe is drawn by
@@ -36,10 +36,11 @@ export { FOOT_DEF, FOOT_BOUNDS, FOOT_CHOICES, FOOT_LABELS, clampFoot, type FootC
 const NUM = ['No', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten'];
 const listOf = (a: string[]) => a.length < 2 ? a.join('') : a.slice(0, -1).join(', ') + ' and ' + a[a.length - 1];
 /* the last line: one sentence that is true now, from the model */
-export function lastLine(W: HomeWorld, startHour: number): string {
-  const at = hhmm(startHour * 60) + ' local time';
+export function lastLine(W: HomeWorld): string {
   if (W.allDone || W.picked) return finalLine(W);
   const next = W.cs.filter((x) => x.state === 'next').sort((a, b) => a.start - b.start)[0];
+  /* each city at its own start: the next one's, in its own local time */
+  const at = next ? hhmm(next.start + next.city.offset) + ' local time' : '';
   if (W.live.length) {
     /* in the chips' own words: building (votes open too), then last votes */
     const build = W.live.filter((x) => x.state === 'build').map((x) => x.name), last = W.live.filter((x) => x.state === 'vote' && x.entries).map((x) => x.name);
@@ -173,7 +174,7 @@ export function DayFooter({ W, day, href, sound, city, cfg: given, sections, min
   return (
     <footer className="bd ft" data-dir={cfg.dir} data-arc={arc ? '' : undefined} data-face={face} data-fastext={fastext ? '' : undefined} style={vars}>
       {city && cfg.tail && !noCities ? <Tail city={city} href={href} /> : null}
-      {cfg.dir === 'closedown' ? <Closedown W={W} lit={lit} line={lastLine(W, day.startHour)} clock={loaded ? localTime(CITIES[lit].id, ms) : ''} /> : null}
+      {cfg.dir === 'closedown' ? <Closedown W={W} lit={lit} line={lastLine(W)} clock={loaded ? localTime(CITIES[lit].id, ms) : ''} /> : null}
       {cfg.dir === 'endboard' ? <EndMark W={W} /> : null}
       {noCities ? null : horizon ? (
         <div className="ft-sky">
@@ -198,7 +199,7 @@ export function DayFooter({ W, day, href, sound, city, cfg: given, sections, min
         <Switches sound={sound} />
       </div>
       <div className="ft-end">
-        {cfg.last ? <p className="ft-last">{lastLine(W, day.startHour)}</p> : null}
+        {cfg.last ? <p className="ft-last">{lastLine(W)}</p> : null}
         <p className="ft-sig bd-k">{EVENT.name} · {DATE}{cfg.credit ? ' · Wheel by anthony lio' : ''}</p>
       </div>
     </footer>

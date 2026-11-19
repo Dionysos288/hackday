@@ -71,7 +71,7 @@ export function EndingLab({ saved, wheel, ours, nowMs }: { saved: EndCfg; wheel:
   return (
     <main className="el-lab" aria-label="Ending lab">
       <p className="el-title">The ending: {END_LABELS['end:' + cfg.end]}. Press the map away from a city for a new seed.</p>
-      <Ending cfg={cfg} wheel={wheel} cities={cities} start={ci} last={lastLine(W, day.startHour)} date={ours.date} sound={P.sound === 'steps'}
+      <Ending cfg={cfg} wheel={wheel} cities={cities} start={ci} last={lastLine(W)} date={ours.date} sound={P.sound === 'steps'}
         links={{ how: '#how', prizes: '#prizes', questions: '#questions' }} style={partsVars(P) as CSSProperties} face={P.face} board={board} markMode={wheel.mark}
         play={play} onMapPress={() => { setCfg((c) => clampEnd({ ...c, seed: 1 + Math.floor(Math.random() * 9998) })); setPlay((n) => n + 1); }} />
       <LabPanel title="Ending lab" cfg={cfg} bounds={END_BOUNDS} choices={END_CHOICES} groups={GROUPS} set={set} moments={[]} momentIdx={-1}

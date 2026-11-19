@@ -1,11 +1,25 @@
-/* luma.ts: where to register. The Luma event links are not out yet, so every city points at one placeholder address.
-
-   PLACEHOLDER, not confirmed: the Luma links. */
-export const LUMA = 'https://example.com/luma';
-/* false while LUMA is the placeholder: a page shows no Register link until the real one is here */
-export const LUMA_LIVE = false;
-export const lumaHref = (city?: string) => LUMA + (city ? '?city=' + city : '');
-
+/* luma.ts: where to register. Each city has its own Luma event; the address is the event's public page. */
+const EVENT_PAGE: Record<string, string> = {
+  'seoul': 'supabase-builder-day-seoul',
+  'singapore': 'supabase-builder-day-singapore',
+  'peshawar': 'supabase-builder-day-peshawar',
+  'nouakchott': 'supabase-builder-day-nouakchott',
+  'london': 'supabase-builder-day-london',
+  'rosario': 'supabase-builder-day-rosario',
+  'santiago': 'supabase-builder-day-santiago',
+  'manta': 'supabase-builder-day-manta',
+  'new-york': 'supabase-builder-day-new-york-city',
+  'toronto': 'supabase-builder-day-toronto',
+  'san-salvador': 'supabase-builder-day-san-salvador',
+  'austin': 'supabase-builder-day-austin',
+  'mexico-city': 'supabase-builder-day-mexico-city',
+  'san-francisco': 'supabase-builder-day-san-francisco',
+};
+export const LUMA = 'https://luma.com/';
+/* true: the pages show Register links to the Luma events */
+export const LUMA_LIVE = true;
+/* a city's Luma event; with no city (or one without an event), the list of cities on the preview page to pick from */
+export const lumaHref = (city?: string) => (LUMA_LIVE && city && EVENT_PAGE[city] ? LUMA + EVENT_PAGE[city] : '/preview#cities');
 /* ---------------- the guest list import ----------------
    A host pastes addresses, or drops the CSV Luma exports. The exact Luma header names are not confirmed, so the
    email column is found wherever it is (a header containing "email", else the column whose cells look like emails);

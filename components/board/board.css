@@ -11,7 +11,7 @@
 .bd {
   --bd-ink: #f4f4f2; --bd-muted: #a3a39f; --bd-border: #6b6c6b; --bd-rule: #2b2c2c;
   --bd-sans: "Inter", "Helvetica Neue", Helvetica, Arial, sans-serif;
-  --bd-m: max(16px, 4.6vw);
+  --bd-m: max(16px, 4.6vw, env(safe-area-inset-left, 0px), env(safe-area-inset-right, 0px));
   color: var(--bd-ink); font-family: var(--bd-sans); font-size: 15px; line-height: 1.4;
   -webkit-font-smoothing: antialiased; font-variant-numeric: tabular-nums;
 }
@@ -169,6 +169,8 @@
 .sw-b { height: calc(var(--bd-u) * 5); padding: 0 12px; border: 1px solid var(--bd-border); background: var(--bd-ground); font: 500 var(--bd-num)/1 var(--bd-face); cursor: pointer; }
 .sw-b[aria-pressed="true"] { background: var(--bd-ink); color: var(--bd-ground); border-color: var(--bd-ink); }
 .sw-b:disabled { color: #8a8b8a; cursor: default; }
+/* a touch screen of any width gets the full press height */
+@media (pointer: coarse) { .sw-b { min-height: 44px; } }
 /* the state is in the words too, so on and off never read as two kinds of button */
 .sw-s { margin-left: 6px; opacity: 0.72; }
 

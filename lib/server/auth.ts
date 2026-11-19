@@ -1,4 +1,4 @@
-/* auth.ts: the three ways to prove an email, none with a password (event-plan.md, "The pass").
+/* auth.ts: the three ways to prove an email, none with a password.
    - the personal link: our own key (keys.ts), opened as many times as needed until the day after;
    - the room code on the stage: email plus the four characters, for an email on that city's list only (no walk-ins);
      it also checks the person in, which is what unlocks Submit (rule 7c, lib/server/room.ts);

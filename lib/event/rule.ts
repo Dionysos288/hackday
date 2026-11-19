@@ -1,4 +1,4 @@
-/* rule.ts: who may submit, said the same way everywhere (event-plan.md, rule 7c). Be on your city's list with the
+/* rule.ts: who may submit, said the same way everywhere. Be on your city's list with the
    email you used on Luma, then type the code on the screen in the room. Anyone may vote after confirming an email.
    The emails, the line under a city's header, Get ready, the submit sheet, the editor server and every refusal read
    from here, so the words cannot drift apart. */

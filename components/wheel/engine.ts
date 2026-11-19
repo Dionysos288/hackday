@@ -57,11 +57,16 @@ export type WheelEngine = {
   wake?: () => void;
   /* a page's flow: the names come in, turning onto the city from `sweep` cities back while they fade up over `ms`.
      No turn and no fade under reduced motion: they are simply there */
-  arrive?: (sweep: number, ms: number) => void;
+  arrive?: (sweep: number, ms: number, o?: ArriveOpts) => void;
   /* a page's flow: the hub and radius in CSS px (the wheel at the top of the page), where the wheel is turned to, and
      the wheel's height, where its names are clipped */
   geometry?: () => { x: number; y: number; r: number; at: number; h: number };
 };
+
+/* how the text globe comes in with the names (held unseen until then with the flow's hold): it prints in rows over
+   `steps` of its clock, sweeps, or is simply there. `turnGlobe`: the globe turns with the names from where they start,
+   not only the names. */
+export type ArriveOpts = { globe?: 'print' | 'sweep' | 'none'; steps?: number; turnGlobe?: boolean; names?: boolean };
 
 const clamp01 = (v: number) => Math.min(Math.max(v, 0), 1);
 const smooth = (v: number) => v * v * (3 - 2 * v);
@@ -97,7 +102,7 @@ export function createWheel(els: Els, first: { cfg: WheelCfg; cities: WheelCity[
   const rides = () => fixedGlass() && cfg.globe === 'ascii';
   /* how far the loop moves what it places for a scroll of s: none while they ride the page */
   const lift = (s: number) => (rides() ? 0 : s);
-  const crt: Crt | null = first.noGl ? null : createCrt(canvas, cfg);
+  const crt: Crt | null = first.noGl ? null : createCrt(canvas, cfg, () => { dirty = true; lastGl = ''; start(true); });
   const picture = crt ? document.createElement('canvas') : canvas;
   const ctx = picture.getContext('2d')!;
   const reduce = window.matchMedia('(prefers-reduced-motion: reduce)');
@@ -122,7 +127,9 @@ export function createWheel(els: Els, first: { cfg: WheelCfg; cities: WheelCity[
   let raf = 0, running = false, onScreen = true, holes = '';
   /* the names' arrival: their share of ink, when the fade began and how long it takes, and no clicks while they turn in */
   const intro = { a: flow?.hold ? 0 : 1, t0: -1, ms: 1, quiet: false };
-  let readyOut = false;
+  /* with the flow's hold the text globe waits unseen too, and its arrival is the page's to start (arrive()) */
+  const globeHold = { held: !!flow?.hold, want: null as null | { mode: 'print' | 'sweep'; steps: number } };
+  let readyOut = false, readyFlow = false;
   /* the text globe: the study's frames and the land map once loaded, its clock, what was drawn last, the city under
      the pointer and the one pressed (reverse video), and how far it has thinned out on the scroll */
   let art: { frames: Frames | null; land: LandMap | null } | null = null, asciiKey = '', alive = true;
@@ -346,6 +353,7 @@ export function createWheel(els: Els, first: { cfg: WheelCfg; cities: WheelCity[
     clock.tick(now, -turn.yaw * 180 / Math.PI, settled);
   };
   const drawGlobeText = (lift = 0) => {
+    if (globeHold.held || clock.pending()) return;
     const d = globeDraw(lift); if (!d) return;
     drawTextGlobe(ctx, d);
   };
@@ -355,8 +363,11 @@ export function createWheel(els: Els, first: { cfg: WheelCfg; cities: WheelCity[
     Promise.all([loadFrames(), loadLand()]).then(([frames, land]) => {
       if (!alive) return;
       art = { frames, land }; asciiKey = ''; dirty = true; lastGl = '';
-      let seen = false; try { seen = sessionStorage.getItem(ARRIVED) === '1'; sessionStorage.setItem(ARRIVED, '1'); } catch { /* storage blocked */ }
-      if (!seen) clock.arrive();
+      if (flow?.hold) { if (globeHold.want) { clock.arrive(globeHold.want.mode, globeHold.want.steps); globeHold.want = null; globeHold.held = false; } }
+      else {
+        let seen = false; try { seen = sessionStorage.getItem(ARRIVED) === '1'; sessionStorage.setItem(ARRIVED, '1'); } catch { /* storage blocked */ }
+        if (!seen) clock.arrive();
+      }
       start(true);
     });
   };
@@ -532,7 +543,10 @@ export function createWheel(els: Els, first: { cfg: WheelCfg; cities: WheelCity[
       }
     }
     fl.drawnS = s;
-    if (!readyOut && stats.pictures > 0) { readyOut = true; flow?.ready?.(); }
+    if (!readyOut && stats.pictures > 0) { readyOut = true; if (flow) canvas.setAttribute('data-drawn', ''); }
+    /* the page's arrival starts once the wheel has drawn and the text globe's frames are here, so the names and the
+       globe come in together (the page still caps the wait) */
+    if (readyOut && !readyFlow && (!asciiOn() || art?.frames)) { readyFlow = true; flow?.ready?.(); }
     /* off screen in a page: once the last frame is drawn and nothing moves, the loop stops (no frame at rest) */
     if (fixed && !onScreen && position === target && Math.abs(away) < 1e-5 && (lens.open === 0 || lens.open === 1) && fl.spin === 0) stop();
   };
@@ -692,10 +706,28 @@ export function createWheel(els: Els, first: { cfg: WheelCfg; cities: WheelCity[
     jump(slot) { target = position = slot; clicked = Math.round(slot); settledOn = idx(slot); turn.yaw = cfg.face - rad(cityAt(slot).lon); clock.reset(); dirty = true; lastGl = ''; if (flow) start(true); },
     step(s) { target += s; if (flow) start(true); },
     wake() { lastGl = ''; holes = ''; start(true); },
-    arrive(sweep, ms) {
-      if (reduced || ms <= 0) { intro.a = 1; intro.t0 = -1; }
-      else { position = target - sweep; clicked = Math.round(position); intro.quiet = true; intro.t0 = performance.now(); intro.ms = ms; }
-      dirty = true; lastGl = ''; start(true);
+    arrive(sweep, ms, o = {}) {
+      if (o.names === false) { /* the names keep waiting: only the globe arrives */ }
+      else if (reduced || ms <= 0) { intro.a = 1; intro.t0 = -1; }
+      else {
+        position = target - sweep; clicked = Math.round(position); intro.quiet = true; intro.t0 = performance.now(); intro.ms = ms;
+        /* the globe's clock forgets its last step, so the first picture is the pose it turns in from, never the city it
+           ends on for one step and then a jump back */
+        if (o.turnGlobe && sweep) { turn.yaw = cfg.face - rad(cityAt(Math.round(position)).lon); clock.reset(); asciiKey = ''; lastGl = ''; dirty = true; }
+      }
+      /* the globe: shown now, and printed or swept in from the next step of its clock */
+      const g = reduced ? 'none' : o.globe ?? 'none';
+      if (g === 'none') globeHold.held = false;
+      else {
+        /* the print starts with its frames: until they are here the globe stays unseen, so it never shows whole first */
+        const w = { mode: g, steps: Math.max(1, Math.round(o.steps ?? cfg.globeSweep)) };
+        if (art?.frames) { globeHold.held = false; clock.arrive(w.mode, w.steps); } else {
+          globeHold.want = w; globeHold.held = true;
+          /* frames that never come: the globe is shown as it is after two seconds */
+          window.setTimeout(() => { if (alive && globeHold.want) { globeHold.want = null; globeHold.held = false; dirty = true; lastGl = ''; start(true); } }, 2000);
+        }
+      }
+      dirty = true; lastGl = ''; asciiKey = ''; start(true);
     },
     ...(flow ? { geometry: () => ({ x: view.x / view.ratio, y: view.y / view.ratio, r: view.radius / view.ratio, at: position, h: fl.geomH }) } : {}),
     measure() { measureCells(); measureLens(); lastGl = ''; },

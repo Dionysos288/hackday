@@ -1,6 +1,5 @@
-/* snapshot.ts: what the public pages read about a city, as one JSON answer (event-plan.md, "Reading: one snapshot per
-   city"). The shape is shared by the server that builds it and the pages that read it. No email, no owner id, no
-   flag: only what a visitor may see. Times are milliseconds since 1970 (UTC). Pure. */
+/* snapshot.ts: what the public pages read about a city, as one JSON answer. The shape is shared by the
+   server that builds it and the pages that read it. No email, no owner id, no flag: only what a visitor may see. Times are milliseconds since 1970 (UTC). Pure. */
 
 export type SnapCity = {
   id: string; name: string; offset: number; venue: string | null; luma: string | null; editor: string | null;
